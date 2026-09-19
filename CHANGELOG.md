@@ -1,3 +1,12 @@
+# Changelog
+
+## 2.3.1
+
+- Hardened the GitHub loadstring example against missing runtime compilers.
+- Added explicit download, compile, execution, and library-shape validation.
+- Switched the example and documentation to the canonical `/main/` raw GitHub path.
+- Improved startup errors so line-1 `nil` calls are actionable.
+
 ## v2.3.0
 
 - Stability and rendering fixes.
@@ -23,8 +32,6 @@
 - Added config manager, config listing, delete, export, import, and existence APIs.
 - Added key-system provider registry for PlatoBoost, Panda Development, and Luarmor with pluggable validation adapters.
 - Added provider cycling, key-link copy, and status feedback to the key-system UI.
-
-# Changelog
 
 ## 2.1.0
 

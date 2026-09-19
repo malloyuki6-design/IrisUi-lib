@@ -1,4 +1,32 @@
-local IrisHub = loadstring(game:HttpGet("https://raw.githubusercontent.com/malloyuki6-design/IrisUi-lib/refs/heads/main/dist/IrisHub.luau"))()
+local IRISHUB_URL = "https://raw.githubusercontent.com/malloyuki6-design/IrisUi-lib/main/dist/IrisHub.luau"
+
+local function LoadIrisHub()
+    local httpGet = game.HttpGet
+    assert(type(httpGet) == "function", "IrisHub: game:HttpGet is unavailable in this environment.")
+
+    local ok, source = pcall(function()
+        return game:HttpGet(IRISHUB_URL)
+    end)
+    assert(ok, "IrisHub: failed to download the library. " .. tostring(source))
+    assert(type(source) == "string" and #source > 0, "IrisHub: GitHub returned an empty response.")
+
+    local compiler = loadstring
+    if type(compiler) ~= "function" then
+        compiler = load
+    end
+    assert(type(compiler) == "function", "IrisHub: this environment does not provide loadstring or load. Use an environment that supports Lua/Luau runtime compilation.")
+
+    local compiled, compileError = compiler(source)
+    assert(type(compiled) == "function", "IrisHub: the GitHub build could not be compiled. " .. tostring(compileError))
+
+    local loaded, library = pcall(compiled)
+    assert(loaded, "IrisHub: the library crashed while loading. " .. tostring(library))
+    assert(type(library) == "table" and type(library.Create) == "function", "IrisHub: the downloaded file is not a valid IrisHub build.")
+
+    return library
+end
+
+local IrisHub = LoadIrisHub()
 
 local UI = IrisHub.Create({
     Name = "IrisHubExample",

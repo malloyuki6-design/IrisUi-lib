@@ -164,7 +164,7 @@ local ok, data = UI:LoadConfig("profile")
 For executor-style runtimes that provide `loadstring` and `game:HttpGet`, host the generated `dist/IrisHub.luau` file in a public GitHub repository and use its raw URL:
 
 ```lua
-local IrisHub = loadstring(game:HttpGet("https://raw.githubusercontent.com/malloyuki6-design/IrisUi-lib/refs/heads/main/dist/IrisHub.luau"))()
+local IrisHub = loadstring(game:HttpGet("https://raw.githubusercontent.com/malloyuki6-design/IrisUi-lib/main/dist/IrisHub.luau"))()
 
 local UI = IrisHub.Create({
     Title = "My Hub",

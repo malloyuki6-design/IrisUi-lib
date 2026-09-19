@@ -1,6 +1,6 @@
 local IrisHub = {}
 IrisHub.__index = IrisHub
-IrisHub.Version = "2.3.0"
+IrisHub.Version = "2.3.1"
 IrisHub.Name = "IrisHub"
 
 local Players = game:GetService("Players")
