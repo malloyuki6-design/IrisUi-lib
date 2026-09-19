@@ -1,6 +1,14 @@
 # Changelog
 
-## 2.6.0
+## 2.8.0
+
+- Fixed section chevron runtime error caused by assigning Image on a Frame icon container.
+- Added animated tab page transitions and window entrance animation.
+- Increased window and component corner radii.
+- Prioritized the Footagesus icon runtime for explicit lucide, geist, and craft icon namespaces.
+- Added ClearBackgroundImage compatibility alias.
+- Kept source and distribution builds synchronized.
+
 
 - Reworked the window layout into a compact WindUI-inspired navigation model.
 - Added grouped navigation with `Window:Section(...):Tab(...)`.

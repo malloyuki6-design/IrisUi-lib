@@ -1,6 +1,6 @@
 local IrisHub = {}
 IrisHub.__index = IrisHub
-IrisHub.Version = "2.7.0"
+IrisHub.Version = "2.8.0"
 IrisHub.Name = "IrisHub"
 
 local Players = game:GetService("Players")
@@ -736,6 +736,21 @@ local function ResolveIconData(icon)
     if value:match("^rbxassetid://") or value:match("^rbxthumb://") or value:match("^rbxgameasset://") then
         return value, nil, nil
     end
+    local provider, name = value:match("^([^:]+):(.*)$")
+    if provider and name then
+        local providerLower = string.lower(provider)
+        if providerLower == "lucide" or providerLower == "geist" or providerLower == "craft" then
+            local asset, metadata, parts = ResolveRemoteIcon(value, providerLower, name)
+            if asset then
+                return asset, metadata, parts
+            end
+            local known = IconRegistry.Assets[providerLower .. ":" .. NormalizeIconName(name)]
+            if known then
+                return known, nil, nil
+            end
+            return IconAliasAsset(name), nil, nil
+        end
+    end
     local exact = IconRegistry.Assets[value]
     if exact then
         return exact, nil, nil
@@ -744,21 +759,6 @@ local function ResolveIconData(icon)
     local normalizedAsset = IconRegistry.Assets[normalized]
     if normalizedAsset then
         return normalizedAsset, nil, nil
-    end
-    local provider, name = value:match("^([^:]+):(.*)$")
-    if provider and name then
-        local providerLower = string.lower(provider)
-        if providerLower == "lucide" or providerLower == "geist" or providerLower == "craft" then
-            local known = IconRegistry.Assets[providerLower .. ":" .. NormalizeIconName(name)]
-            if known then
-                return known, nil, nil
-            end
-            local asset, metadata, parts = ResolveRemoteIcon(value, providerLower, name)
-            if asset then
-                return asset, metadata, parts
-            end
-            return IconAliasAsset(name), nil, nil
-        end
     end
     if value:match("^https?://") then
         return nil, nil, nil
@@ -834,6 +834,15 @@ local function SetIconColor(icon, color)
             if child:IsA("ImageLabel") then child.ImageColor3 = color end
             if child:IsA("TextLabel") then child.TextColor3 = color end
         end
+    end
+end
+
+local function SetIconRotation(icon, rotation, animated)
+    if not icon or not icon.Parent then return end
+    if animated then
+        Tween(icon, {Rotation = rotation}, 0.16, Enum.EasingStyle.Quart)
+    else
+        icon.Rotation = rotation
     end
 end
 
@@ -1331,6 +1340,12 @@ function Window:CreateTab(options)
         self.Active = value == true
         if self.Active then self.Library:ClosePopups() end
         self.Page.Visible = self.Active
+        if self.Active then
+            self.Page.Position = UDim2.fromOffset(14, 0)
+            Tween(self.Page, {Position = UDim2.fromOffset(0, 0)}, 0.20, Enum.EasingStyle.Quart)
+        else
+            self.Page.Position = UDim2.fromOffset(0, 0)
+        end
         self.TabButton.BackgroundColor3 = self.Active and self.Library.Theme.Surface3 or self.Library.Theme.Surface2
         self.TabButton.BackgroundTransparency = self.Active and 0.02 or 1
         if self.ButtonStroke then self.ButtonStroke.Color = self.Library.Theme.Border; self.ButtonStroke.Transparency = self.Active and 0.18 or 1 end
@@ -1431,7 +1446,7 @@ function Window:CreateTab(options)
             AutomaticSize = Enum.AutomaticSize.None
         }, page)
         New("UISizeConstraint", {MinSize = Vector2.new(0, minimum), MaxSize = Vector2.new(math.huge, math.huge)}, row)
-        Corner(row, math.max(10, theme.Radius - 2))
+        Corner(row, math.max(12, theme.Radius))
         Stroke(row, theme.Border, 0.88, 1)
         return row
     end
@@ -1482,7 +1497,7 @@ function Window:CreateTab(options)
             Visible = false
         }, row)
         Corner(accent, 1)
-        local chevron = CreateIcon(row, descriptionText ~= "" and "chevron-down" or "chevron-right", 13, theme.Muted, "right")
+        local chevron = CreateIcon(row, "chevron-down", 13, theme.Muted, "right")
         if chevron then
             chevron.AnchorPoint = Vector2.new(1, 0.5)
             chevron.Position = UDim2.new(1, -10, 0.5, 0)
@@ -1499,9 +1514,7 @@ function Window:CreateTab(options)
             local expanded = comp.Data.Expanded == true
             accent.Visible = expanded
             if chevron then
-                local iconName = expanded and "chevron-down" or "chevron-right"
-                local asset = ResolveIcon(iconName)
-                if asset then chevron.Image = asset end
+                SetIconRotation(chevron, expanded and 0 or -90, true)
             end
             titleLabel.TextColor3 = expanded and self.Library.Theme.Text or self.Library.Theme.Muted
             for _, child in ipairs(comp.Children) do
@@ -2689,9 +2702,10 @@ function IrisHub:CreateWindow(options)
         ClipsDescendants = true,
         ZIndex = 10
     }, root)
-    Corner(main, math.max(15, theme.Radius + 1))
-    local outline = Stroke(main, theme.Border, 0.12, 1)
+    Corner(main, math.max(17, theme.Radius + 2))
+    local outline = Stroke(main, theme.Border, 0.08, 1)
     New("UISizeConstraint", {MinSize = minSize, MaxSize = maxSize}, main)
+    local presentationScale = New("UIScale", {Scale = options.Animation == false and 1 or 0.975}, main)
 
     local backgroundImage = New("ImageLabel", {
         Name = "BackgroundImage",
@@ -2776,6 +2790,7 @@ function IrisHub:CreateWindow(options)
 
     local body = New("Frame", {BackgroundTransparency = 1, BorderSizePixel = 0, Position = UDim2.fromOffset(0, 60), Size = UDim2.new(1, 0, 1, -60), ZIndex = 19}, main)
     local sidebar = New("Frame", {BackgroundColor3 = theme.Background, BorderSizePixel = 0, Position = UDim2.fromOffset(0, 0), Size = UDim2.new(0, 182, 1, 0), ClipsDescendants = true, ZIndex = 20}, body)
+    Corner(sidebar, math.max(12, theme.Radius - 1))
     local sidebarHeader = New("TextLabel", {BackgroundTransparency = 1, Position = UDim2.fromOffset(16, 12), Size = UDim2.new(1, -32, 0, 14), Font = theme.SmallFont, Text = "PAGES", TextSize = 8, TextColor3 = theme.Muted, TextXAlignment = Enum.TextXAlignment.Left, ZIndex = 21}, sidebar)
     local tabList = New("ScrollingFrame", {BackgroundTransparency = 1, BorderSizePixel = 0, Position = UDim2.fromOffset(0, 38), Size = UDim2.new(1, 0, 1, -68), AutomaticCanvasSize = Enum.AutomaticSize.Y, CanvasSize = UDim2.new(), ScrollBarThickness = 0, ZIndex = 21}, sidebar)
     Padding(tabList, 11, 11, 6, 14)
@@ -2785,6 +2800,7 @@ function IrisHub:CreateWindow(options)
     sidebarDivider.Size = UDim2.new(0, 1, 1, 0)
 
     local content = New("Frame", {BackgroundColor3 = theme.Background, BorderSizePixel = 0, Position = UDim2.fromOffset(169, 0), Size = UDim2.new(1, -183, 1, 0), ClipsDescendants = true, ZIndex = 20}, body)
+    Corner(content, math.max(12, theme.Radius - 1))
     local contentDivider = New("Frame", {BackgroundColor3 = theme.Border, BackgroundTransparency = 0.55, BorderSizePixel = 0, Position = UDim2.fromOffset(0, 0), Size = UDim2.fromOffset(1, 1), ZIndex = 22}, content)
     contentDivider.Size = UDim2.new(0, 1, 1, 0)
     local pages = New("Frame", {BackgroundTransparency = 1, Position = UDim2.fromOffset(0, 0), Size = UDim2.new(1, 0, 1, 0), ClipsDescendants = true, ZIndex = 21}, content)
@@ -2793,6 +2809,7 @@ function IrisHub:CreateWindow(options)
         Library = self,
         Root = root,
         Main = main,
+        PresentationScale = presentationScale,
         Shadow = nil,
         Gradient = nil,
         Size = main.Size,
@@ -2998,6 +3015,10 @@ function IrisHub:CreateWindow(options)
         return self
     end
 
+    function window:ClearBackgroundImage()
+        return self:ClearBackground()
+    end
+
     function window:SetBackgroundTint(color, overlayTransparency)
         if typeof(color) == "Color3" then
             self.BackgroundTint = color
@@ -3066,6 +3087,13 @@ function IrisHub:CreateWindow(options)
     local defaultTab = window:CreateTab({Title = options.DefaultTab or "Main", Icon = options.DefaultIcon or "home", NavSection = defaultSection})
     defaultTab:SetActive(true)
     window:ApplyTheme(theme)
+    if options.Animation ~= false and window.PresentationScale then
+        task.defer(function()
+            if not window.Destroyed then
+                Tween(window.PresentationScale, {Scale = 1}, 0.24, Enum.EasingStyle.Quart)
+            end
+        end)
+    end
     return window
 end
 

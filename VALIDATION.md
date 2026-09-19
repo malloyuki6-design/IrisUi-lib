@@ -1,6 +1,6 @@
-# IrisHub v2.7.0 Validation
+# IrisHub v2.8.0 Validation
 
-Static validation completed for the v2.7.0 release.
+Static validation completed for the v2.8.0 release.
 
 - Luau syntax checker: PASS
 - Example syntax checker: PASS
@@ -18,6 +18,6 @@ Static validation completed for the v2.7.0 release.
 
 Source lines: 3488
 Components: 28
-Version: 2.7.0
+Version: 2.8.0
 
 Roblox Studio/client runtime rendering and interaction still require an actual Roblox session for final engine-level verification.

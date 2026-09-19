@@ -1,110 +1,113 @@
 local IRISHUB_URL = "https://raw.githubusercontent.com/malloyuki6-design/IrisUi-lib/main/dist/IrisHub.luau"
 
-local function LoadIrisHub()
-    local httpGet = game.HttpGet
-    assert(type(httpGet) == "function", "IrisHub: game:HttpGet is unavailable in this environment.")
+local function loadIrisHub()
+    local request = game.HttpGet
+    assert(type(request) == "function", "IrisHub: game:HttpGet is unavailable in this environment.")
 
-    local ok, source = pcall(function()
+    local downloaded, source = pcall(function()
         return game:HttpGet(IRISHUB_URL)
     end)
-    assert(ok, "IrisHub: failed to download the library. " .. tostring(source))
-    assert(type(source) == "string" and #source > 0, "IrisHub: GitHub returned an empty response.")
+    assert(downloaded, "IrisHub: failed to download the GitHub build. " .. tostring(source))
+    assert(type(source) == "string" and #source > 0, "IrisHub: GitHub returned an empty library response.")
 
     local compiler = loadstring
     if type(compiler) ~= "function" then
         compiler = load
     end
-    assert(type(compiler) == "function", "IrisHub: this environment does not provide loadstring or load. Use an environment that supports Lua/Luau runtime compilation.")
+    assert(type(compiler) == "function", "IrisHub: this runtime does not expose loadstring or load.")
 
     local compiled, compileError = compiler(source)
-    assert(type(compiled) == "function", "IrisHub: the GitHub build could not be compiled. " .. tostring(compileError))
+    assert(type(compiled) == "function", "IrisHub: downloaded build failed to compile. " .. tostring(compileError))
 
-    local loaded, library = pcall(compiled)
-    assert(loaded, "IrisHub: the library crashed while loading. " .. tostring(library))
-    assert(type(library) == "table" and type(library.Create) == "function", "IrisHub: the downloaded file is not a valid IrisHub build.")
+    local executed, library = pcall(compiled)
+    assert(executed, "IrisHub: downloaded build failed while loading. " .. tostring(library))
+    assert(type(library) == "table" and type(library.Create) == "function", "IrisHub: downloaded file is not a valid IrisHub build.")
 
     return library
 end
 
-local IrisHub = LoadIrisHub()
+local IrisHub = loadIrisHub()
 
 local UI = IrisHub.Create({
     Name = "IrisHubExample",
     Title = "IrisHub",
     Subtitle = "Universal UI Framework • GitHub Loadstring Demo",
     Theme = "Iris",
-    DefaultIcon = "lucide:info",
+    DefaultTab = "Main",
+    DefaultSection = "MAIN",
+    DefaultIcon = "lucide:layout-dashboard",
     Size = UDim2.fromOffset(900, 620),
     MinSize = Vector2.new(560, 380),
     MaxSize = Vector2.new(1320, 900),
-    UIScale = 1,
     ToggleKey = Enum.KeyCode.RightControl,
     Draggable = true,
     Resizable = true,
-    ConfigName = "IrisHubExample"
+    ConfigName = "IrisHubExample",
+    Animation = true
 })
 
 local Window = UI.Windows[1]
-local Dashboard = Window:GetTab("Main")
-local Features = Window:CreateTab({Title = "Features", Icon = "lucide:layout-grid"})
-local Appearance = Window:CreateTab({Title = "Appearance", Icon = "lucide:palette"})
-local Utilities = Window:CreateTab({Title = "Utilities", Icon = "lucide:settings"})
-local About = Window:CreateTab({Title = "About", Icon = "lucide:info"})
-
-Features:Section({Title = "Icon System", Description = "Uses the Footagesus Icons runtime for named provider icons"})
-Features:Tag({Text = "LUCIDE", Icon = "lucide:star"})
-Features:Button({
-    Title = "Test remote icon",
-    Icon = "lucide:circle-check",
-    Callback = function()
-        notify("Icons", "Footagesus icon lookup succeeded for the current runtime.", "Success")
-    end
-})
+assert(Window, "IrisHub: Create did not return a default window.")
 
 local function notify(title, description, kind, duration)
     UI:Notify({
         Title = title,
         Description = description,
         Type = kind or "Info",
-        Duration = duration or 3
+        Duration = duration or 3,
+        Icon = (kind == "Success" and "lucide:circle-check") or (kind == "Warning" and "lucide:triangle-alert") or (kind == "Error" and "lucide:circle-x") or "lucide:info"
     })
 end
 
-Dashboard:Paragraph({
-    Title = "Welcome to IrisHub",
-    Content = "This example is loaded directly from GitHub and demonstrates the public IrisHub API, runtime updates, themes, stateful controls, notifications, configuration, and utility components.",
-    Height = 86
-})
+local Main = Window:GetTab("Main")
+assert(Main, "IrisHub: default Main tab was not created.")
 
-Dashboard:Status({
-    Title = "Framework status",
-    Description = "IrisHub is running normally",
-    State = "Success"
-})
+local Pages = Window:Section({Title = "PAGES", Icon = "lucide:layout-grid"})
+local Features = Pages:Tab({Title = "Features", Icon = "lucide:sliders-horizontal"})
+local Appearance = Pages:Tab({Title = "Appearance", Icon = "lucide:palette"})
+local Utilities = Pages:Tab({Title = "Utilities", Icon = "lucide:settings"})
+local About = Pages:Tab({Title = "About", Icon = "lucide:info"})
 
-Dashboard:Section({Title = "Runtime overview", Description = "Live information from the loaded library"})
-Dashboard:KeyValue({Key = "Version", Value = UI:GetVersion()})
-Dashboard:KeyValue({Key = "Theme", Value = UI.ThemeName})
-Dashboard:KeyValue({Key = "Tabs", Value = "5"})
-Dashboard:Badge({Text = "GITHUB BUILD"})
+local Extras = Window:Section({Title = "SYSTEM", Icon = "lucide:box"})
+local KeySystem = Extras:Tab({Title = "Key System", Icon = "lucide:key"})
+local Configs = Extras:Tab({Title = "Configs", Icon = "lucide:folder-cog"})
 
-local progress = Dashboard:Progress({
-    Title = "Example coverage",
+local progress = Main:Progress({
+    Title = "Showcase coverage",
     Min = 0,
     Max = 100,
-    Default = 72,
+    Default = 76,
     Decimals = 0
 })
 
-Dashboard:Alert({
-    Type = "Info",
-    Title = "Tip",
-    Description = "Press RightControl to hide or show the window. Drag the title bar to reposition it and use the resize grip in the lower-right corner."
+Main:Paragraph({
+    Title = "Welcome to IrisHub",
+    Content = "A complete public example built around the current IrisHub API. Explore controls, grouped navigation, icons, themes, backgrounds, notifications, configurations, and the key-system adapter layer.",
+    Height = 86
 })
 
-local openFeatures = Dashboard:Button({
+Main:Status({
+    Title = "Framework status",
+    Description = "IrisHub loaded successfully",
+    State = "Success"
+})
+
+Main:Section({Title = "Runtime", Description = "Information from the loaded library"})
+Main:KeyValue({Key = "Version", Value = UI:GetVersion()})
+Main:KeyValue({Key = "Theme", Value = UI.ThemeName})
+Main:KeyValue({Key = "Tabs", Value = tostring(#Window.TabOrder)})
+Main:Tag({Text = "GITHUB BUILD", Icon = "lucide:github"})
+
+Main:Alert({
+    Type = "Info",
+    Title = "Controls",
+    Description = "RightControl toggles the window. The title bar can be dragged and the lower-right corner can be resized."
+})
+
+local openFeatures = Main:Button({
     Title = "Open feature playground",
-    Description = "Jump to the controls showcase.",
+    Description = "Jump directly to the controls showcase.",
+    Icon = "lucide:sliders-horizontal",
     Callback = function()
         Window:SetVisible(true)
         Window:SelectTab("Features")
@@ -112,34 +115,30 @@ local openFeatures = Dashboard:Button({
     end
 })
 
-Dashboard:Tooltip({
-    Target = openFeatures,
-    Text = "Switches to the Features tab."
-})
+Main:Tooltip({Target = openFeatures, Text = "Switch to the Features tab."})
+Main:Divider()
 
-Dashboard:Divider()
-
-Dashboard:CodeBlock({
+Main:CodeBlock({
     Language = "luau",
     Code = [[local IrisHub = loadstring(game:HttpGet("YOUR_RAW_GITHUB_URL"))()
 
 local UI = IrisHub.Create({
     Title = "My Hub",
-    DefaultTab = "Main",
-    DefaultIcon = "lucide:layout-dashboard",
-    Theme = "Iris"
+    Theme = "Iris",
+    DefaultIcon = "lucide:layout-dashboard"
 })]],
     Height = 116
 })
 
-Features:Section({Title = "Controls", Description = "Interactive components with real callbacks"})
+Features:Section({Title = "Controls", Description = "Reactive components from the public API"})
 
 local enabled = Features:Toggle({
-    Title = "Enable advanced mode",
-    Description = "Updates the progress indicator and saves state to the config object.",
+    Title = "Advanced mode",
+    Description = "Updates the showcase progress and stores the setting.",
     Default = true,
+    Icon = "lucide:zap",
     Callback = function(value)
-        progress:Set(value and 94 or 34)
+        progress:Set(value and 94 or 36)
         UI:SetConfig("AdvancedMode", value)
         notify("Advanced mode", value and "Enabled" or "Disabled", value and "Success" or "Warning")
     end
@@ -148,15 +147,15 @@ local enabled = Features:Toggle({
 Features:Dropdown({
     Title = "Quality preset",
     Options = {
-        {Value = "Balanced", Label = "Balanced"},
-        {Value = "Performance", Label = "Performance"},
-        {Value = "Quality", Label = "Quality"},
-        {Value = "Experimental", Label = "Experimental"}
+        {Value = "Balanced", Label = "Balanced", Icon = "lucide:gauge"},
+        {Value = "Performance", Label = "Performance", Icon = "lucide:rocket"},
+        {Value = "Quality", Label = "Quality", Icon = "lucide:sparkles"},
+        {Value = "Experimental", Label = "Experimental", Icon = "lucide:flask-conical"}
     },
     Default = "Balanced",
     Callback = function(value)
         UI:SetConfig("QualityPreset", value)
-        notify("Preset changed", tostring(value), "Info")
+        notify("Quality", tostring(value) .. " selected.", "Info", 2.4)
     end
 })
 
@@ -179,16 +178,15 @@ Features:ImageDropdown({
     Default = "Aurora",
     Callback = function(value)
         UI:SetConfig("ProfilePreset", value)
-        notify("Profile", tostring(value) .. " selected.", "Info")
     end
 })
 
 Features:Slider({
-    Title = "Example coverage",
+    Title = "Showcase coverage",
     Min = 0,
     Max = 100,
     Increment = 1,
-    Default = 72,
+    Default = 76,
     Decimals = 0,
     Callback = function(value)
         progress:Set(value)
@@ -205,17 +203,28 @@ Features:Input({
 })
 
 Features:Keybind({
-    Title = "Test notification key",
+    Title = "Notification key",
     Default = "F6",
     Callback = function(key, pressed)
         if pressed then
-            notify("Keybind", tostring(key) .. " activated.", "Success")
+            notify("Keybind", tostring(key) .. " activated.", "Success", 2.4)
         end
     end
 })
 
-Appearance:Section({Title = "Theme lab", Description = "Change the visual language at runtime"})
-Appearance:Section({Title = "Background", Description = "Apply a Roblox texture asset to the window surface"})
+Features:Button({
+    Title = "Notification demo",
+    Icon = "lucide:bell",
+    Callback = function()
+        notify("IrisHub", "Notification system is working.", "Success")
+    end
+})
+
+Features:Tag({Text = "LUCIDE", Icon = "lucide:sparkles"})
+Features:Tag({Text = "GEIST", Icon = "geist:star"})
+Features:Tag({Text = "CRAFT", Icon = "craft:layers"})
+
+Appearance:Section({Title = "Theme", Description = "Change the visual system at runtime"})
 
 Appearance:Dropdown({
     Title = "Theme",
@@ -223,48 +232,7 @@ Appearance:Dropdown({
     Default = UI.ThemeName,
     Callback = function(themeName)
         UI:SetTheme(themeName)
-        notify("Theme applied", tostring(themeName), "Success")
-    end
-})
-
-local glass = Appearance:Toggle({
-    Title = "Soft surfaces",
-    Description = "Increase the shared transparency token.",
-    Default = UI:GetThemeValue("Transparency") > 0,
-    Callback = function(value)
-        UI:SetTheme({Transparency = value and 0.08 or 0.02})
-    end
-})
-
-local backgroundId = Appearance:Input({
-    Title = "Texture ID",
-    Placeholder = "rbxassetid://1234567890",
-    Default = "",
-    Callback = function(value)
-        UI:SetConfig("BackgroundTexture", value)
-    end
-})
-
-Appearance:Button({
-    Title = "Apply texture",
-    Icon = "lucide:image",
-    Callback = function()
-        local value = backgroundId:Get()
-        if tostring(value or "") ~= "" then
-            UI:SetBackgroundImage(value, 0.86, UDim2.fromOffset(128, 128), Color3.new(1, 1, 1))
-            notify("Background", "Texture applied.", "Success")
-        else
-            notify("Background", "Enter a Roblox texture ID first.", "Warning")
-        end
-    end
-})
-
-Appearance:Button({
-    Title = "Clear background",
-    Icon = "lucide:eraser",
-    Callback = function()
-        UI:ClearBackgroundImage()
-        notify("Background", "Texture cleared.", "Info")
+        notify("Theme", tostring(themeName) .. " applied.", "Success")
     end
 })
 
@@ -276,10 +244,53 @@ Appearance:ColorPicker({
     end
 })
 
+local glass = Appearance:Toggle({
+    Title = "Soft surfaces",
+    Description = "Adjust the shared transparency token.",
+    Default = UI:GetThemeValue("Transparency") > 0,
+    Callback = function(value)
+        UI:SetTheme({Transparency = value and 0.06 or 0})
+    end
+})
+
+Appearance:Section({Title = "Background", Description = "Use a Roblox texture ID on the window surface"})
+
+local backgroundId = Appearance:Input({
+    Title = "Texture ID",
+    Placeholder = "rbxassetid://1234567890",
+    Default = "",
+    Callback = function(value)
+        UI:SetConfig("BackgroundTexture", value)
+    end
+})
+
+Appearance:Button({
+    Title = "Apply background",
+    Icon = "lucide:image",
+    Callback = function()
+        local value = tostring(backgroundId:Get() or "")
+        if value == "" then
+            notify("Background", "Enter a Roblox texture ID first.", "Warning")
+            return
+        end
+        Window:SetBackgroundImage(value, 0.88, UDim2.fromOffset(128, 128), Color3.new(1, 1, 1))
+        notify("Background", "Texture applied.", "Success")
+    end
+})
+
+Appearance:Button({
+    Title = "Clear background",
+    Icon = "lucide:eraser",
+    Callback = function()
+        Window:ClearBackgroundImage()
+        notify("Background", "Texture cleared.", "Info")
+    end
+})
+
 Appearance:Image({
     Image = "rbxthumb://type=AvatarBust&id=1&w=420&h=420",
-    Caption = "IrisHub visual component",
-    Height = 170
+    Caption = "IrisHub image component",
+    Height = 160
 })
 
 Appearance:Avatar({
@@ -290,7 +301,7 @@ Appearance:Avatar({
 
 Appearance:Card({
     Title = "Design language",
-    Description = "Layered surfaces, restrained motion, consistent spacing, and runtime theming.",
+    Description = "Compact navigation, curved surfaces, restrained accents, and runtime theming.",
     Height = 82
 })
 
@@ -299,16 +310,12 @@ local themeStatus = Appearance:Status({
     Description = "Live and reactive",
     State = "Success"
 })
+Appearance:Tooltip({Target = themeStatus, Text = "Theme changes propagate through registered components."})
 
-Appearance:Tooltip({
-    Target = themeStatus,
-    Text = "Theme changes propagate through registered UI components."
-})
-
-Utilities:Section({Title = "Utility playground", Description = "Configuration, loading, menus, and modals"})
+Utilities:Section({Title = "Tools", Description = "Utility components and runtime demonstrations"})
 
 Utilities:Search({
-    Placeholder = "Search the playground...",
+    Placeholder = "Search playground...",
     Callback = function(value)
         if value ~= "" then
             notify("Search", "Query: " .. value, "Info", 2)
@@ -320,32 +327,9 @@ local loading = Utilities:Loading({Text = "Background operation"})
 
 Utilities:Button({
     Title = "Toggle loading",
+    Icon = "lucide:loader-circle",
     Callback = function()
         loading:Set(not loading:Get())
-    end
-})
-
-Utilities:Button({
-    Title = "Save config",
-    Callback = function()
-        local ok, result = UI:SaveConfig("IrisHubExample")
-        if ok then
-            notify("Configuration", "Saved to " .. tostring(result), "Success")
-        else
-            notify("Configuration", tostring(result), "Warning")
-        end
-    end
-})
-
-Utilities:Button({
-    Title = "Load config",
-    Callback = function()
-        local ok, data = UI:LoadConfig("IrisHubExample")
-        if ok then
-            notify("Configuration", "Loaded " .. tostring(data.DisplayName or "saved state"), "Success")
-        else
-            notify("Configuration", tostring(data), "Warning")
-        end
     end
 })
 
@@ -353,18 +337,19 @@ Utilities:ContextMenu({
     Title = "Context actions",
     Items = {
         {Title = "Refresh", Callback = function() notify("Context", "Refresh requested.", "Info") end},
-        {Title = "Save profile", Callback = function() UI:SaveConfig("IrisHubExample"); notify("Context", "Profile save requested.", "Success") end},
+        {Title = "Save profile", Callback = function() UI:SaveConfig("IrisHubExample"); notify("Config", "Profile saved.", "Success") end},
         {Title = "Disabled action", Disabled = true},
         {Title = "Hide window", Callback = function() UI:SetUIVisible(false) end}
     }
 })
 
 Utilities:Button({
-    Title = "Open confirmation modal",
+    Title = "Open modal",
+    Icon = "lucide:message-square",
     Callback = function()
         UI:CreateModal({
             Title = "IrisHub modal",
-            Description = "This modal is built by the library and can be driven entirely through callbacks.",
+            Description = "This modal uses the public callback-driven API.",
             CancelText = "Cancel",
             ConfirmText = "Continue",
             OnCancel = function()
@@ -389,67 +374,96 @@ Utilities:CodeBlock({
     Height = 112
 })
 
+Configs:Section({Title = "Configuration manager", Description = "Named profiles backed by the library config API"})
+local configPanel = Configs:ConfigPanel({
+    Title = "Profiles",
+    Description = "Save, load, and delete IrisHub configuration profiles.",
+    DefaultName = "IrisHubExample",
+    OnSave = function(ok, result, name)
+        notify("Configs", ok and ("Saved " .. tostring(name)) or tostring(result), ok and "Success" or "Warning")
+    end,
+    OnLoadResult = function(ok, result, name)
+        notify("Configs", ok and ("Loaded " .. tostring(name)) or tostring(result), ok and "Success" or "Warning")
+    end,
+    OnDelete = function(ok, result, name)
+        notify("Configs", ok and ("Deleted " .. tostring(name)) or tostring(result), ok and "Success" or "Warning")
+    end
+})
+
+Configs:Button({
+    Title = "Export config",
+    Icon = "lucide:upload",
+    Callback = function()
+        local ok, result = UI:ExportConfig()
+        notify("Configs", ok and "Configuration exported." or tostring(result), ok and "Success" or "Warning")
+    end
+})
+
+Configs:Button({
+    Title = "List configs",
+    Icon = "lucide:list",
+    Callback = function()
+        local names = UI:ListConfigs()
+        notify("Configs", #names > 0 and table.concat(names, ", ") or "No saved configurations.", "Info", 3.5)
+    end
+})
+
+KeySystem:Section({Title = "Provider adapters", Description = "Available key-system providers in the IrisHub API"})
+KeySystem:Dropdown({
+    Title = "Provider",
+    Options = UI:GetKeyProviders(),
+    Default = "Luarmor",
+    Callback = function(provider)
+        UI:SetConfig("KeyProvider", provider)
+    end
+})
+
+KeySystem:Tag({Text = "PLATOBOOST", Icon = "lucide:key"})
+KeySystem:Tag({Text = "PANDA DEVELOPMENT", Icon = "lucide:shield-check"})
+KeySystem:Tag({Text = "LUARMOR", Icon = "lucide:badge-check"})
+
+KeySystem:Button({
+    Title = "Open key-system demo",
+    Icon = "lucide:key-round",
+    Callback = function()
+        local providerName = UI:GetConfig("KeyProvider", "Luarmor")
+        UI:CreateKeySystem({
+            Provider = providerName,
+            Description = "This example uses a local validator to demonstrate the adapter UI. Connect a real provider validator for production use.",
+            Validate = function(key)
+                local accepted = key == "IRISHUB-DEMO"
+                return accepted, accepted and "Demo key accepted." or "Use IRISHUB-DEMO for this local example."
+            end,
+            OnSuccess = function()
+                notify("Key system", "Access granted.", "Success")
+            end,
+            OnFailure = function(_, message)
+                notify("Key system", tostring(message), "Warning")
+            end
+        })
+    end
+})
+
 About:Section({Title = "About IrisHub", Description = "Open-source universal Roblox UI framework"})
 About:Paragraph({
-    Title = "Built for extensibility",
-    Content = "Use the component references returned by IrisHub to update, enable, disable, hide, show, or destroy UI elements at runtime."
+    Title = "Built for developers",
+    Content = "Component references support runtime updates, visibility changes, theme propagation, cleanup, and structured navigation."
 })
 About:Status({Title = "Repository", Description = "Hosted on GitHub", State = "Success"})
 About:KeyValue({Key = "Library version", Value = UI:GetVersion()})
 About:KeyValue({Key = "Distribution", Value = "dist/IrisHub.luau"})
-About:Badge({Text = "OPEN SOURCE"})
+About:Tag({Text = "OPEN SOURCE", Icon = "lucide:github"})
 
-local navigationGroup = Window:Section({Title = "Examples", Icon = "lucide:layers-3"})
-local Extra = navigationGroup:Tab({Title = "Extra", Icon = "lucide:sparkles"})
-Extra:Paragraph({Title = "Sectioned navigation", Content = "IrisHub supports grouped navigation while keeping the direct CreateTab API available."})
-
-local versionInfo = About:Button({
+local versionButton = About:Button({
     Title = "Show runtime version",
+    Icon = "lucide:badge-info",
     Callback = function()
         notify("IrisHub", "Running version " .. UI:GetVersion(), "Info")
     end
 })
-
-About:Tooltip({
-    Target = versionInfo,
-    Text = "Reads the version directly from the loaded IrisHub runtime."
-})
+About:Tooltip({Target = versionButton, Text = "Reads the version directly from the loaded runtime."})
 
 UI:SetConfig("AdvancedMode", enabled:Get())
 UI:SetConfig("Theme", UI.ThemeName)
 UI:SetConfig("GlassSurfaces", glass:Get())
 UI:SetConfig("EnabledSystems", systems:GetSelected())
-
-
-local providerTag = About:Tag({Text = "LUARMOR ADAPTER READY", Icon = "lucide:key"})
-local notificationDemo = About:Button({
-    Title = "Test rich notification",
-    Icon = "lucide:bell",
-    Callback = function()
-        local notice = UI:Notify({
-            Title = "IrisHub",
-            Description = "Icon-aware notification with progress and manual dismiss.",
-            Type = "Success",
-            Duration = 5,
-            Icon = "lucide:sparkles"
-        })
-        task.delay(1, function() notice:SetDescription("Notification updated at runtime.") end)
-    end
-})
-
-local keyDemoButton = About:Button({
-    Title = "Open key-system demo",
-    Icon = "lucide:key",
-    Callback = function()
-        UI:CreateKeySystem({
-            Provider = "Luarmor",
-            Description = "Demo adapter only. Replace Validate with your real provider integration.",
-            Validate = function(key)
-                return key == "IRISHUB-DEMO", key == "IRISHUB-DEMO" and "Demo key accepted." or "Use IRISHUB-DEMO for this local demo."
-            end,
-            OnSuccess = function()
-                UI:Notify({Title = "Key system", Description = "Demo access granted.", Type = "Success", Icon = "lucide:shield"})
-            end
-        })
-    end
-})

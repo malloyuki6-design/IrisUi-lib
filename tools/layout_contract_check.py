@@ -17,6 +17,10 @@ assert 'https://raw.githubusercontent.com/Footagesus/Icons/main/Main-v2.lua' in 
 assert 'function window:SetBackgroundImage(image, transparency, tileSize, tint)' in SOURCE
 assert 'function IrisHub:SetBackgroundImage(image, transparency, tileSize, tint)' in SOURCE
 assert 'function window:Section(opts)' in SOURCE
+assert 'Corner(main, math.max(17, theme.Radius + 2))' in SOURCE
+assert 'Corner(row, math.max(12, theme.Radius))' in SOURCE
+assert 'SetIconRotation(chevron, expanded and 0 or -90, true)' in SOURCE
+assert 'PresentationScale' in SOURCE
 assert 'IconRegistry.Glyphs' not in SOURCE or 'TextLabel' in SOURCE
 for expected in ['lucide:layout-dashboard', 'lucide:sparkles', 'lucide:palette', 'lucide:settings', 'lucide:info']:
     assert expected in EXAMPLE, f'missing canonical example icon: {expected}'
