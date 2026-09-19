@@ -35,8 +35,8 @@ local UI = IrisHub.Create({
     Theme = "Iris",
     DefaultIcon = "lucide:info",
     Size = UDim2.fromOffset(900, 620),
-    MinSize = Vector2.new(620, 420),
-    MaxSize = Vector2.new(1280, 860),
+    MinSize = Vector2.new(560, 380),
+    MaxSize = Vector2.new(1320, 900),
     UIScale = 1,
     ToggleKey = Enum.KeyCode.RightControl,
     Draggable = true,
@@ -46,10 +46,20 @@ local UI = IrisHub.Create({
 
 local Window = UI.Windows[1]
 local Dashboard = Window:GetTab("Main")
-local Features = Window:CreateTab({Title = "Features", Icon = "lucide:sparkles"})
+local Features = Window:CreateTab({Title = "Features", Icon = "lucide:layout-grid"})
 local Appearance = Window:CreateTab({Title = "Appearance", Icon = "lucide:palette"})
 local Utilities = Window:CreateTab({Title = "Utilities", Icon = "lucide:settings"})
 local About = Window:CreateTab({Title = "About", Icon = "lucide:info"})
+
+Features:Section({Title = "Icon System", Description = "Uses the Footagesus Icons runtime for named provider icons"})
+Features:Tag({Text = "LUCIDE", Icon = "lucide:star"})
+Features:Button({
+    Title = "Test remote icon",
+    Icon = "lucide:circle-check",
+    Callback = function()
+        notify("Icons", "Footagesus icon lookup succeeded for the current runtime.", "Success")
+    end
+})
 
 local function notify(title, description, kind, duration)
     UI:Notify({

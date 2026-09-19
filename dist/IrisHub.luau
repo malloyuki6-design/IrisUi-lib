@@ -1,6 +1,6 @@
 local IrisHub = {}
 IrisHub.__index = IrisHub
-IrisHub.Version = "2.6.0"
+IrisHub.Version = "2.7.0"
 IrisHub.Name = "IrisHub"
 
 local Players = game:GetService("Players")
@@ -16,16 +16,16 @@ local ParentGui = (gethui and gethui()) or (LocalPlayer and LocalPlayer:WaitForC
 
 local Themes = {
     Iris = {
-        Background = Color3.fromRGB(10, 11, 18),
-        Surface = Color3.fromRGB(18, 20, 31),
-        Surface2 = Color3.fromRGB(25, 28, 42),
-        Surface3 = Color3.fromRGB(34, 37, 55),
-        Border = Color3.fromRGB(55, 60, 84),
+        Background = Color3.fromRGB(9, 10, 15),
+        Surface = Color3.fromRGB(15, 17, 24),
+        Surface2 = Color3.fromRGB(21, 24, 33),
+        Surface3 = Color3.fromRGB(28, 32, 44),
+        Border = Color3.fromRGB(44, 49, 66),
         Text = Color3.fromRGB(247, 248, 255),
         Muted = Color3.fromRGB(164, 168, 194),
         Accent = Color3.fromRGB(157, 132, 255),
         Accent2 = Color3.fromRGB(105, 190, 255),
-        AccentSoft = Color3.fromRGB(58, 50, 98),
+        AccentSoft = Color3.fromRGB(49, 42, 83),
         Success = Color3.fromRGB(84, 205, 142),
         Warning = Color3.fromRGB(241, 190, 82),
         Danger = Color3.fromRGB(238, 92, 112),
@@ -33,7 +33,7 @@ local Themes = {
         Shadow = Color3.fromRGB(0, 0, 0),
         ShadowTransparency = 0.80,
         Transparency = 0,
-        Radius = 12,
+        Radius = 15,
         Font = Enum.Font.Gotham,
         TitleFont = Enum.Font.GothamBold,
         SmallFont = Enum.Font.GothamMedium
@@ -56,7 +56,7 @@ local Themes = {
         Shadow = Color3.fromRGB(0, 0, 0),
         ShadowTransparency = 0.5,
         Transparency = 0.03,
-        Radius = 10,
+        Radius = 13,
         Font = Enum.Font.Gotham,
         TitleFont = Enum.Font.GothamBold,
         SmallFont = Enum.Font.GothamMedium
@@ -79,7 +79,7 @@ local Themes = {
         Shadow = Color3.fromRGB(28, 30, 38),
         ShadowTransparency = 0.38,
         Transparency = 0.02,
-        Radius = 10,
+        Radius = 13,
         Font = Enum.Font.Gotham,
         TitleFont = Enum.Font.GothamBold,
         SmallFont = Enum.Font.GothamMedium
@@ -691,23 +691,24 @@ end
 
 local function NormalizeIconResult(result)
     if type(result) == "string" and result ~= "" then
-        return result, nil
+        return result, nil, nil
     end
     if type(result) ~= "table" then
-        return nil, nil
+        return nil, nil, nil
     end
-    local image = result.image or result.Image or result.asset or result.Asset
-    local metadata = result.metadata or result.Metadata or result
+    local image = result.image or result.Image or result.asset or result.Asset or result[1]
+    local metadata = result.metadata or result.Metadata or result[2]
     if type(image) == "string" and image ~= "" then
-        return image, metadata
+        local parts = type(metadata) == "table" and metadata.Parts or nil
+        return image, metadata, parts
     end
-    return nil, nil
+    return nil, nil, nil
 end
 
 local function ResolveRemoteIcon(value, provider, name)
     local module = GetRemoteIconModule()
     if not module or type(module.Icon2) ~= "function" then
-        return nil, nil
+        return nil, nil, nil
     end
     local ok, result = pcall(function()
         return module.Icon2(name or value, provider or "lucide")
@@ -718,31 +719,31 @@ local function ResolveRemoteIcon(value, provider, name)
         end)
     end
     if not ok then
-        return nil, nil
+        return nil, nil, nil
     end
     return NormalizeIconResult(result)
 end
 
 local function ResolveIconData(icon)
-    if icon == nil then return nil, nil end
+    if icon == nil then return nil, nil, nil end
     if typeof(icon) == "Instance" and icon:IsA("ImageLabel") then
-        return icon.Image, nil
+        return icon.Image, nil, nil
     end
     if type(icon) == "number" then
-        return "rbxassetid://" .. tostring(icon), nil
+        return "rbxassetid://" .. tostring(icon), nil, nil
     end
     local value = tostring(icon)
     if value:match("^rbxassetid://") or value:match("^rbxthumb://") or value:match("^rbxgameasset://") then
-        return value, nil
+        return value, nil, nil
     end
     local exact = IconRegistry.Assets[value]
     if exact then
-        return exact, nil
+        return exact, nil, nil
     end
     local normalized = NormalizeIconName(value)
     local normalizedAsset = IconRegistry.Assets[normalized]
     if normalizedAsset then
-        return normalizedAsset, nil
+        return normalizedAsset, nil, nil
     end
     local provider, name = value:match("^([^:]+):(.*)$")
     if provider and name then
@@ -750,59 +751,90 @@ local function ResolveIconData(icon)
         if providerLower == "lucide" or providerLower == "geist" or providerLower == "craft" then
             local known = IconRegistry.Assets[providerLower .. ":" .. NormalizeIconName(name)]
             if known then
-                return known, nil
+                return known, nil, nil
             end
-            local asset, metadata = ResolveRemoteIcon(value, providerLower, name)
+            local asset, metadata, parts = ResolveRemoteIcon(value, providerLower, name)
             if asset then
-                return asset, metadata
+                return asset, metadata, parts
             end
-            return IconAliasAsset(name), nil
+            return IconAliasAsset(name), nil, nil
         end
     end
     if value:match("^https?://") then
-        return nil, nil
+        return nil, nil, nil
     end
-    local asset, metadata = ResolveRemoteIcon(value, "lucide", value)
+    local asset, metadata, parts = ResolveRemoteIcon(value, "lucide", value)
     if asset then
-        return asset, metadata
+        return asset, metadata, parts
     end
-    return IconAliasAsset(value), nil
+    return IconAliasAsset(value), nil, nil
 end
 
 local function ResolveIcon(icon)
-    return ResolveIconData(icon)
+    local asset, metadata = ResolveIconData(icon)
+    return asset, metadata
 end
 
 local function CreateIcon(parent, icon, size, color, xAlignment)
     if icon == nil then return nil end
-    local asset, metadata = ResolveIconData(icon)
+    local asset, metadata, parts = ResolveIconData(icon)
     if not asset then return nil end
+    local iconSize = tonumber(size) or 18
     local anchor = xAlignment == "right" and 1 or 0
     local offset = xAlignment == "right" and -12 or 12
-    local image = New("ImageLabel", {
+    local container = New("Frame", {
         BackgroundTransparency = 1,
-        Size = UDim2.fromOffset(size or 18, size or 18),
-        Image = asset,
-        ImageColor3 = color or Color3.new(1, 1, 1),
-        ImageTransparency = 0,
-        ScaleType = Enum.ScaleType.Fit,
-        ResampleMode = Enum.ResamplerMode.Default,
+        Size = UDim2.fromOffset(iconSize, iconSize),
         AnchorPoint = Vector2.new(anchor, 0.5),
-        Position = UDim2.new(anchor, offset, 0.5, 0)
+        Position = UDim2.new(anchor, offset, 0.5, 0),
+        ZIndex = (tonumber(parent.ZIndex) or 1) + 1
     }, parent)
-    if type(metadata) == "table" then
-        if typeof(metadata.ImageRectSize) == "Vector2" then
-            image.ImageRectSize = metadata.ImageRectSize
+    local function addImage(imageAsset, imageMetadata)
+        local image = New("ImageLabel", {
+            BackgroundTransparency = 1,
+            Size = UDim2.fromScale(1, 1),
+            Image = imageAsset,
+            ImageColor3 = color or Color3.new(1, 1, 1),
+            ScaleType = Enum.ScaleType.Fit,
+            ResampleMode = Enum.ResamplerMode.Default,
+            ZIndex = container.ZIndex
+        }, container)
+        if type(imageMetadata) == "table" then
+            if typeof(imageMetadata.ImageRectSize) == "Vector2" then image.ImageRectSize = imageMetadata.ImageRectSize end
+            local rectPosition = imageMetadata.ImageRectPosition or imageMetadata.ImageRectOffset
+            if typeof(rectPosition) == "Vector2" then image.ImageRectOffset = rectPosition end
+            if imageMetadata.ScaleType and typeof(imageMetadata.ScaleType) == "EnumItem" then image.ScaleType = imageMetadata.ScaleType end
         end
-        local rectPosition = metadata.ImageRectPosition or metadata.ImageRectOffset
-        if typeof(rectPosition) == "Vector2" then
-            image.ImageRectOffset = rectPosition
-        end
-        if metadata.ScaleType and typeof(metadata.ScaleType) == "EnumItem" then
-            image.ScaleType = metadata.ScaleType
+        return image
+    end
+    addImage(asset, metadata)
+    if type(parts) == "table" then
+        for _, part in ipairs(parts) do
+            local partAsset, partMetadata = ResolveIconData(part)
+            if partAsset then addImage(partAsset, partMetadata) end
         end
     end
-    return image
+    container:SetAttribute("IrisIcon", true)
+    container:SetAttribute("IrisIconName", tostring(icon))
+    return container
+end
+
+local function SetIconColor(icon, color)
+    if not icon then return end
+    if icon:IsA("ImageLabel") then
+        icon.ImageColor3 = color
+        return
+    end
+    if icon:IsA("TextLabel") then
+        icon.TextColor3 = color
+        return
+    end
+    if icon:IsA("Frame") then
+        for _, child in ipairs(icon:GetDescendants()) do
+            if child:IsA("ImageLabel") then child.ImageColor3 = color end
+            if child:IsA("TextLabel") then child.TextColor3 = color end
+        end
+    end
 end
 
 local function PositionPopup(library, popup, anchor, width, height)
@@ -978,7 +1010,7 @@ end
 
 function IrisHub:ClearBackgroundImage()
     for _, window in ipairs(self.Windows) do
-        if window and not window.Destroyed and type(window.ClearBackgroundImage) == "function" then
+        if window and not window.Destroyed and type(window.ClearBackground) == "function" then
             window:ClearBackgroundImage()
         end
     end
@@ -1179,12 +1211,12 @@ function Window:CreateTab(options)
         BackgroundTransparency = 1,
         Text = "",
         AutoButtonColor = false,
-        Size = UDim2.new(1, -18, 0, 38),
+        Size = UDim2.new(1, -2, 0, 40),
         ZIndex = 4,
         ClipsDescendants = true,
         LayoutOrder = navSection and navSection:NextOrder() or (#self.TabOrder + 1)
     }, self.TabList)
-    Corner(button, 7)
+    Corner(button, 10)
     local icon = CreateIcon(button, options.Icon, 16, theme.Muted)
     local title = New("TextLabel", {
         BackgroundTransparency = 1,
@@ -1192,7 +1224,7 @@ function Window:CreateTab(options)
         Size = UDim2.new(1, options.Icon and -50 or -26, 1, 0),
         Font = theme.SmallFont,
         Text = tostring(options.Title or "Tab"),
-        TextSize = 12,
+        TextSize = 11,
         TextColor3 = theme.Muted,
         TextXAlignment = Enum.TextXAlignment.Left,
         TextTruncate = Enum.TextTruncate.AtEnd,
@@ -1221,7 +1253,7 @@ function Window:CreateTab(options)
         ClipsDescendants = true,
         ScrollBarImageTransparency = 0.1
     }, self.Pages)
-    Padding(page, 2, 6, 6, 20)
+    Padding(page, 16, 18, 14, 22)
     local layout = New("UIListLayout", {Padding = UDim.new(0, 10), SortOrder = Enum.SortOrder.LayoutOrder}, page)
     local tab = setmetatable({
         Library = self.Library,
@@ -1244,8 +1276,7 @@ function Window:CreateTab(options)
             if tabSelf.ButtonStroke then tabSelf.ButtonStroke.Color = themeData.Border; tabSelf.ButtonStroke.Transparency = tabSelf.Active and 0.35 or 1 end
             if tabSelf.Icon then
                 local iconColor = tabSelf.Active and themeData.Accent or themeData.Muted
-                if tabSelf.Icon:IsA("ImageLabel") then tabSelf.Icon.ImageColor3 = iconColor end
-                if tabSelf.Icon:IsA("TextLabel") then tabSelf.Icon.TextColor3 = iconColor end
+                SetIconColor(tabSelf.Icon, iconColor)
             end
             if tabSelf.ActiveBar then tabSelf.ActiveBar.BackgroundColor3 = themeData.Accent end
         end,
@@ -1306,8 +1337,7 @@ function Window:CreateTab(options)
         self.Title.TextColor3 = self.Locked and self.Library.Theme.Muted or (self.Active and self.Library.Theme.Text or self.Library.Theme.Muted)
         if self.Icon then
             local iconColor = self.Active and self.Library.Theme.Accent or self.Library.Theme.Muted
-            if self.Icon:IsA("ImageLabel") then self.Icon.ImageColor3 = iconColor end
-            if self.Icon:IsA("TextLabel") then self.Icon.TextColor3 = iconColor end
+            SetIconColor(self.Icon, iconColor)
         end
         self.ActiveBar.Visible = self.Active and not self.Locked
         if self.Active then
@@ -1401,8 +1431,8 @@ function Window:CreateTab(options)
             AutomaticSize = Enum.AutomaticSize.None
         }, page)
         New("UISizeConstraint", {MinSize = Vector2.new(0, minimum), MaxSize = Vector2.new(math.huge, math.huge)}, row)
-        Corner(row, 8)
-        Stroke(row, theme.Border, 0.70, 1)
+        Corner(row, math.max(10, theme.Radius - 2))
+        Stroke(row, theme.Border, 0.88, 1)
         return row
     end
 
@@ -1502,7 +1532,7 @@ function Window:CreateTab(options)
             c.Data.Description.TextColor3 = t.Muted
             c.Data.Line.BackgroundColor3 = t.Border
             c.Data.Accent.BackgroundColor3 = t.Accent
-            if c.Data.Chevron then c.Data.Chevron.ImageColor3 = t.Muted end
+            SetIconColor(c.Data.Chevron, t.Muted)
         end
         comp:AddConnection(row.Activated:Connect(function() comp:Toggle() end))
         refresh()
@@ -1714,10 +1744,10 @@ function Window:CreateTab(options)
         if arrow then arrow.AnchorPoint = Vector2.new(1, 0.5); arrow.Position = UDim2.new(1, -10, 0.5, 0) end
         local hit = New("TextButton", {BackgroundTransparency = 1, Size = UDim2.fromScale(1, 1), Text = "", AutoButtonColor = false}, row)
         local popup = New("Frame", {BackgroundColor3 = theme.Surface, BorderSizePixel = 0, Size = UDim2.new(1, 0, 0, 0), Position = UDim2.new(0, 0, 1, 6), ClipsDescendants = true, Visible = false, ZIndex = 20}, row)
-        Corner(popup, theme.Radius)
+        Corner(popup, math.max(11, theme.Radius))
         Stroke(popup, theme.Border, 0.15, 1)
         local search = New("TextBox", {BackgroundColor3 = theme.Surface2, BorderSizePixel = 0, Position = UDim2.fromOffset(8, 8), Size = UDim2.new(1, -16, 0, 30), PlaceholderText = "Search...", PlaceholderColor3 = theme.Muted, TextColor3 = theme.Text, Font = theme.Font, TextSize = 12, ClearTextOnFocus = false, Visible = opts.Search ~= false}, popup)
-        Corner(search, 7)
+        Corner(search, 9)
         Padding(search, 10, 10, 0, 0)
         local list = New("ScrollingFrame", {BackgroundTransparency = 1, BorderSizePixel = 0, Position = UDim2.fromOffset(0, opts.Search == false and 0 or 46), Size = UDim2.new(1, 0, 1, -(opts.Search == false and 0 or 46)), AutomaticCanvasSize = Enum.AutomaticSize.Y, CanvasSize = UDim2.new(), ScrollBarThickness = 3, ZIndex = 21}, popup)
         Padding(list, 8, 8, 8, 8)
@@ -1780,7 +1810,7 @@ function Window:CreateTab(options)
                 local label = tostring(item.Label or item.Value)
                 if filter == "" or string.find(string.lower(label), filter, 1, true) then
                     local itemButton = New("TextButton", {BackgroundColor3 = self.Library.Theme.Surface2, BorderSizePixel = 0, Size = UDim2.new(1, 0, 0, 32), Text = "", AutoButtonColor = false, ZIndex = 22}, list)
-                    Corner(itemButton, 6)
+                    Corner(itemButton, 8)
                     local itemIcon = item.Icon and CreateIcon(itemButton, item.Icon, 15, self.Library.Theme.Muted) or nil
                     if itemIcon then itemIcon.ZIndex = 23 end
                     local itemLabel = New("TextLabel", {BackgroundTransparency = 1, Position = UDim2.fromOffset(itemIcon and 34 or 10, 0), Size = UDim2.new(1, itemIcon and -46 or -20, 1, 0), Font = self.Library.Theme.Font, Text = label, TextSize = 12, TextColor3 = item.Disabled and self.Library.Theme.Muted or self.Library.Theme.Text, TextXAlignment = Enum.TextXAlignment.Left, TextTruncate = Enum.TextTruncate.AtEnd, ZIndex = 23}, itemButton)
@@ -1812,10 +1842,10 @@ function Window:CreateTab(options)
         if arrow then arrow.AnchorPoint = Vector2.new(1, 0.5); arrow.Position = UDim2.new(1, -10, 0.5, 0) end
         local hit = New("TextButton", {BackgroundTransparency = 1, Size = UDim2.fromScale(1, 1), Text = "", AutoButtonColor = false}, row)
         local popup = New("Frame", {BackgroundColor3 = theme.Surface, BorderSizePixel = 0, Size = UDim2.new(1, 0, 0, 0), Position = UDim2.new(0, 0, 1, 6), ClipsDescendants = true, Visible = false, ZIndex = 20}, row)
-        Corner(popup, theme.Radius)
+        Corner(popup, math.max(11, theme.Radius))
         Stroke(popup, theme.Border, 0.15, 1)
         local search = New("TextBox", {BackgroundColor3 = theme.Surface2, BorderSizePixel = 0, Position = UDim2.fromOffset(8, 8), Size = UDim2.new(1, -16, 0, 30), PlaceholderText = "Search...", PlaceholderColor3 = theme.Muted, TextColor3 = theme.Text, Font = theme.Font, TextSize = 12, ClearTextOnFocus = false}, popup)
-        Corner(search, 7)
+        Corner(search, 9)
         Padding(search, 10, 10, 0, 0)
         local actions = New("Frame", {BackgroundTransparency = 1, Position = UDim2.fromOffset(8, 44), Size = UDim2.new(1, -16, 0, 24)}, popup)
         local selectAll = New("TextButton", {BackgroundTransparency = 1, Size = UDim2.fromOffset(70, 24), Text = "Select all", Font = theme.Font, TextSize = 11, TextColor3 = theme.Accent, AutoButtonColor = false}, actions)
@@ -1839,7 +1869,7 @@ function Window:CreateTab(options)
                 local label = tostring(item.Label or item.Value)
                 if filter == "" or string.find(string.lower(label), filter, 1, true) then
                     local btn = New("TextButton", {BackgroundColor3 = contains(comp.Data.Value, item.Value) and self.Library.Theme.Surface or self.Library.Theme.Surface2, BorderSizePixel = 0, Size = UDim2.new(1, 0, 0, 32), Text = "", AutoButtonColor = false, ZIndex = 22}, list)
-                    Corner(btn, 6)
+                    Corner(btn, 8)
                     local mark = New("TextLabel", {BackgroundTransparency = 1, Position = UDim2.fromOffset(10, 0), Size = UDim2.fromOffset(20, 32), Font = self.Library.Theme.TitleFont, Text = contains(comp.Data.Value, item.Value) and "✓" or "", TextSize = 13, TextColor3 = self.Library.Theme.Accent, ZIndex = 23}, btn)
                     local lbl = New("TextLabel", {BackgroundTransparency = 1, Position = UDim2.fromOffset(34, 0), Size = UDim2.new(1, -44, 1, 0), Font = self.Library.Theme.Font, Text = label, TextSize = 12, TextColor3 = item.Disabled and self.Library.Theme.Muted or self.Library.Theme.Text, TextXAlignment = Enum.TextXAlignment.Left, ZIndex = 23}, btn)
                     if not item.Disabled then
@@ -1921,13 +1951,13 @@ function Window:CreateTab(options)
         local row = makeRow(opts, 60)
         local title = New("TextLabel", {BackgroundTransparency = 1, Position = UDim2.fromOffset(14, 0), Size = UDim2.new(1, -112, 1, 0), Font = theme.SmallFont, Text = tostring(opts.Title or "Image Dropdown"), TextSize = 13, TextColor3 = theme.Text, TextXAlignment = Enum.TextXAlignment.Left, TextTruncate = Enum.TextTruncate.AtEnd}, row)
         local preview = New("ImageLabel", {BackgroundColor3 = theme.Surface, BorderSizePixel = 0, AnchorPoint = Vector2.new(1, 0.5), Position = UDim2.new(1, -34, 0.5, 0), Size = UDim2.fromOffset(38, 38), Image = "", ScaleType = Enum.ScaleType.Crop}, row)
-        Corner(preview, 8)
+        Corner(preview, 10)
         Stroke(preview, theme.Border, 0.35, 1)
         local arrow = CreateIcon(row, "lucide:chevron-down", 14, theme.Muted, "right")
         if arrow then arrow.AnchorPoint = Vector2.new(1, 0.5); arrow.Position = UDim2.new(1, -10, 0.5, 0) end
         local hit = New("TextButton", {BackgroundTransparency = 1, Size = UDim2.fromScale(1, 1), Text = "", AutoButtonColor = false}, row)
         local popup = New("Frame", {BackgroundColor3 = theme.Surface, BorderSizePixel = 0, Size = UDim2.new(1, 0, 0, 0), Position = UDim2.new(0, 0, 1, 6), ClipsDescendants = true, Visible = false, ZIndex = 20}, row)
-        Corner(popup, theme.Radius)
+        Corner(popup, math.max(11, theme.Radius))
         Stroke(popup, theme.Border, 0.15, 1)
         local grid = New("ScrollingFrame", {BackgroundTransparency = 1, BorderSizePixel = 0, Size = UDim2.fromScale(1, 1), CanvasSize = UDim2.new(), AutomaticCanvasSize = Enum.AutomaticSize.Y, ScrollBarThickness = 3, ZIndex = 21}, popup)
         Padding(grid, 10, 10, 10, 10)
@@ -1938,10 +1968,10 @@ function Window:CreateTab(options)
             for _, child in ipairs(grid:GetChildren()) do if child:IsA("TextButton") then child:Destroy() end end
             for _, item in ipairs(comp.Data.Options) do
                 local card = New("TextButton", {BackgroundColor3 = self.Library.Theme.Surface2, BorderSizePixel = 0, Text = "", AutoButtonColor = false, ZIndex = 22}, grid)
-                Corner(card, 8)
+                Corner(card, 10)
                 local imageSource = tostring(item.Image or item.Icon or "")
                 local image = New("ImageLabel", {BackgroundTransparency = 1, Size = UDim2.new(1, -14, 0, 42), Position = UDim2.fromOffset(7, 7), Image = imageSource, ScaleType = Enum.ScaleType.Crop, ZIndex = 23}, card)
-                Corner(image, 6)
+                Corner(image, 8)
                 local lbl = New("TextLabel", {BackgroundTransparency = 1, Position = UDim2.new(0, 7, 1, -23), Size = UDim2.new(1, -14, 0, 18), Font = self.Library.Theme.Font, Text = tostring(item.Label or item.Value), TextSize = 10, TextColor3 = self.Library.Theme.Text, TextTruncate = Enum.TextTruncate.AtEnd, ZIndex = 23}, card)
                 if not item.Disabled then comp.DynamicConnections:Add(card.Activated:Connect(function() comp:Set(item.Value); comp:Close() end)) end
             end
@@ -2030,7 +2060,7 @@ function Window:CreateTab(options)
         local row = makeRow(opts, opts.Height or 58)
         local title = New("TextLabel", {BackgroundTransparency = 1, Position = UDim2.fromOffset(14, 6), Size = UDim2.new(1, -190, 0, 18), Font = theme.SmallFont, Text = tostring(opts.Title or "Input"), TextSize = 13, TextColor3 = theme.Text, TextXAlignment = Enum.TextXAlignment.Left, TextTruncate = Enum.TextTruncate.AtEnd}, row)
         local box = New("TextBox", {BackgroundColor3 = theme.Surface, BorderSizePixel = 0, AnchorPoint = Vector2.new(1, 0.5), Position = UDim2.new(1, -12, 0.5, 0), Size = UDim2.fromOffset(164, 34), PlaceholderText = tostring(opts.Placeholder or "Enter value..."), PlaceholderColor3 = theme.Muted, Text = tostring(opts.Default or ""), TextColor3 = theme.Text, Font = theme.Font, TextSize = 12, ClearTextOnFocus = false, TextXAlignment = Enum.TextXAlignment.Left}, row)
-        Corner(box, 7)
+        Corner(box, 9)
         Stroke(box, theme.Border, 0.35, 1)
         Padding(box, 10, 10, 0, 0)
         local comp = Component.new(self.Library, "Input", row, {Value = box.Text, Title = title, Box = box, Callback = opts.Callback})
@@ -2049,7 +2079,7 @@ function Window:CreateTab(options)
         local row = makeRow(opts, 56)
         local title = New("TextLabel", {BackgroundTransparency = 1, Position = UDim2.fromOffset(14, 0), Size = UDim2.new(1, -106, 1, 0), Font = theme.SmallFont, Text = tostring(opts.Title or "Keybind"), TextSize = 13, TextColor3 = theme.Text, TextXAlignment = Enum.TextXAlignment.Left, TextTruncate = Enum.TextTruncate.AtEnd}, row)
         local keyButton = New("TextButton", {BackgroundColor3 = theme.Surface, BorderSizePixel = 0, AnchorPoint = Vector2.new(1, 0.5), Position = UDim2.new(1, -12, 0.5, 0), Size = UDim2.fromOffset(76, 32), Text = tostring(opts.Default or "None"), Font = theme.SmallFont, TextSize = 11, TextColor3 = theme.Text, AutoButtonColor = false}, row)
-        Corner(keyButton, 7)
+        Corner(keyButton, 9)
         Stroke(keyButton, theme.Border, 0.35, 1)
         local comp = Component.new(self.Library, "Keybind", row, {Value = opts.Default, Title = title, Button = keyButton, Listening = false, Callback = opts.Callback})
         function comp:Set(value)
@@ -2087,11 +2117,11 @@ function Window:CreateTab(options)
         Corner(preview, 7)
         Stroke(preview, theme.Border, 0.35, 1)
         local popup = New("Frame", {BackgroundColor3 = theme.Surface, BorderSizePixel = 0, Size = UDim2.fromOffset(270, 140), Position = UDim2.new(1, -270, 1, 7), Visible = false, ZIndex = 30}, row)
-        Corner(popup, theme.Radius)
+        Corner(popup, math.max(11, theme.Radius))
         Stroke(popup, theme.Border, 0.1, 1)
         local hexLabel = New("TextLabel", {BackgroundTransparency = 1, Position = UDim2.fromOffset(12, 10), Size = UDim2.fromOffset(30, 24), Font = theme.SmallFont, Text = "Hex", TextSize = 11, TextColor3 = theme.Muted, TextXAlignment = Enum.TextXAlignment.Left, ZIndex = 31}, popup)
         local hex = New("TextBox", {BackgroundColor3 = theme.Surface2, BorderSizePixel = 0, Position = UDim2.fromOffset(48, 8), Size = UDim2.fromOffset(210, 28), PlaceholderText = "#8F78FF", PlaceholderColor3 = theme.Muted, TextColor3 = theme.Text, Font = theme.Font, TextSize = 11, ClearTextOnFocus = false, ZIndex = 31}, popup)
-        Corner(hex, 6)
+        Corner(hex, 8)
         Padding(hex, 8, 8, 0, 0)
         local rgb = {}
         local letters = {"R", "G", "B"}
@@ -2103,7 +2133,7 @@ function Window:CreateTab(options)
             rgb[i] = box
         end
         local apply = New("TextButton", {BackgroundColor3 = theme.Accent, BorderSizePixel = 0, Position = UDim2.fromOffset(12, 82), Size = UDim2.fromOffset(246, 40), Text = "Apply", Font = theme.SmallFont, TextSize = 11, TextColor3 = theme.Text, AutoButtonColor = false, ZIndex = 31}, popup)
-        Corner(apply, 7)
+        Corner(apply, 9)
         local comp = Component.new(self.Library, "ColorPicker", row, {Value = opts.Default or theme.Accent, Title = title, Preview = preview, Popup = popup, Hex = hex, RGB = rgb, Open = false, Callback = opts.Callback})
         local function toHex(value) return ColorToHex(value) end
         local function fromHex(value) return HexToColor(value) end
@@ -2430,8 +2460,8 @@ function Window:CreateTab(options)
             TextXAlignment = Enum.TextXAlignment.Center,
             TextTruncate = Enum.TextTruncate.AtEnd
         }, pill)
-        if opts.Icon and icon and icon:IsA("TextLabel") then
-            icon.TextColor3 = color
+        if opts.Icon and icon then
+            SetIconColor(icon, color)
         end
         local textBounds = TextService:GetTextSize(text.Text, text.TextSize, text.Font, Vector2.new(500, 24))
         local width = math.clamp(textBounds.X + (opts.Icon and 42 or 22), 56, 260)
@@ -2498,7 +2528,7 @@ function Window:CreateTab(options)
         local row = makeRow(opts, opts.Height or math.max(82, 38 + select(2, code:gsub("\n", "")) * 12))
         local language = New("TextLabel", {BackgroundTransparency = 1, Position = UDim2.fromOffset(12, 6), Size = UDim2.new(0.5, 0, 0, 16), Font = theme.SmallFont, Text = tostring(opts.Language or "code"), TextSize = 9, TextColor3 = theme.Muted, TextXAlignment = Enum.TextXAlignment.Left}, row)
         local copy = New("TextButton", {BackgroundColor3 = theme.Surface3 or theme.Surface2, BorderSizePixel = 0, AnchorPoint = Vector2.new(1, 0), Position = UDim2.new(1, -10, 0, 5), Size = UDim2.fromOffset(60, 22), Text = "Copy", Font = theme.SmallFont, TextSize = 9, TextColor3 = theme.Text, AutoButtonColor = false}, row)
-        Corner(copy, 6)
+        Corner(copy, 8)
         local body = New("TextLabel", {BackgroundTransparency = 1, Position = UDim2.fromOffset(12, 30), Size = UDim2.new(1, -24, 1, -36), Font = Enum.Font.Code, Text = code, TextSize = opts.TextSize or 11, TextColor3 = theme.Text, TextWrapped = false, TextXAlignment = Enum.TextXAlignment.Left, TextYAlignment = Enum.TextYAlignment.Top, RichText = false}, row)
         local comp = Component.new(self.Library, "CodeBlock", row, {Value = code, Language = language, Copy = copy, Code = body})
         function comp:Set(value) self.Data.Value = tostring(value or ""); self.Data.Code.Text = self.Data.Value; return self end
@@ -2518,18 +2548,19 @@ function Window:CreateTab(options)
         opts = opts or {}
         local trigger = makeRow(opts, opts.Height or 48)
         local label = New("TextLabel", {BackgroundTransparency = 1, Position = UDim2.fromOffset(14, 0), Size = UDim2.new(1, -28, 1, 0), Font = theme.SmallFont, Text = tostring(opts.Title or "Context Menu"), TextSize = 12, TextColor3 = theme.Text, TextXAlignment = Enum.TextXAlignment.Left}, trigger)
-        local popup = New("Frame", {BackgroundColor3 = theme.Surface, BorderSizePixel = 0, Size = UDim2.fromOffset(220, 0), Position = UDim2.new(0, 0, 1, 6), Visible = false, ClipsDescendants = true, ZIndex = 40}, trigger)
-        Corner(popup, theme.Radius)
-        Stroke(popup, theme.Border, 0.1, 1)
-        local list = New("UIListLayout", {Padding = UDim.new(0, 4), SortOrder = Enum.SortOrder.LayoutOrder}, popup)
+        local hitTarget = New("TextButton", {BackgroundTransparency = 1, BorderSizePixel = 0, Size = UDim2.fromScale(1, 1), Text = "", AutoButtonColor = false, Active = true, ZIndex = 50}, trigger)
+        local popup = New("Frame", {BackgroundColor3 = theme.Surface, BorderSizePixel = 0, Size = UDim2.fromOffset(228, 0), Position = UDim2.fromOffset(0, 0), Visible = false, ClipsDescendants = true, ZIndex = 250}, self.Library.PopupLayer or self.Library.Gui)
+        Corner(popup, math.max(11, theme.Radius))
+        Stroke(popup, theme.Border, 0.18, 1)
+        local list = New("UIListLayout", {Padding = UDim.new(0, 3), SortOrder = Enum.SortOrder.LayoutOrder}, popup)
         Padding(popup, 7, 7, 7, 7)
-        local comp = Component.new(self.Library, "ContextMenu", trigger, {Value = false, Trigger = trigger, Popup = popup, Title = label, Items = opts.Items or {}, Open = false})
+        local comp = Component.new(self.Library, "ContextMenu", trigger, {Value = false, Trigger = hitTarget, Popup = popup, Title = label, Items = opts.Items or {}, Open = false})
         local function render()
             comp.DynamicConnections:Clear()
             for _, child in ipairs(popup:GetChildren()) do if child:IsA("TextButton") then child:Destroy() end end
             for _, item in ipairs(comp.Data.Items) do
                 local button = New("TextButton", {BackgroundColor3 = self.Library.Theme.Surface2, BorderSizePixel = 0, Size = UDim2.new(1, 0, 0, 30), Text = tostring(item.Title or item.Label or "Item"), Font = self.Library.Theme.Font, TextSize = 11, TextColor3 = item.Disabled and self.Library.Theme.Muted or self.Library.Theme.Text, AutoButtonColor = false, ZIndex = 41}, popup)
-                Corner(button, 6)
+                Corner(button, 8)
                 Padding(button, 9, 9, 0, 0)
                 if not item.Disabled then comp.DynamicConnections:Add(button.Activated:Connect(function() Fire(item.Callback); comp:Close() end)) end
             end
@@ -2550,9 +2581,18 @@ function Window:CreateTab(options)
         end
         function comp:Toggle() if self.Data.Open then return self:Close() end return self:Open() end
         function comp:SetItems(items) self.Data.Items = items or {}; render(); return self end
-        comp.ApplyTheme = function(c, t) c.Data.Trigger.BackgroundColor3 = t.Surface2; c.Data.Title.TextColor3 = t.Text; c.Data.Popup.BackgroundColor3 = t.Surface; local stroke = c.Data.Popup:FindFirstChildOfClass("UIStroke"); if stroke then stroke.Color = t.Border end; render() end
-        comp:AddConnection(trigger.Activated:Connect(function() comp:Toggle() end))
-        comp:AddConnection(trigger.MouseButton2Click:Connect(function() comp:Toggle() end))
+        comp.ApplyTheme = function(c, t) c.Data.Title.TextColor3 = t.Text; c.Data.Popup.BackgroundColor3 = t.Surface; local stroke = c.Data.Popup:FindFirstChildOfClass("UIStroke"); if stroke then stroke.Color = t.Border end; render() end
+        comp:AddConnection(hitTarget.Activated:Connect(function() comp:Toggle() end))
+        comp:AddConnection(hitTarget.MouseButton2Click:Connect(function() comp:Toggle() end))
+        comp:AddConnection(UserInputService.InputBegan:Connect(function(input)
+            if not comp.Data.Open then return end
+            if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+                local p = input.Position
+                local pos = comp.Data.Popup.AbsolutePosition
+                local size = comp.Data.Popup.AbsoluteSize
+                if p.X < pos.X or p.X > pos.X + size.X or p.Y < pos.Y or p.Y > pos.Y + size.Y then comp:Close() end
+            end
+        end))
         render()
         return self:_add(comp)
     end
@@ -2649,7 +2689,7 @@ function IrisHub:CreateWindow(options)
         ClipsDescendants = true,
         ZIndex = 10
     }, root)
-    Corner(main, 10)
+    Corner(main, math.max(15, theme.Radius + 1))
     local outline = Stroke(main, theme.Border, 0.12, 1)
     New("UISizeConstraint", {MinSize = minSize, MaxSize = maxSize}, main)
 
@@ -2678,25 +2718,25 @@ function IrisHub:CreateWindow(options)
         ZIndex = 12
     }, main)
 
-    local top = New("Frame", {BackgroundColor3 = theme.Surface, BackgroundTransparency = 0.03, BorderSizePixel = 0, Size = UDim2.new(1, 0, 0, 60), ZIndex = 20}, main)
+    local top = New("Frame", {BackgroundColor3 = theme.Surface, BackgroundTransparency = 0.03, BorderSizePixel = 0, Size = UDim2.new(1, 0, 0, 58), ZIndex = 20}, main)
     local brand = New("Frame", {
         BackgroundColor3 = theme.AccentSoft,
         BackgroundTransparency = 0.12,
         BorderSizePixel = 0,
-        Position = UDim2.fromOffset(13, 13),
-        Size = UDim2.fromOffset(34, 34),
+        Position = UDim2.fromOffset(12, 11),
+        Size = UDim2.fromOffset(36, 36),
         ZIndex = 21
     }, top)
-    Corner(brand, 9)
+    Corner(brand, 12)
     local brandIcon = CreateIcon(brand, options.Icon or "sparkles", 16, theme.Text)
     if brandIcon then brandIcon.AnchorPoint = Vector2.new(0.5, 0.5); brandIcon.Position = UDim2.fromScale(0.5, 0.5); brandIcon.ZIndex = 22 end
     local title = New("TextLabel", {
         BackgroundTransparency = 1,
-        Position = UDim2.fromOffset(57, 10),
-        Size = UDim2.new(1, -250, 0, 21),
+        Position = UDim2.fromOffset(62, 8),
+        Size = UDim2.new(1, -340, 0, 20),
         Font = theme.TitleFont,
         Text = tostring(options.Title or "IrisHub"),
-        TextSize = 15,
+        TextSize = 14,
         TextColor3 = theme.Text,
         TextXAlignment = Enum.TextXAlignment.Left,
         TextTruncate = Enum.TextTruncate.AtEnd,
@@ -2704,24 +2744,24 @@ function IrisHub:CreateWindow(options)
     }, top)
     local subtitle = New("TextLabel", {
         BackgroundTransparency = 1,
-        Position = UDim2.fromOffset(57, 31),
-        Size = UDim2.new(1, -280, 0, 15),
+        Position = UDim2.fromOffset(62, 28),
+        Size = UDim2.new(1, -350, 0, 13),
         Font = theme.Font,
         Text = tostring(options.Subtitle or "Universal UI"),
-        TextSize = 9,
+        TextSize = 8,
         TextColor3 = theme.Muted,
         TextXAlignment = Enum.TextXAlignment.Left,
         TextTruncate = Enum.TextTruncate.AtEnd,
         ZIndex = 22
     }, top)
-    local statusDot = New("Frame", {BackgroundColor3 = theme.Success, BorderSizePixel = 0, Position = UDim2.fromOffset(58, 49), Size = UDim2.fromOffset(5, 5), ZIndex = 22}, top)
+    local statusDot = New("Frame", {BackgroundColor3 = theme.Success, BorderSizePixel = 0, Position = UDim2.fromOffset(63, 46), Size = UDim2.fromOffset(5, 5), ZIndex = 22}, top)
     Corner(statusDot, 3)
-    local statusText = New("TextLabel", {BackgroundTransparency = 1, Position = UDim2.fromOffset(67, 45), Size = UDim2.fromOffset(80, 13), Font = theme.SmallFont, Text = "READY", TextSize = 8, TextColor3 = theme.Muted, TextXAlignment = Enum.TextXAlignment.Left, ZIndex = 22}, top)
-    local breadcrumb = New("TextLabel", {BackgroundTransparency = 1, AnchorPoint = Vector2.new(1, 0.5), Position = UDim2.new(1, -126, 0, 30), Size = UDim2.fromOffset(124, 16), Font = theme.SmallFont, Text = "Main", TextSize = 9, TextColor3 = theme.Muted, TextXAlignment = Enum.TextXAlignment.Right, TextTruncate = Enum.TextTruncate.AtEnd, ZIndex = 22}, top)
+    local statusText = New("TextLabel", {BackgroundTransparency = 1, Position = UDim2.fromOffset(72, 42), Size = UDim2.fromOffset(80, 13), Font = theme.SmallFont, Text = "READY", TextSize = 8, TextColor3 = theme.Muted, TextXAlignment = Enum.TextXAlignment.Left, ZIndex = 22}, top)
+    local breadcrumb = New("TextLabel", {BackgroundTransparency = 1, AnchorPoint = Vector2.new(1, 0.5), Position = UDim2.new(1, -132, 0, 29), Size = UDim2.fromOffset(126, 16), Font = theme.SmallFont, Text = "Main", TextSize = 9, TextColor3 = theme.Muted, TextXAlignment = Enum.TextXAlignment.Right, TextTruncate = Enum.TextTruncate.AtEnd, ZIndex = 22}, top)
 
     local function topButton(iconName, rightOffset)
-        local button = New("TextButton", {BackgroundColor3 = theme.Surface2, BackgroundTransparency = 0.10, BorderSizePixel = 0, AnchorPoint = Vector2.new(1, 0.5), Position = UDim2.new(1, rightOffset, 0.5, 0), Size = UDim2.fromOffset(30, 30), Text = "", AutoButtonColor = false, ZIndex = 23}, top)
-        Corner(button, 8)
+        local button = New("TextButton", {BackgroundColor3 = theme.Surface2, BackgroundTransparency = 0.10, BorderSizePixel = 0, AnchorPoint = Vector2.new(1, 0.5), Position = UDim2.new(1, rightOffset, 0.5, 0), Size = UDim2.fromOffset(31, 31), Text = "", AutoButtonColor = false, ZIndex = 23}, top)
+        Corner(button, 10)
         Stroke(button, theme.Border, 0.60, 1)
         local icon = CreateIcon(button, iconName, 13, theme.Muted)
         if icon then icon.AnchorPoint = Vector2.new(0.5, 0.5); icon.Position = UDim2.fromScale(0.5, 0.5); icon.ZIndex = 24 end
@@ -2731,20 +2771,20 @@ function IrisHub:CreateWindow(options)
     local minimizeButton, minimizeIcon = topButton("minus", -46)
     local maximize, maximizeIcon = topButton("maximize-2", -82)
     local headerLine = New("Frame", {BackgroundColor3 = theme.Border, BackgroundTransparency = 0.52, BorderSizePixel = 0, Position = UDim2.new(0, 12, 1, -1), Size = UDim2.new(1, -24, 0, 1), ZIndex = 24}, top)
-    local accentLine = New("Frame", {BackgroundColor3 = theme.Accent, BorderSizePixel = 0, Position = UDim2.fromOffset(12, 59), Size = UDim2.fromOffset(56, 2), ZIndex = 25}, main)
+    local accentLine = New("Frame", {BackgroundColor3 = theme.Accent, BorderSizePixel = 0, Position = UDim2.fromOffset(14, 57), Size = UDim2.fromOffset(62, 2), ZIndex = 25}, main)
     Corner(accentLine, 1)
 
     local body = New("Frame", {BackgroundTransparency = 1, BorderSizePixel = 0, Position = UDim2.fromOffset(0, 60), Size = UDim2.new(1, 0, 1, -60), ZIndex = 19}, main)
-    local sidebar = New("Frame", {BackgroundColor3 = theme.Background, BorderSizePixel = 0, Position = UDim2.fromOffset(0, 0), Size = UDim2.new(0, 168, 1, 0), ClipsDescendants = true, ZIndex = 20}, body)
+    local sidebar = New("Frame", {BackgroundColor3 = theme.Background, BorderSizePixel = 0, Position = UDim2.fromOffset(0, 0), Size = UDim2.new(0, 182, 1, 0), ClipsDescendants = true, ZIndex = 20}, body)
     local sidebarHeader = New("TextLabel", {BackgroundTransparency = 1, Position = UDim2.fromOffset(16, 12), Size = UDim2.new(1, -32, 0, 14), Font = theme.SmallFont, Text = "PAGES", TextSize = 8, TextColor3 = theme.Muted, TextXAlignment = Enum.TextXAlignment.Left, ZIndex = 21}, sidebar)
-    local tabList = New("ScrollingFrame", {BackgroundTransparency = 1, BorderSizePixel = 0, Position = UDim2.fromOffset(0, 34), Size = UDim2.new(1, 0, 1, -66), AutomaticCanvasSize = Enum.AutomaticSize.Y, CanvasSize = UDim2.new(), ScrollBarThickness = 0, ZIndex = 21}, sidebar)
-    Padding(tabList, 9, 9, 4, 10)
-    New("UIListLayout", {Padding = UDim.new(0, 4), SortOrder = Enum.SortOrder.LayoutOrder}, tabList)
+    local tabList = New("ScrollingFrame", {BackgroundTransparency = 1, BorderSizePixel = 0, Position = UDim2.fromOffset(0, 38), Size = UDim2.new(1, 0, 1, -68), AutomaticCanvasSize = Enum.AutomaticSize.Y, CanvasSize = UDim2.new(), ScrollBarThickness = 0, ZIndex = 21}, sidebar)
+    Padding(tabList, 11, 11, 6, 14)
+    New("UIListLayout", {Padding = UDim.new(0, 5), SortOrder = Enum.SortOrder.LayoutOrder}, tabList)
     local sidebarFooter = New("TextLabel", {BackgroundTransparency = 1, AnchorPoint = Vector2.new(0, 1), Position = UDim2.new(0, 16, 1, -12), Size = UDim2.new(1, -30, 0, 13), Font = theme.Font, Text = "IrisHub " .. self.Version, TextSize = 8, TextColor3 = theme.Muted, TextXAlignment = Enum.TextXAlignment.Left, ZIndex = 21}, sidebar)
     local sidebarDivider = New("Frame", {BackgroundColor3 = theme.Border, BackgroundTransparency = 0.40, BorderSizePixel = 0, Position = UDim2.new(1, 0, 0, 0), Size = UDim2.fromOffset(1, 1), ZIndex = 22}, sidebar)
     sidebarDivider.Size = UDim2.new(0, 1, 1, 0)
 
-    local content = New("Frame", {BackgroundColor3 = theme.Background, BorderSizePixel = 0, Position = UDim2.fromOffset(169, 0), Size = UDim2.new(1, -169, 1, 0), ClipsDescendants = true, ZIndex = 20}, body)
+    local content = New("Frame", {BackgroundColor3 = theme.Background, BorderSizePixel = 0, Position = UDim2.fromOffset(169, 0), Size = UDim2.new(1, -183, 1, 0), ClipsDescendants = true, ZIndex = 20}, body)
     local contentDivider = New("Frame", {BackgroundColor3 = theme.Border, BackgroundTransparency = 0.55, BorderSizePixel = 0, Position = UDim2.fromOffset(0, 0), Size = UDim2.fromOffset(1, 1), ZIndex = 22}, content)
     contentDivider.Size = UDim2.new(0, 1, 1, 0)
     local pages = New("Frame", {BackgroundTransparency = 1, Position = UDim2.fromOffset(0, 0), Size = UDim2.new(1, 0, 1, 0), ClipsDescendants = true, ZIndex = 21}, content)
@@ -2801,7 +2841,7 @@ function IrisHub:CreateWindow(options)
         local existing = navGroups[key]
         if existing then return existing end
         navGroupCount = navGroupCount + 1
-        local header = New("Frame", {BackgroundTransparency = 1, Size = UDim2.new(1, -18, 0, 24), LayoutOrder = navGroupCount * 1000 - 1, ZIndex = 22}, tabList)
+        local header = New("Frame", {BackgroundTransparency = 1, Size = UDim2.new(1, -2, 0, 22), LayoutOrder = navGroupCount * 1000 - 1, ZIndex = 22}, tabList)
         local headerIcon = CreateIcon(header, icon, 11, theme.Muted)
         if headerIcon then
             headerIcon.AnchorPoint = Vector2.new(0, 0.5)
@@ -3133,9 +3173,9 @@ function IrisHub:CreateModal(options)
     local desc = New("TextLabel", {BackgroundTransparency = 1, Position = UDim2.fromOffset(18, 48), Size = UDim2.new(1, -36, 0, modalDescriptionHeight), Font = theme.Font, Text = modalDescription, TextSize = 12, TextColor3 = theme.Muted, TextWrapped = true, TextXAlignment = Enum.TextXAlignment.Left, TextYAlignment = Enum.TextYAlignment.Top, ZIndex = 502}, card)
     local actions = New("Frame", {BackgroundTransparency = 1, AnchorPoint = Vector2.new(1, 1), Position = UDim2.new(1, -18, 1, -18), Size = UDim2.fromOffset(240, 42), ZIndex = 502}, card)
     local cancel = New("TextButton", {BackgroundColor3 = theme.Surface2, BorderSizePixel = 0, Size = UDim2.fromOffset(104, 38), Text = tostring(options.CancelText or "Cancel"), Font = theme.SmallFont, TextSize = 12, TextColor3 = theme.Muted, AutoButtonColor = false, ZIndex = 83}, actions)
-    Corner(cancel, 8)
+    Corner(cancel, 10)
     local confirm = New("TextButton", {BackgroundColor3 = theme.Accent, BorderSizePixel = 0, Position = UDim2.fromOffset(114, 0), Size = UDim2.fromOffset(126, 38), Text = tostring(options.ConfirmText or "Confirm"), Font = theme.SmallFont, TextSize = 12, TextColor3 = theme.Text, AutoButtonColor = false, ZIndex = 83}, actions)
-    Corner(confirm, 8)
+    Corner(confirm, 10)
     local modal = {Instance = root, Destroyed = false}
     function modal:Destroy()
         if self.Destroyed then return end
@@ -3304,13 +3344,13 @@ function IrisHub:CreateKeySystem(options)
     local info = New("TextLabel", {BackgroundTransparency = 1, Position = UDim2.fromOffset(20, 60), Size = UDim2.new(1, -40, 0, keyDescriptionHeight), Font = theme.Font, Text = keyDescription, TextSize = 12, TextColor3 = theme.Muted, TextWrapped = true, TextXAlignment = Enum.TextXAlignment.Left, TextYAlignment = Enum.TextYAlignment.Top, ZIndex = 602}, card)
     local providerY = 70 + keyDescriptionHeight + 18
     local providerBox = New("Frame", {BackgroundColor3 = theme.Surface2, BorderSizePixel = 0, Position = UDim2.fromOffset(20, providerY), Size = UDim2.new(1, -40, 0, 42), ZIndex = 602}, card)
-    Corner(providerBox, 9)
+    Corner(providerBox, 11)
     Stroke(providerBox, theme.Border, 0.35, 1)
     local providerLabel = New("TextLabel", {BackgroundTransparency = 1, Position = UDim2.fromOffset(12, 0), Size = UDim2.new(1, -110, 1, 0), Font = theme.SmallFont, Text = "Provider • " .. providerName, TextSize = 11, TextColor3 = theme.Text, TextXAlignment = Enum.TextXAlignment.Left, ZIndex = 73}, providerBox)
     local cycle = New("TextButton", {BackgroundTransparency = 1, AnchorPoint = Vector2.new(1, 0.5), Position = UDim2.new(1, -8, 0.5, 0), Size = UDim2.fromOffset(86, 28), Text = "Change", Font = theme.SmallFont, TextSize = 10, TextColor3 = theme.Accent, AutoButtonColor = false, ZIndex = 73}, providerBox)
     local inputY = providerY + 54
     local input = New("TextBox", {BackgroundColor3 = theme.Surface2, BorderSizePixel = 0, Position = UDim2.fromOffset(20, inputY), Size = UDim2.new(1, -40, 0, 42), PlaceholderText = tostring(options.Placeholder or "Paste your key"), PlaceholderColor3 = theme.Muted, TextColor3 = theme.Text, Font = theme.Font, TextSize = 12, ClearTextOnFocus = false, ZIndex = 72}, card)
-    Corner(input, 9)
+    Corner(input, 10)
     Stroke(input, theme.Border, 0.35, 1)
     Padding(input, 12, 12, 0, 0)
     local statusY = inputY + 47
@@ -3318,13 +3358,13 @@ function IrisHub:CreateKeySystem(options)
     local actionsY = statusY + 31
     local actions = New("Frame", {BackgroundTransparency = 1, Position = UDim2.fromOffset(20, actionsY), Size = UDim2.new(1, -40, 0, 42), ZIndex = 602}, card)
     local getKey = New("TextButton", {BackgroundColor3 = theme.Surface2, BorderSizePixel = 0, Size = UDim2.fromOffset(122, 40), Text = "Get Key", Font = theme.SmallFont, TextSize = 11, TextColor3 = theme.Muted, AutoButtonColor = false, ZIndex = 73}, actions)
-    Corner(getKey, 9)
+    Corner(getKey, 10)
     Stroke(getKey, theme.Border, 0.28, 1)
     local copyLink = New("TextButton", {BackgroundColor3 = theme.Surface2, BorderSizePixel = 0, Position = UDim2.fromOffset(130, 0), Size = UDim2.fromOffset(122, 40), Text = "Copy Link", Font = theme.SmallFont, TextSize = 11, TextColor3 = theme.Muted, AutoButtonColor = false, ZIndex = 73}, actions)
-    Corner(copyLink, 9)
+    Corner(copyLink, 10)
     Stroke(copyLink, theme.Border, 0.28, 1)
     local submit = New("TextButton", {BackgroundColor3 = theme.Accent, BorderSizePixel = 0, AnchorPoint = Vector2.new(1, 0), Position = UDim2.new(1, 0, 0, 0), Size = UDim2.fromOffset(136, 40), Text = "Validate Key", Font = theme.SmallFont, TextSize = 11, TextColor3 = theme.Text, AutoButtonColor = false, ZIndex = 73}, actions)
-    Corner(submit, 9)
+    Corner(submit, 10)
     local controller = {Instance = root, Input = input, Provider = providerName, ProviderData = provider, Destroyed = false}
     function controller:Destroy()
         if self.Destroyed then return end
