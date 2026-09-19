@@ -1,0 +1,9 @@
+{
+  "name": "IrisHub",
+  "tree": {
+    "$className": "ReplicatedStorage",
+    "IrisHub": {
+      "$path": "src/IrisHub.luau"
+    }
+  }
+}

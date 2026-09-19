@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#0f1018">
+<title>IrisHub — Universal Roblox UI Library</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="glow glow-a"></div>
+<div class="glow glow-b"></div>
+<header class="nav">
+  <a class="brand" href="#top"><span class="brand-mark">I</span><span>IrisHub</span><span class="version">v2.0.0</span></a>
+  <nav>
+    <a href="#features">Features</a>
+    <a href="#components">Components</a>
+    <a href="#usage">Usage</a>
+    <a href="#themes">Themes</a>
+    <a href="../docs/API.md">API</a>
+  </nav>
+  <a class="nav-button" href="../dist/IrisHub.luau">Source</a>
+</header>
+<main id="top">
+<section class="hero">
+  <div class="hero-copy">
+    <div class="eyebrow">OPEN SOURCE • LUAU • UNIVERSAL</div>
+    <h1>Build Roblox interfaces that feel <span>alive.</span></h1>
+    <p>IrisHub is a polished universal Roblox/Luau UI framework with responsive controls, runtime themes, component state, advanced window behavior, notifications, configuration helpers, and a developer-first API.</p>
+    <div class="actions">
+      <a class="primary" href="#usage">Get started</a>
+      <a class="secondary" href="../README.md">Open repository README</a>
+    </div>
+    <div class="stats">
+      <div><strong>30+</strong><span>UI primitives</span></div>
+      <div><strong>3</strong><span>built-in themes</span></div>
+      <div><strong>v2</strong><span>API + window system</span></div>
+    </div>
+  </div>
+  <div class="showcase">
+    <div class="window mock-window">
+      <div class="topbar"><div><small>IRISHUB</small><strong>Universal UI</strong></div><div class="traffic"><i></i><i></i><i></i></div></div>
+      <div class="mock-body">
+        <aside>
+          <div class="side active">◈ <span>Overview</span></div>
+          <div class="side">✦ <span>Controls</span></div>
+          <div class="side">⚙ <span>Settings</span></div>
+        </aside>
+        <section class="panel">
+          <div class="crumb">Overview</div>
+          <h3>IrisHub Showcase</h3>
+          <p>A clean component stack with animated state.</p>
+          <div class="mock-row"><div><b>Enable feature</b><small>Reactive toggle state</small></div><span class="toggle on"><i></i></span></div>
+          <div class="mock-row"><div><b>Power</b><small>50 / 100</small></div><div class="slider"><i></i></div></div>
+          <div class="mock-row"><div><b>Mode</b><small>Performance</small></div><span class="select">Performance⌄</span></div>
+        </section>
+      </div>
+    </div>
+  </div>
+</section>
+<section id="features" class="section">
+  <div class="section-head"><span>01</span><div><p class="kicker">WHY IRISHUB</p><h2>A framework, not a menu script.</h2></div></div>
+  <div class="feature-grid">
+    <article><b>Consistent API</b><p>Every component follows the same object model, making large interfaces easier to extend and maintain.</p></article>
+    <article><b>Animation system</b><p>Reusable tween behavior powers hover, press, open, close, and state transitions without visual clutter.</p></article>
+    <article><b>Theme engine</b><p>Switch themes at runtime, register your own palette, or override selected design tokens.</p></article>
+    <article><b>Lifecycle aware</b><p>Connection bags and destruction paths are built into the component model to reduce cleanup mistakes.</p></article>
+    <article><b>Developer-first</b><p>Returned component references expose state and lifecycle controls so your UI can react without rebuilding it.</p></article>
+    <article><b>Ready to fork</b><p>The repository includes examples, tests, API documentation, a showcase site, and a standalone distribution.</p></article>
+  </div>
+</section>
+<section class="section">
+  <div class="section-head"><span>02</span><div><p class="kicker">WHAT'S NEW</p><h2>More control without more clutter.</h2></div></div>
+  <div class="feature-grid">
+    <article><b>Resizable windows</b><p>Built-in min/max sizing, a resize grip, animated maximize behavior, and explicit focus management.</p></article>
+    <article><b>Reactive primitives</b><p>Progress, status, badges, alerts, key/value rows, and code blocks join the core control set.</p></article>
+    <article><b>Safer rerenders</b><p>Temporary dropdown and context-menu connections are isolated so dynamic option lists do not accumulate listeners.</p></article>
+  </div>
+</section>
+<section id="components" class="section">
+  <div class="section-head"><span>03</span><div><p class="kicker">COMPONENTS</p><h2>Everything you need for a full UI.</h2></div></div>
+  <div id="component-list" class="chips"></div>
+</section>
+<section id="usage" class="section two-col">
+  <div class="section-head"><span>04</span><div><p class="kicker">QUICK START</p><h2>Drop it in and start building.</h2></div></div>
+  <div class="code-card">
+    <div class="code-head"><span>Showcase.luau</span><button id="copy">Copy</button></div>
+    <pre id="snippet"><code>local IrisHub = require(game.ReplicatedStorage.IrisHub)
+
+local UI = IrisHub.Create({
+    Name = "MyInterface",
+    Title = "My Hub",
+    Subtitle = "Powered by IrisHub v2",
+    Theme = "Iris",
+    UIScale = 1,
+    ToggleKey = Enum.KeyCode.RightControl
+})
+
+local Window = UI.Windows[1]
+local Main = Window:GetTab("Main")
+
+local progress = Main:Progress({
+    Title = "Loading",
+    Min = 0,
+    Max = 100,
+    Default = 72
+})
+
+Main:Toggle({
+    Title = "Feature",
+    Description = "Reactive state",
+    Default = true,
+    Callback = function(value)
+        progress:Set(value and 100 or 0)
+    end
+})</code></pre>
+  </div>
+</section>
+<section id="themes" class="section">
+  <div class="section-head"><span>05</span><div><p class="kicker">THEMES</p><h2>One system, multiple personalities.</h2></div></div>
+  <div class="theme-grid">
+    <div class="theme-card iris"><span>Iris</span><b>Soft violet + blue</b><small>Dark, luminous, balanced</small></div>
+    <div class="theme-card midnight"><span>Midnight</span><b>Cool blue steel</b><small>Dense, technical, focused</small></div>
+    <div class="theme-card light"><span>Light</span><b>Bright neutral surfaces</b><small>Clean and high contrast</small></div>
+  </div>
+</section>
+</main>
+<footer><span>IrisHub · MIT License</span><span>Built for Luau developers</span></footer>
+<script src="app.js"></script>
+</body>
+</html>
