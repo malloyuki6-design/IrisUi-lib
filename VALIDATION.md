@@ -1,13 +1,13 @@
-# IrisHub 2.2.2 Validation
+# IrisHub v2.3.0 Validation
 
-- Source contains no `--` comment markers in Luau source, examples, or tests.
-- Source and `dist/IrisHub.luau` are byte-identical.
-- Project delimiter and block checks pass.
-- Required component APIs are present, including Tag and ConfigPanel.
-- Icon registry APIs are present for namespaced provider support.
-- Key provider registry APIs are present for PlatoBoost, Panda Development, and Luarmor.
-- Notification create/list/clear APIs are present.
-- Config manager, import/export, listing, delete, and existence APIs are present.
-- Documentation and website JavaScript checks pass.
-- ZIP integrity was verified after packaging.
-- Actual Roblox Studio rendering/input execution is not available in this environment.
+Static validation targets the runtime problems observed in Roblox screenshots.
+
+- Tab method collision: fixed by storing the internal tab button in `TabButton`.
+- Blurry CanvasGroup rendering: eliminated from primary UI, notifications, and key system.
+- Stuck detached shadow: eliminated.
+- Empty-tab section visibility: section children are explicitly owned and refreshed when tabs activate.
+- Icon resolution: common bundled icon fallbacks are available, with provider registration overrides.
+- Secondary mouse interaction: uses `MouseButton2Click`.
+- `dist/IrisHub.luau`: rebuilt from `src/IrisHub.luau`.
+
+A real Roblox Studio/client play-test remains necessary for final engine/runtime verification.

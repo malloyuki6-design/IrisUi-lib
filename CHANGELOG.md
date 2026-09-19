@@ -1,3 +1,7 @@
+## v2.3.0
+
+- Stability and rendering fixes.
+
 ## 2.2.2
 
 - Added the missing ConfigPanel implementation and tab alias.

@@ -27,7 +27,7 @@ Tab:Button({
 })
 ```
 
-When a namespaced icon has not been registered, IrisHub uses a crisp text glyph fallback instead of creating an invalid ImageLabel. This keeps the UI functional while projects prepare their own Roblox-hosted icon assets.
+IrisHub includes functional Roblox-hosted fallback assets for common Lucide-style names such as `home`, `settings`, `user`, `search`, `bell`, `sparkles`, `palette`, and `sliders`. Projects can override these with `RegisterIcon` or `RegisterIconSet`. Namespaced icons that are not registered use a crisp text glyph fallback instead of creating an invalid ImageLabel. This keeps the UI functional while projects prepare their own Roblox-hosted icon assets.
 
 ## Provider sources
 
@@ -36,3 +36,11 @@ Lucide Icons: https://lucide.dev/
 Geist Icons: https://vercel.com/geist/icons
 
 Craft Icons: https://www.figma.com/community/file/1415718327120418204
+
+## Built-in catalog
+
+```lua
+local catalog = UI:GetIconCatalog()
+```
+
+The catalog exposes the bundled fallback asset names. Geist and Craft remain supported as provider namespaces through custom Roblox-hosted asset registration.

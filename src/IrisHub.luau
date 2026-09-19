@@ -1,6 +1,6 @@
 local IrisHub = {}
 IrisHub.__index = IrisHub
-IrisHub.Version = "2.2.2"
+IrisHub.Version = "2.3.0"
 IrisHub.Name = "IrisHub"
 
 local Players = game:GetService("Players")
@@ -174,6 +174,16 @@ local IconProviders = {
 
 local IconRegistry = {
     Assets = {},
+    BuiltinAssets = {
+        home = "rbxassetid://10734953400",
+        settings = "rbxassetid://10734950309",
+        user = "rbxassetid://10734953610",
+        search = "rbxassetid://10734950020",
+        bell = "rbxassetid://10734948966",
+        sparkles = "rbxassetid://10734951749",
+        palette = "rbxassetid://10734951010",
+        sliders = "rbxassetid://10734952330"
+    },
     Fallbacks = {
         home = "⌂",
         house = "⌂",
@@ -205,8 +215,34 @@ local IconRegistry = {
         chevrondown = "⌄",
         palette = "◉",
         code = "<>"
+        save = "▣"
+        download = "⇩"
+        trash = "⌫"
+        refresh = "↻"
+        play = "▶"
+        pause = "Ⅱ"
+        folder = "▰"
+        file = "▤"
+        clock = "◷"
+        calendar = "□"
+        link = "↗"
+        copy = "▣"
+        eye = "◉"
+        eyeoff = "◌"
+        checkcircle = "✓"
+        xcircle = "×"
+        menu = "☰"
+        chevronup = "⌃"
+        chevrondown = "⌄"
+        chevronleft = "‹"
+        chevronright = "›"
     }
 }
+
+for iconName, asset in pairs(IconRegistry.BuiltinAssets) do
+    IconRegistry.Assets[iconName] = asset
+    IconRegistry.Assets["lucide:" .. iconName] = asset
+end
 
 local function CopyText(value)
     local text = tostring(value or "")
@@ -279,17 +315,7 @@ local function SetText(label, text)
 end
 
 local function CreateShadow(parent, transparency)
-    local shadow = New("Frame", {
-        BackgroundColor3 = Color3.new(0, 0, 0),
-        BackgroundTransparency = transparency or 0.8,
-        BorderSizePixel = 0,
-        AnchorPoint = parent.AnchorPoint,
-        Position = UDim2.new(parent.Position.X.Scale, parent.Position.X.Offset + 8, parent.Position.Y.Scale, parent.Position.Y.Offset + 9),
-        Size = UDim2.new(parent.Size.X.Scale, parent.Size.X.Offset + 12, parent.Size.Y.Scale, parent.Size.Y.Offset + 12),
-        ZIndex = math.max(0, parent.ZIndex - 1)
-    }, parent.Parent)
-    Corner(shadow, 14)
-    return shadow
+    return nil
 end
 
 local ConnectionBag = {}
@@ -470,26 +496,37 @@ local function ResolveIcon(icon)
         return "rbxassetid://" .. tostring(icon), nil
     end
     local value = tostring(icon)
-    local asset = IconRegistry.Assets[value]
-    if asset then return asset, nil end
-    local provider, name = value:match("^(%w+):(.*)$")
+    if value:match("^rbxassetid://") or value:match("^rbxthumb://") or value:match("^rbxgameasset://") then
+        return value, nil
+    end
+    local exact = IconRegistry.Assets[value]
+    if exact then return exact, nil end
+    local normalized = string.lower(value)
+    local normalizedAsset = IconRegistry.Assets[normalized]
+    if normalizedAsset then return normalizedAsset, nil end
+    local provider, name = value:match("^([^:]+):(.*)$")
     if provider and name then
-        local providerData = IconProviders[provider:sub(1, 1):upper() .. provider:sub(2):lower()]
-        if providerData then
-            local registered = IconRegistry.Assets[value]
+        local providerKey = nil
+        local providerLower = string.lower(provider)
+        for key in pairs(IconProviders) do
+            if string.lower(key) == providerLower then
+                providerKey = key
+                break
+            end
+        end
+        if providerKey then
+            local iconKey = providerLower .. ":" .. string.lower(name:gsub("[_%-]", ""))
+            local registered = IconRegistry.Assets[iconKey]
             if registered then return registered, nil end
             return nil, IconRegistry.Fallbacks[string.lower(name:gsub("[_%-]", ""))] or "•"
         end
     end
-    if value:match("^rbxassetid://") or value:match("^rbxthumb://") or value:match("^rbxgameasset://") then
-        return value, nil
-    end
     if value:match("^https?://") then
-        local direct = IconRegistry.Assets[value]
+        local direct = IconRegistry.Assets[value] or IconRegistry.Assets[normalized]
         if direct then return direct, nil end
-        return nil, "•"
+        return nil, IconRegistry.Fallbacks[normalized:gsub("[_%-]", "")] or "•"
     end
-    return nil, value
+    return nil, IconRegistry.Fallbacks[normalized:gsub("[_%-]", "")] or value
 end
 
 local function CreateIcon(parent, icon, size, color, xAlignment)
@@ -652,6 +689,10 @@ function IrisHub:GetIconProviders()
     return result
 end
 
+function IrisHub:GetIconCatalog()
+    return CloneTable(IconRegistry.BuiltinAssets)
+end
+
 function IrisHub:ResolveIcon(icon)
     local asset, fallback = ResolveIcon(icon)
     return asset or fallback
@@ -792,7 +833,7 @@ function Window:CreateTab(options)
     local tab = setmetatable({
         Library = self.Library,
         Window = self,
-        Button = button,
+        TabButton = button,
         Title = title,
         Icon = icon,
         ActiveBar = activeBar,
@@ -803,8 +844,8 @@ function Window:CreateTab(options)
         Name = tostring(options.Title or "Tab"),
         ApplyTheme = function(tabSelf, themeData)
             tabSelf.Title.TextColor3 = tabSelf.Active and themeData.Text or themeData.Muted
-            tabSelf.Button.BackgroundColor3 = tabSelf.Active and themeData.Surface3 or themeData.Surface2
-            tabSelf.Button.BackgroundTransparency = tabSelf.Active and 0 or 0.52
+            tabSelf.TabButton.BackgroundColor3 = tabSelf.Active and themeData.Surface3 or themeData.Surface2
+            tabSelf.TabButton.BackgroundTransparency = tabSelf.Active and 0 or 0.52
             if tabSelf.ButtonStroke then tabSelf.ButtonStroke.Color = themeData.Border; tabSelf.ButtonStroke.Transparency = tabSelf.Active and 0.18 or 1 end
             if tabSelf.Icon then
                 local iconColor = tabSelf.Active and themeData.Accent or themeData.Muted
@@ -822,17 +863,38 @@ function Window:CreateTab(options)
         table.insert(self.Components, component)
         if component.Kind == "Section" then
             self.ActiveSection = component
-        elseif self.ActiveSection and self.ActiveSection.Data.Expanded == false then
-            component:SetVisible(false)
+        elseif self.ActiveSection then
+            component.Data.SectionOwner = self.ActiveSection
+            table.insert(self.ActiveSection.Children, component)
+            if self.ActiveSection.Data.Expanded == false then
+                component:SetVisible(false)
+            end
         end
         return self.Library:_register(component)
+    end
+
+    function methods:Refresh()
+        if self.Destroyed then return self end
+        local visible = self.Active == true
+        self.Page.Visible = visible
+        for _, component in ipairs(self.Components) do
+            if component and not component.Destroyed and component.Instance then
+                local section = component.Data.SectionOwner
+                if section and section.Data and section.Data.Expanded == false then
+                    component.Instance.Visible = false
+                elseif component.Kind ~= "Section" then
+                    component.Instance.Visible = true
+                end
+            end
+        end
+        return self
     end
 
     function methods:SetActive(value)
         self.Active = value == true
         self.Page.Visible = self.Active
-        self.Button.BackgroundColor3 = self.Active and self.Library.Theme.Surface3 or self.Library.Theme.Surface2
-        self.Button.BackgroundTransparency = self.Active and 0 or 0.52
+        self.TabButton.BackgroundColor3 = self.Active and self.Library.Theme.Surface3 or self.Library.Theme.Surface2
+        self.TabButton.BackgroundTransparency = self.Active and 0 or 0.52
         if self.ButtonStroke then self.ButtonStroke.Color = self.Library.Theme.Border; self.ButtonStroke.Transparency = self.Active and 0.18 or 1 end
         self.Title.TextColor3 = self.Active and self.Library.Theme.Text or self.Library.Theme.Muted
         if self.Icon then
@@ -845,6 +907,7 @@ function Window:CreateTab(options)
             self.Window.ActiveTab = self
             self.Window.Breadcrumb.Text = self.Name
         end
+        self:Refresh()
         return self
     end
 
@@ -936,14 +999,13 @@ function Window:CreateTab(options)
         local description = New("TextLabel", {BackgroundTransparency = 1, Position = UDim2.fromOffset(110, 0), Size = UDim2.new(1, -156, 1, 0), Font = theme.Font, Text = tostring(opts.Description or ""), TextSize = 10, TextColor3 = theme.Muted, TextXAlignment = Enum.TextXAlignment.Left, TextTruncate = Enum.TextTruncate.AtEnd}, row)
         local chevron = New("TextLabel", {BackgroundTransparency = 1, AnchorPoint = Vector2.new(1, 0.5), Position = UDim2.new(1, -14, 0.5, 0), Size = UDim2.fromOffset(22, 22), Font = theme.TitleFont, Text = "⌄", TextSize = 15, TextColor3 = theme.Muted}, row)
         local comp = Component.new(self.Library, "Section", row, {Value = true, Expanded = opts.DefaultExpanded ~= false, Title = titleLabel, Description = description, Chevron = chevron, Line = line})
-        comp.Index = #self.Components + 1
         local function refresh()
             local expanded = comp.Data.Expanded == true
             comp.Data.Chevron.Text = expanded and "⌄" or "›"
-            for i = comp.Index + 1, #self.Components do
-                local other = self.Components[i]
-                if other and other.Kind == "Section" then break end
-                if other then other:SetVisible(expanded) end
+            for _, child in ipairs(comp.Children) do
+                if child and not child.Destroyed then
+                    child:SetVisible(expanded)
+                end
             end
         end
         function comp:Set(value)
@@ -1857,7 +1919,7 @@ function Window:CreateTab(options)
         function comp:SetItems(items) self.Data.Items = items or {}; render(); return self end
         comp.ApplyTheme = function(c, t) c.Data.Trigger.BackgroundColor3 = t.Surface2; c.Data.Title.TextColor3 = t.Text; c.Data.Popup.BackgroundColor3 = t.Surface; local stroke = c.Data.Popup:FindFirstChildOfClass("UIStroke"); if stroke then stroke.Color = t.Border end; render() end
         comp:AddConnection(trigger.Activated:Connect(function() comp:Toggle() end))
-        comp:AddConnection(trigger.SecondaryActivated:Connect(function() comp:Toggle() end))
+        comp:AddConnection(trigger.MouseButton2Click:Connect(function() comp:Toggle() end))
         render()
         return self:_add(comp)
     end
@@ -1921,7 +1983,7 @@ end
 function IrisHub:CreateWindow(options)
     options = options or {}
     local theme = self.Theme
-    local root = New("CanvasGroup", {BackgroundTransparency = 1, Size = UDim2.fromScale(1, 1), Visible = true}, self.Gui)
+    local root = New("Frame", {BackgroundTransparency = 1, BorderSizePixel = 0, Size = UDim2.fromScale(1, 1), Visible = true}, self.Gui)
     local main = New("Frame", {
         BackgroundColor3 = theme.Surface,
         BackgroundTransparency = 0,
@@ -1932,7 +1994,7 @@ function IrisHub:CreateWindow(options)
         ClipsDescendants = false,
         ZIndex = 10
     }, root)
-    local shadow = CreateShadow(main, theme.ShadowTransparency or 0.8)
+    local shadow = nil
     Corner(main, theme.Radius + 2)
     local outline = Stroke(main, theme.Border, 0.12, 1)
     local gradient = New("UIGradient", {
@@ -2305,9 +2367,6 @@ function IrisHub:CreateWindow(options)
                 ColorSequenceKeypoint.new(1, themeData.Surface)
             })
         end
-        if self.Shadow then
-            self.Shadow.BackgroundTransparency = themeData.ShadowTransparency or 0.8
-        end
         self.Stroke.Color = themeData.Border
         self.Brand.BackgroundColor3 = themeData.AccentSoft
         local brandStroke = self.Brand:FindFirstChildOfClass("UIStroke")
@@ -2367,7 +2426,7 @@ function IrisHub:Notify(options)
     end
     local typeName = tostring(options.Type or "Info")
     local accentColor = options.Color or (typeName == "Success" and theme.Success or typeName == "Warning" and theme.Warning or (typeName == "Error" or typeName == "Danger") and theme.Danger or theme.Accent)
-    local card = New("CanvasGroup", {BackgroundColor3 = theme.Surface, BorderSizePixel = 0, Size = UDim2.new(1, 0, 0, 78), LayoutOrder = os.clock() % 1 * 1000, ZIndex = 100, GroupTransparency = 0}, holder)
+    local card = New("Frame", {BackgroundColor3 = theme.Surface, BorderSizePixel = 0, Size = UDim2.new(1, 0, 0, 78), LayoutOrder = math.floor(os.clock() * 1000), ZIndex = 100}, holder)
     Corner(card, theme.Radius + 2)
     Stroke(card, theme.Border, 0.08, 1)
     local accent = New("Frame", {BackgroundColor3 = accentColor, BorderSizePixel = 0, Size = UDim2.fromOffset(3, 78), Position = UDim2.fromOffset(0, 0), ZIndex = 102}, card)
@@ -2393,8 +2452,7 @@ function IrisHub:Notify(options)
         for i = #self.Library.Notifications, 1, -1 do
             if self.Library.Notifications[i] == self then table.remove(self.Library.Notifications, i) break end
         end
-        Tween(card, {GroupTransparency = 1}, 0.16)
-        Tween(card, {Position = UDim2.new(1, 28, 0, 0)}, 0.16)
+        Tween(card, {BackgroundTransparency = 1, Position = UDim2.new(1, 28, 0, 0)}, 0.16)
         task.delay(0.18, function() pcall(function() card:Destroy() end) end)
     end
     item.Library = self
@@ -2598,7 +2656,7 @@ function IrisHub:CreateKeySystem(options)
     local providerName = options.Provider or "PlatoBoost"
     local provider = KeyProviders[providerName]
     if not provider then providerName = "PlatoBoost"; provider = KeyProviders[providerName] end
-    local root = New("CanvasGroup", {BackgroundTransparency = 0, GroupTransparency = 0, Size = UDim2.fromScale(1, 1), ZIndex = 70}, self.Gui)
+    local root = New("Frame", {BackgroundTransparency = 0, BorderSizePixel = 0, Size = UDim2.fromScale(1, 1), ZIndex = 70}, self.Gui)
     local scrim = New("Frame", {BackgroundColor3 = theme.Overlay, BackgroundTransparency = 0.18, BorderSizePixel = 0, Size = UDim2.fromScale(1, 1), ZIndex = 70}, root)
     local card = New("Frame", {BackgroundColor3 = theme.Surface, BorderSizePixel = 0, AnchorPoint = Vector2.new(0.5, 0.5), Position = UDim2.fromScale(0.5, 0.5), Size = options.Size or UDim2.fromOffset(470, 330), ZIndex = 71}, root)
     Corner(card, theme.Radius + 4)
