@@ -1,5 +1,12 @@
 # Changelog
 
+## 2.0.1
+
+- Fixed `IrisHub.Create()` not creating the default window expected by the documented API.
+- Fixed `Window:Minimize()` referencing a nonexistent `Content` field.
+- Improved `IrisHub:Destroy()` cleanup for multiple windows and notifications.
+- Updated examples and API documentation to match the runtime contract.
+
 ## 2.0.0 — 2026-09-19
 
 ### UI

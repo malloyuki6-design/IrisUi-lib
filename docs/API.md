@@ -2,7 +2,7 @@
 
 ## Library factory
 
-`IrisHub.Create(options)` and `IrisHub.new(options)` create a library instance.
+`IrisHub.Create(options)` creates a library instance and its default window. `IrisHub.new(options)` creates only the library instance; call `:CreateWindow(options)` to create windows manually.
 
 ### Library methods
 

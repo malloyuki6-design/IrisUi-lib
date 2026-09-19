@@ -10,7 +10,7 @@ local UI = IrisHub.Create({
     UIScale = 1
 })
 
-assert(UI:GetVersion() == "2.0.0", "Unexpected version")
+assert(UI:GetVersion() == "2.0.1", "Unexpected version")
 assert(UI:GetThemes()[1] ~= nil, "Theme registry is empty")
 
 local Window = UI.Windows[1]
@@ -38,7 +38,7 @@ assert(#multi:GetSelected() == 2, "Multi selection failed")
 progress:Set(75):SetRange(0, 150)
 status:Set("Warning", "Check")
 badge:Set("LIVE")
-keyValue:Set("2.0.0")
+keyValue:Set("2.0.1")
 alert:Set("Success", "Done")
 code:SetLanguage("lua"):Set("print(2)")
 section:Collapse():Expand()

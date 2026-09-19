@@ -1,6 +1,6 @@
 local IrisHub = {}
 IrisHub.__index = IrisHub
-IrisHub.Version = "2.0.0"
+IrisHub.Version = "2.0.1"
 IrisHub.Name = "IrisHub"
 
 local Players = game:GetService("Players")
@@ -584,12 +584,13 @@ function Window:SetVisible(value)
 end
 
 function Window:Minimize()
-    if self.Destroyed then return end
+    if self.Destroyed then return self end
     self.Minimized = not self.Minimized
     local target = self.Minimized and UDim2.fromOffset(self.Size.X.Offset, 54) or self.Size
     Tween(self.Main, {Size = target}, 0.24, Enum.EasingStyle.Quart)
-    self.Content.Visible = not self.Minimized
+    self.Pages.Visible = not self.Minimized
     self.Sidebar.Visible = not self.Minimized
+    self.Breadcrumb.Visible = not self.Minimized
     return self
 end
 
@@ -1971,16 +1972,26 @@ function IrisHub:Destroy()
     if self.Destroyed then return end
     self.Destroyed = true
     self.Connections:Clear()
-    for _, window in ipairs(self.Windows) do pcall(function() window:Destroy() end) end
-    self.Windows = {}
-    for _, notification in ipairs(self.Notifications) do pcall(function() notification:Destroy() end) end
-    self.Notifications = {}
-    if self.NotificationHolder then self.NotificationHolder:Destroy() end
-    if self.Gui then self.Gui:Destroy() end
+    while #self.Windows > 0 do
+        local window = self.Windows[#self.Windows]
+        pcall(function() window:Destroy() end)
+        if self.Windows[#self.Windows] == window then
+            table.remove(self.Windows, #self.Windows)
+        end
+    end
+    while #self.Notifications > 0 do
+        local notification = self.Notifications[#self.Notifications]
+        pcall(function() notification:Destroy() end)
+        table.remove(self.Notifications, #self.Notifications)
+    end
+    if self.NotificationHolder then pcall(function() self.NotificationHolder:Destroy() end) end
+    if self.Gui then pcall(function() self.Gui:Destroy() end) end
 end
 
 function IrisHub.Create(options)
-    return IrisHub.new(options)
+    local library = IrisHub.new(options)
+    library:CreateWindow(options or {})
+    return library
 end
 
 IrisHub.Themes = Themes
