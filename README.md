@@ -222,3 +222,11 @@ See `THIRD_PARTY.md` for icon source references and redistribution notes.
 IrisHub keeps the primary interface on native `Frame` and `TextLabel`/`TextButton` objects instead of rasterizing the whole interface through `CanvasGroup`. This keeps text and icon fallbacks sharp. The main window no longer uses a detached shadow object, so moving, resizing, minimizing, and maximizing cannot leave a stale shadow behind.
 
 The tab API stores its internal button as `TabButton`, leaving `Tab:Button()` available as a callable method.
+
+## Icon Rendering
+
+IrisHub accepts namespaced icon identifiers such as `lucide:settings`, `geist:activity`, and `craft:palette`. The runtime resolves these names to Roblox-hosted image assets and falls back to a real built-in help icon when a requested asset cannot be resolved, so missing providers do not create empty square placeholders.
+
+External icon APIs such as Iconify are useful for obtaining SVG icon data, but Roblox `ImageLabel` image content is designed around assets uploaded to Roblox rather than arbitrary web SVG URLs. IrisHub therefore keeps its runtime path Roblox-native and exposes `RegisterIcon()` and `RegisterIconSet()` for your own uploaded provider assets.
+
+The project tracks Lucide, Geist, and Craft as provider namespaces so you can keep source-compatible icon names while choosing the Roblox assets that back them.

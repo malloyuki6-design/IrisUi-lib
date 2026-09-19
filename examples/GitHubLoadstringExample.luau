@@ -115,6 +115,8 @@ Dashboard:CodeBlock({
 
 local UI = IrisHub.Create({
     Title = "My Hub",
+    DefaultTab = "Main",
+    DefaultIcon = "lucide:layout-dashboard",
     Theme = "Iris"
 })]],
     Height = 116
@@ -335,6 +337,7 @@ Utilities:Button({
 Utilities:CodeBlock({
     Language = "luau",
     Code = [[UI:Notify({
+    Icon = "lucide:bell",
     Title = "Hello",
     Description = "IrisHub is running.",
     Type = "Success",

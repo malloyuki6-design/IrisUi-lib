@@ -1,12 +1,13 @@
 local IrisHub = {}
 IrisHub.__index = IrisHub
-IrisHub.Version = "2.3.2"
+IrisHub.Version = "2.5.2"
 IrisHub.Name = "IrisHub"
 
 local Players = game:GetService("Players")
 local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
 local TextService = game:GetService("TextService")
+local RunService = game:GetService("RunService")
 local CoreGui = game:GetService("CoreGui")
 local HttpService = game:GetService("HttpService")
 
@@ -158,90 +159,233 @@ local IconProviders = {
     Lucide = {
         Name = "Lucide Icons",
         Prefix = "lucide:",
-        Website = "https://lucide.dev/"
+        Website = "https://lucide.dev/",
+        Source = "https://raw.githubusercontent.com/lucide-icons/lucide/main/icons/"
     },
     Geist = {
         Name = "Geist Icons",
         Prefix = "geist:",
-        Website = "https://vercel.com/geist/icons"
+        Website = "https://vercel.com/geist/icons",
+        Source = "https://github.com/geist-org/geist"
     },
     Craft = {
         Name = "Craft Icons",
         Prefix = "craft:",
-        Website = "https://www.figma.com/community/file/1415718327120418204"
+        Website = "https://www.figma.com/community/file/1415718327120418204",
+        Source = "https://www.figma.com/community/file/1415718327120418204"
     }
 }
 
 local IconRegistry = {
     Assets = {},
     BuiltinAssets = {
-        home = "rbxassetid://10734953400",
+        activity = "rbxassetid://10709752035",
+        alertcircle = "rbxassetid://10709752996",
+        alerttriangle = "rbxassetid://10709753149",
+        archive = "rbxassetid://10709762233",
+        bell = "rbxassetid://10709775704",
+        book = "rbxassetid://10709781824",
+        bookopen = "rbxassetid://10709781717",
+        bot = "rbxassetid://10709782230",
+        bug = "rbxassetid://10709782845",
+        calendar = "rbxassetid://10709789505",
+        camera = "rbxassetid://10709789686",
+        check = "rbxassetid://10709790644",
+        checkcircle = "rbxassetid://10709790387",
+        chevrondown = "rbxassetid://10709790948",
+        chevronleft = "rbxassetid://10709791281",
+        chevronright = "rbxassetid://10709791437",
+        chevronup = "rbxassetid://10709791523",
+        circle = "rbxassetid://10709798174",
+        clipboard = "rbxassetid://10709799288",
+        clipboardcopy = "rbxassetid://10709798574",
+        clock = "rbxassetid://10709805144",
+        code = "rbxassetid://10709810463",
+        cog = "rbxassetid://10709810948",
+        copy = "rbxassetid://10709812159",
+        cpu = "rbxassetid://10709813383",
+        crown = "rbxassetid://10709818626",
+        database = "rbxassetid://10709818996",
+        delete = "rbxassetid://10709819059",
+        download = "rbxassetid://10723344270",
+        edit = "rbxassetid://10734883598",
+        eye = "rbxassetid://10723346959",
+        eyeoff = "rbxassetid://10723346871",
+        externalink = "rbxassetid://10723346684",
+        file = "rbxassetid://10723374641",
+        filecode = "rbxassetid://10723356507",
+        filecog = "rbxassetid://10723356830",
+        filejson = "rbxassetid://10723364435",
+        filter = "rbxassetid://10723375128",
+        flame = "rbxassetid://10723376114",
+        folder = "rbxassetid://10723387563",
+        folderopen = "rbxassetid://10723386277",
+        gamepad = "rbxassetid://10723395457",
+        gamepad2 = "rbxassetid://10723395215",
+        gem = "rbxassetid://10723396000",
+        globe = "rbxassetid://10723404337",
+        grab = "rbxassetid://10723404472",
+        gripvertical = "rbxassetid://10723405236",
+        heart = "rbxassetid://10723406885",
+        helpcircle = "rbxassetid://10723406988",
+        home = "rbxassetid://10723407389",
+        image = "rbxassetid://10723415040",
+        info = "rbxassetid://10723415903",
+        key = "rbxassetid://10723416652",
+        keyboard = "rbxassetid://10723416765",
+        layers = "rbxassetid://10723424505",
+        layout = "rbxassetid://10723425376",
+        layoutdashboard = "rbxassetid://10723424646",
+        layoutgrid = "rbxassetid://10723424838",
+        link = "rbxassetid://10723426722",
+        list = "rbxassetid://10723433811",
+        loader = "rbxassetid://10723434070",
+        lock = "rbxassetid://10723434711",
+        login = "rbxassetid://10723434830",
+        logout = "rbxassetid://10723434906",
+        mail = "rbxassetid://10734885430",
+        map = "rbxassetid://10734886202",
+        mappin = "rbxassetid://10734886004",
+        maximize = "rbxassetid://10734886735",
+        maximize2 = "rbxassetid://10734886496",
+        megaphone = "rbxassetid://10734887454",
+        menu = "rbxassetid://10734887784",
+        messagecircle = "rbxassetid://10734888000",
+        messagesquare = "rbxassetid://10734888228",
+        mic = "rbxassetid://10734888864",
+        minimize = "rbxassetid://10734895698",
+        minimize2 = "rbxassetid://10734895530",
+        minus = "rbxassetid://10734896206",
+        monitor = "rbxassetid://10734896881",
+        moon = "rbxassetid://10734897102",
+        morehorizontal = "rbxassetid://10734897250",
+        morevertical = "rbxassetid://10734897387",
+        mouse = "rbxassetid://10734898592",
+        move = "rbxassetid://10734900011",
+        navigation = "rbxassetid://10734906744",
+        package = "rbxassetid://10734909540",
+        paintbrush = "rbxassetid://10734910187",
+        palette = "rbxassetid://10734910430",
+        paperclip = "rbxassetid://10734910927",
+        pause = "rbxassetid://10734919336",
+        pencil = "rbxassetid://10734919691",
+        play = "rbxassetid://10734923549",
+        plus = "rbxassetid://10734924532",
+        power = "rbxassetid://10734930466",
+        refreshccw = "rbxassetid://10734933056",
+        refreshcw = "rbxassetid://10734933222",
+        rocket = "rbxassetid://10734934585",
+        save = "rbxassetid://10734941499",
+        search = "rbxassetid://10734943674",
+        send = "rbxassetid://10734943902",
+        server = "rbxassetid://10734949856",
         settings = "rbxassetid://10734950309",
-        user = "rbxassetid://10734953610",
-        search = "rbxassetid://10734950020",
-        bell = "rbxassetid://10734948966",
-        sparkles = "rbxassetid://10734951749",
-        palette = "rbxassetid://10734951010",
-        sliders = "rbxassetid://10734952330"
+        settings2 = "rbxassetid://10734950020",
+        share = "rbxassetid://10734950813",
+        shield = "rbxassetid://10734951847",
+        shieldalert = "rbxassetid://10734951173",
+        shieldcheck = "rbxassetid://10734951367",
+        sidebar = "rbxassetid://10734954301",
+        sliders = "rbxassetid://10734963400",
+        slidershorizontal = "rbxassetid://10734963191",
+        smartphone = "rbxassetid://10734963940",
+        star = "rbxassetid://10734966248",
+        sun = "rbxassetid://10734974297",
+        tag = "rbxassetid://10734976528",
+        tags = "rbxassetid://10734976739",
+        target = "rbxassetid://10734977012",
+        terminal = "rbxassetid://10734982144",
+        trash = "rbxassetid://10747362393",
+        trash2 = "rbxassetid://10747362241",
+        unlock = "rbxassetid://10747366027",
+        upload = "rbxassetid://10747366434",
+        user = "rbxassetid://10747373176",
+        usercheck = "rbxassetid://10747371901",
+        usercog = "rbxassetid://10747372167",
+        userminus = "rbxassetid://10747372346",
+        userplus = "rbxassetid://10747372702",
+        userx = "rbxassetid://10747372992",
+        users = "rbxassetid://10747373426",
+        verified = "rbxassetid://10747374131",
+        view = "rbxassetid://10747375132",
+        volume = "rbxassetid://10747376008",
+        volume2 = "rbxassetid://10747375679",
+        volumex = "rbxassetid://10747375880",
+        wand = "rbxassetid://10747376565",
+        wrench = "rbxassetid://10747383470",
+        x = "rbxassetid://10747384394",
+        xcircle = "rbxassetid://10747383819"
     },
-    Fallbacks = {
-        home = "⌂",
-        house = "⌂",
-        settings = "⚙",
-        gear = "⚙",
-        user = "●",
-        users = "●●",
-        dashboard = "◈",
-        layout = "▦",
-        menu = "☰",
-        search = "⌕",
-        bell = "◔",
-        notification = "◔",
-        shield = "◇",
-        key = "◆",
-        lock = "■",
-        unlock = "□",
-        star = "★",
-        sparkles = "✦",
-        info = "i",
-        warning = "!",
-        error = "×",
-        success = "✓",
-        check = "✓",
-        close = "×",
-        plus = "+",
-        minus = "−",
-        chevronright = "›",
-        chevrondown = "⌄",
-        palette = "◉",
-        code = "<>",
-        save = "▣",
-        download = "⇩",
-        trash = "⌫",
-        refresh = "↻",
-        play = "▶",
-        pause = "Ⅱ",
-        folder = "▰",
-        file = "▤",
-        clock = "◷",
-        calendar = "□",
-        link = "↗",
-        copy = "▣",
-        eye = "◉",
-        eyeoff = "◌",
-        checkcircle = "✓",
-        xcircle = "×",
-        menu = "☰",
-        chevronup = "⌃",
-        chevrondown = "⌄",
-        chevronleft = "‹",
-        chevronright = "›"
+    Aliases = {
+        dashboard = "layoutdashboard", house = "home",
+        gear = "settings", settings2 = "settings2",
+        account = "user", person = "user", profile = "user",
+        magnifyingglass = "search", find = "search",
+        notification = "bell", notifications = "bell",
+        sparkle = "star", sparkles = "star", magic = "wand",
+        colors = "palette", theme = "palette", paint = "paintbrush",
+        controls = "slidershorizontal", options = "sliders", tune = "slidershorizontal",
+        chevrondown = "chevrondown", chevronleft = "chevronleft", chevronright = "chevronright", chevronup = "chevronup",
+        error = "xcircle", warning = "alerttriangle",
+        success = "checkcircle",
+        close = "x", cancel = "x",
+        remove = "minus", add = "plus",
+        maximize = "maximize2", minimize = "minimize2",
+        context = "morevertical", more = "morehorizontal",
+        github = "code",
+        keyround = "key", lockkeyhole = "lock", unlockkeyhole = "unlock",
+        circlehelp = "helpcircle", circlealert = "alertcircle", trianglealert = "alerttriangle",
+        circlex = "xcircle", circlecheck = "checkcircle", ellipsis = "morehorizontal", ellipsisvertical = "morevertical",
+        refresh = "refreshcw", palette2 = "palette", sliders2 = "slidershorizontal"
+    },
+    Glyphs = {
+        alertcircle = "!", alerttriangle = "!", archive = "[]", bell = "*", book = "[ ]", bookopen = "[ ]", bot = "o", bug = "x",
+        calendar = "[]", camera = "o", check = "+", checkcircle = "o", circle = "o", clipboard = "[]", clipboardcopy = "[]", clock = "o",
+        code = "<> ", cog = "*", copy = "[]", cpu = "[]", crown = "A", database = "[]", delete = "x", download = "v", edit = "/",
+        eye = "o", eyeoff = "x", externalink = ">", file = "[]", filecode = "<> ", filecog = "*", filejson = "{}", filter = "=",
+        flame = "*", folder = "[]", folderopen = "[]", gamepad = "[]", gamepad2 = "[]", gem = "*", globe = "o", grab = "+", gripvertical = "...",
+        heart = "<3", helpcircle = "?", home = "^", image = "[]", info = "i", key = "K", keyboard = "[]", layers = "[]", layout = "[]",
+        layoutdashboard = "[]", layoutgrid = "[]", link = ">", list = "=", loader = "o", lock = "#", login = ">", logout = "<", mail = "@",
+        map = "[]", mappin = ".", maximize = "[]", maximize2 = "[]", menu = "=", messagecircle = "o", messagesquare = "[]", mic = "o",
+        minimize = "-", minimize2 = "-", minus = "-", monitor = "[]", moon = "o", morehorizontal = "...", morevertical = "...", mouse = "o",
+        move = "+", navigation = ">", package = "[]", paintbrush = "*", palette = "o", paperclip = "+", pause = "||", pencil = "/", play = ">",
+        plus = "+", power = "o", refreshccw = "<", refreshcw = ">", rocket = "^", save = "[]", search = "?", send = ">", server = "[]",
+        settings = "*", settings2 = "*", share = ">", shield = "#", shieldalert = "!", shieldcheck = "+", sidebar = "[]", sliders = "=",
+        slidershorizontal = "=", smartphone = "[]", star = "*", sun = "o", tag = "<>", tags = "<>", target = "o", terminal = ">_",
+        trash = "x", trash2 = "x", unlock = "o", upload = "^", user = "o", usercheck = "+", usercog = "*", userminus = "-",
+        userplus = "+", userx = "x", users = "oo", verified = "+", view = "o", volume = "v", volume2 = "v", volumex = "x", wand = "*",
+        wrench = "+", x = "x", xcircle = "x"
     }
 }
 
 for iconName, asset in pairs(IconRegistry.BuiltinAssets) do
     IconRegistry.Assets[iconName] = asset
-    IconRegistry.Assets["lucide:" .. iconName] = asset
+    for providerKey in pairs(IconProviders) do
+        IconRegistry.Assets[string.lower(providerKey) .. ":" .. iconName] = asset
+    end
+end
+for aliasName, canonicalName in pairs(IconRegistry.Aliases) do
+    local asset = IconRegistry.BuiltinAssets[canonicalName]
+    if asset then
+        IconRegistry.Assets[aliasName] = asset
+        for providerKey in pairs(IconProviders) do
+            IconRegistry.Assets[string.lower(providerKey) .. ":" .. aliasName] = asset
+            IconRegistry.Assets[string.lower(providerKey) .. ":" .. canonicalName] = asset
+        end
+    end
+end
+
+local function NormalizeIconName(value)
+    return string.lower(tostring(value or ""):gsub("[_%s%-]", ""))
+end
+
+local function IconAliasAsset(name)
+    local normalized = NormalizeIconName(name)
+    local alias = IconRegistry.Aliases[normalized]
+    if alias and IconRegistry.BuiltinAssets[alias] then
+        return IconRegistry.BuiltinAssets[alias]
+    end
+    return nil
 end
 
 local function CopyText(value)
@@ -263,8 +407,7 @@ local function Fire(callback, ...)
         return
     end
     task.spawn(function(...)
-        local ok = pcall(callback, ...)
-        return ok
+        pcall(callback, ...)
     end, ...)
 end
 
@@ -297,7 +440,7 @@ local function Padding(parent, left, right, top, bottom)
         PaddingLeft = UDim.new(0, left or 0),
         PaddingRight = UDim.new(0, right or left or 0),
         PaddingTop = UDim.new(0, top or left or 0),
-        PaddingBottom = UDim.new(0, bottom or top or left or 0)
+        PaddingBottom = UDim.new(0, bottom or top or 0)
     }, parent)
 end
 
@@ -312,6 +455,20 @@ local function SetText(label, text)
     if IsTextGui(label) then
         label.Text = tostring(text or "")
     end
+end
+
+local function MeasureTextHeight(text, font, textSize, width, minimum)
+    local content = tostring(text or "")
+    local safeWidth = math.max(80, tonumber(width) or 480)
+    local safeMinimum = tonumber(minimum) or 16
+    local ok, bounds = pcall(function()
+        return TextService:GetTextSize(content, textSize or 12, font or Enum.Font.Gotham, Vector2.new(safeWidth, 10000))
+    end)
+    if ok and bounds then
+        return math.max(safeMinimum, math.ceil(bounds.Y))
+    end
+    local lineCount = math.max(1, math.ceil(#content / math.max(1, math.floor(safeWidth / math.max(7, (textSize or 12) * 0.52)))))
+    return math.max(safeMinimum, lineCount * math.max(14, (textSize or 12) + 5))
 end
 
 local function CreateShadow(parent, transparency)
@@ -389,7 +546,7 @@ function Component:SetEnabled(value)
         local shield = self.Data.DisabledShield
         if not self.Data.Enabled then
             if not shield or not shield.Parent then
-                shield = New("Frame", {BackgroundColor3 = self.Library.Theme.Background, BackgroundTransparency = 0.82, BorderSizePixel = 0, Size = UDim2.fromScale(1, 1), ZIndex = 1000}, root)
+                shield = New("Frame", {BackgroundColor3 = self.Library.Theme.Background, BackgroundTransparency = 0.72, BorderSizePixel = 0, Size = UDim2.fromScale(1, 1), ZIndex = 1000}, root)
                 shield.Active = true
                 self.Data.DisabledShield = shield
             end
@@ -482,81 +639,143 @@ function Component:Destroy()
             pcall(function() child:Destroy() end)
         end
     end
+    if self.Data.PopupTracking then
+        pcall(function() self.Data.PopupTracking:Disconnect() end)
+        self.Data.PopupTracking = nil
+    end
+    if self.Data.Popup then
+        pcall(function() self.Data.Popup:Destroy() end)
+        self.Data.Popup = nil
+    end
     if self.Instance then
         pcall(function() self.Instance:Destroy() end)
     end
 end
 
 local function ResolveIcon(icon)
-    if icon == nil then return nil, nil end
+    if icon == nil then return nil end
     if typeof(icon) == "Instance" and icon:IsA("ImageLabel") then
-        return icon.Image, nil
+        return icon.Image
     end
     if type(icon) == "number" then
-        return "rbxassetid://" .. tostring(icon), nil
+        return "rbxassetid://" .. tostring(icon)
     end
     local value = tostring(icon)
     if value:match("^rbxassetid://") or value:match("^rbxthumb://") or value:match("^rbxgameasset://") then
-        return value, nil
+        return value
     end
     local exact = IconRegistry.Assets[value]
-    if exact then return exact, nil end
+    if exact then return exact end
     local normalized = string.lower(value)
     local normalizedAsset = IconRegistry.Assets[normalized]
-    if normalizedAsset then return normalizedAsset, nil end
+    if normalizedAsset then return normalizedAsset end
     local provider, name = value:match("^([^:]+):(.*)$")
     if provider and name then
-        local providerKey = nil
         local providerLower = string.lower(provider)
-        for key in pairs(IconProviders) do
-            if string.lower(key) == providerLower then
-                providerKey = key
-                break
-            end
-        end
-        if providerKey then
-            local iconKey = providerLower .. ":" .. string.lower(name:gsub("[_%-]", ""))
-            local registered = IconRegistry.Assets[iconKey]
-            if registered then return registered, nil end
-            return nil, IconRegistry.Fallbacks[string.lower(name:gsub("[_%-]", ""))] or "•"
+        if IconProviders[provider] or providerLower == "lucide" or providerLower == "geist" or providerLower == "craft" then
+            local known = IconRegistry.Assets[providerLower .. ":" .. NormalizeIconName(name)]
+            if known then return known end
+            local direct = IconRegistry.BuiltinAssets[NormalizeIconName(name)]
+            if direct then return direct end
+            return IconAliasAsset(name)
         end
     end
     if value:match("^https?://") then
-        local direct = IconRegistry.Assets[value] or IconRegistry.Assets[normalized]
-        if direct then return direct, nil end
-        return nil, IconRegistry.Fallbacks[normalized:gsub("[_%-]", "")] or "•"
+        return nil
     end
-    return nil, IconRegistry.Fallbacks[normalized:gsub("[_%-]", "")] or value
+    return IconAliasAsset(value)
 end
 
 local function CreateIcon(parent, icon, size, color, xAlignment)
-    if not icon then return nil end
-    local imageAsset, fallbackText = ResolveIcon(icon)
+    if icon == nil then return nil end
+    local asset = ResolveIcon(icon)
     local anchor = xAlignment == "right" and 1 or 0
     local offset = xAlignment == "right" and -12 or 12
-    if imageAsset then
-        return New("ImageLabel", {
+    local fallbackAsset = IconRegistry.BuiltinAssets.helpcircle or IconRegistry.BuiltinAssets.info
+    local finalAsset = asset or fallbackAsset
+    if finalAsset then
+        local image = New("ImageLabel", {
             BackgroundTransparency = 1,
             Size = UDim2.fromOffset(size or 18, size or 18),
-            Image = imageAsset,
+            Image = finalAsset,
             ImageColor3 = color or Color3.new(1, 1, 1),
+            ImageTransparency = 0,
             ScaleType = Enum.ScaleType.Fit,
+            ResampleMode = Enum.ResamplerMode.Default,
             AnchorPoint = Vector2.new(anchor, 0.5),
             Position = UDim2.new(anchor, offset, 0.5, 0)
         }, parent)
+        if asset then
+            task.delay(1.5, function()
+                if image.Parent and image.Image == asset and not image.IsLoaded and fallbackAsset then
+                    image.Image = fallbackAsset
+                end
+            end)
+        end
+        return image
     end
     return New("TextLabel", {
         BackgroundTransparency = 1,
         Size = UDim2.fromOffset(size or 18, size or 18),
+        AnchorPoint = Vector2.new(anchor, 0.5),
+        Position = UDim2.new(anchor, offset, 0.5, 0),
         Font = Enum.Font.GothamBold,
-        Text = fallbackText or "•",
-        TextSize = math.max(11, (size or 18) - 2),
+        Text = "?",
+        TextSize = math.max(9, math.floor((size or 18) * 0.62)),
         TextColor3 = color or Color3.new(1, 1, 1),
         TextXAlignment = Enum.TextXAlignment.Center,
-        TextYAlignment = Enum.TextYAlignment.Center,
-        AnchorPoint = Vector2.new(anchor, 0.5),
-        Position = UDim2.new(anchor, offset, 0.5, 0)
+        TextYAlignment = Enum.TextYAlignment.Center
     }, parent)
+end
+
+local function PositionPopup(library, popup, anchor, width, height)
+    if not library or not library.PopupLayer or not popup or not anchor then return end
+    if not popup.Parent then return end
+    local viewport = library.PopupLayer.AbsoluteSize
+    if viewport.X <= 0 or viewport.Y <= 0 then
+        local camera = workspace.CurrentCamera
+        viewport = camera and camera.ViewportSize or Vector2.new(1280, 720)
+    end
+    local anchorPosition = anchor.AbsolutePosition
+    local anchorSize = anchor.AbsoluteSize
+    local popupWidth = math.max(180, tonumber(width) or 220)
+    local popupHeight = math.max(40, tonumber(height) or 120)
+    local x = Clamp(anchorPosition.X, 8, math.max(8, viewport.X - popupWidth - 8))
+    local belowY = anchorPosition.Y + anchorSize.Y + 8
+    local aboveY = anchorPosition.Y - popupHeight - 8
+    local y = belowY
+    if y + popupHeight > viewport.Y - 8 and aboveY >= 8 then
+        y = aboveY
+    else
+        y = Clamp(y, 8, math.max(8, viewport.Y - popupHeight - 8))
+    end
+    popup.Position = UDim2.fromOffset(x, y)
+    popup.Size = UDim2.fromOffset(popupWidth, popupHeight)
+end
+
+local function StopPopupTracking(component)
+    if component and component.Data and component.Data.PopupTracking then
+        pcall(function() component.Data.PopupTracking:Disconnect() end)
+        component.Data.PopupTracking = nil
+    end
+    if component and component.Library and component.Library._OpenPopups then
+        component.Library._OpenPopups[component] = nil
+    end
+end
+
+local function StartPopupTracking(component, anchor, popup, width, height)
+    StopPopupTracking(component)
+    PositionPopup(component.Library, popup, anchor, width, height)
+    if component.Library and component.Library._OpenPopups then
+        component.Library._OpenPopups[component] = true
+    end
+    component.Data.PopupTracking = RunService.RenderStepped:Connect(function()
+        if component.Destroyed or not popup.Parent or not popup.Visible then
+            StopPopupTracking(component)
+            return
+        end
+        PositionPopup(component.Library, popup, anchor, width, height)
+    end)
 end
 
 function IrisHub.new(options)
@@ -572,9 +791,10 @@ function IrisHub.new(options)
         Components = {},
         Windows = {},
         Notifications = {},
-        WindowOrder = {},
         Destroyed = false,
-        Config = options.Config or {}
+        Config = options.Config or {},
+        _OpenPopups = {},
+        _FocusedWindow = nil
     }, IrisHub)
 
     local guiName = SafeName(options.Name or "IrisHub") .. "_" .. tostring(math.random(10000, 99999))
@@ -586,6 +806,15 @@ function IrisHub.new(options)
         DisplayOrder = options.DisplayOrder or 100
     }, ParentGui)
     self.Gui = gui
+    local popupLayer = New("Frame", {
+        Name = "PopupLayer",
+        BackgroundTransparency = 1,
+        BorderSizePixel = 0,
+        Size = UDim2.fromScale(1, 1),
+        ZIndex = 250,
+        ClipsDescendants = false
+    }, gui)
+    self.PopupLayer = popupLayer
     return self
 end
 
@@ -637,11 +866,29 @@ function IrisHub:GetComponent(kind)
 end
 
 function IrisHub:SetUIVisible(value)
-    if self.Gui then self.Gui.Enabled = value == true end
-    for _, window in ipairs(self.Windows) do if window and not window.Destroyed then window.Root.Visible = value == true end end
+    local visible = value == true
+    if not visible then self:ClosePopups() end
+    if self.Gui then self.Gui.Enabled = visible end
+    if self.PopupLayer then self.PopupLayer.Visible = visible end
+    for _, window in ipairs(self.Windows) do
+        if window and not window.Destroyed then window.Root.Visible = visible end
+    end
     return self
 end
 
+
+function IrisHub:ClosePopupsExcept(exception)
+    for popupComponent in pairs(self._OpenPopups or {}) do
+        if popupComponent ~= exception and popupComponent and not popupComponent.Destroyed and type(popupComponent.Close) == "function" then
+            pcall(function() popupComponent:Close() end)
+        end
+    end
+    return self
+end
+
+function IrisHub:ClosePopups()
+    return self:ClosePopupsExcept(nil)
+end
 
 function IrisHub:RefreshTheme()
     local theme = self.Theme
@@ -679,6 +926,29 @@ function IrisHub:RegisterIconSet(provider, icons)
         self:RegisterIcon(key, asset)
     end
     return self
+end
+
+function IrisHub:RegisterIconURL(name, url)
+    assert(type(name) == "string", "Icon name must be a string")
+    assert(type(url) == "string", "Icon URL must be a string")
+    self.Options.IconURLs = self.Options.IconURLs or {}
+    self.Options.IconURLs[name] = url
+    return self
+end
+
+function IrisHub:RegisterIconURLSet(provider, icons)
+    assert(type(provider) == "string", "Icon provider must be a string")
+    assert(type(icons) == "table", "Icon URL set must be a table")
+    self.Options.IconURLs = self.Options.IconURLs or {}
+    for name, url in pairs(icons) do
+        self.Options.IconURLs[string.lower(provider) .. ":" .. string.lower(tostring(name))] = url
+    end
+    return self
+end
+
+function IrisHub:GetIconURL(name)
+    if type(self.Options.IconURLs) ~= "table" then return nil end
+    return self.Options.IconURLs[name] or self.Options.IconURLs[string.lower(tostring(name or ""))]
 end
 
 function IrisHub:GetIconProviders()
@@ -753,7 +1023,9 @@ function Window:Focus()
 end
 
 function Window:SetVisible(value)
-    self.Root.Visible = value == true
+    local visible = value == true
+    if not visible then self.Library:ClosePopups() end
+    self.Root.Visible = visible
     return self
 end
 
@@ -773,7 +1045,11 @@ function Window:Maximize()
     if not self.Maximized then
         self.PreviousPosition = self.Main.Position
         self.PreviousSize = self.Main.Size
-        Tween(self.Main, {Position = UDim2.fromScale(0.5, 0.5), Size = UDim2.new(1, -28, 1, -28)}, 0.24, Enum.EasingStyle.Quart)
+        local camera = workspace.CurrentCamera
+        local viewport = camera and camera.ViewportSize or self.Library.Gui.AbsoluteSize
+        local width = math.max(280, viewport.X - 24)
+        local height = math.max(240, viewport.Y - 24)
+        Tween(self.Main, {Position = UDim2.fromScale(0.5, 0.5), Size = UDim2.fromOffset(width, height)}, 0.24, Enum.EasingStyle.Quart)
         self.Maximized = true
     else
         Tween(self.Main, {Position = self.PreviousPosition or UDim2.fromScale(0.5, 0.5), Size = self.PreviousSize or self.Size}, 0.24, Enum.EasingStyle.Quart)
@@ -804,6 +1080,7 @@ function Window:CreateTab(options)
         TextSize = 13,
         TextColor3 = theme.Muted,
         TextXAlignment = Enum.TextXAlignment.Left,
+        TextTruncate = Enum.TextTruncate.AtEnd,
         ZIndex = 5
     }, button)
     local activeBar = New("Frame", {
@@ -826,6 +1103,7 @@ function Window:CreateTab(options)
         ScrollBarImageColor3 = theme.Border,
         Size = UDim2.new(1, 0, 1, 0),
         Visible = false,
+        ClipsDescendants = true,
         ScrollBarImageTransparency = 0.1
     }, self.Pages)
     Padding(page, 2, 6, 6, 20)
@@ -841,6 +1119,7 @@ function Window:CreateTab(options)
         Page = page,
         Layout = layout,
         Components = {},
+        LayoutCounter = 0,
         Name = tostring(options.Title or "Tab"),
         ApplyTheme = function(tabSelf, themeData)
             tabSelf.Title.TextColor3 = tabSelf.Active and themeData.Text or themeData.Muted
@@ -860,6 +1139,10 @@ function Window:CreateTab(options)
     local proxy = setmetatable(tab, {__index = methods})
 
     function methods:_add(component)
+        self.LayoutCounter = self.LayoutCounter + 1
+        if component.Instance and component.Instance.LayoutOrder == 0 then
+            component.Instance.LayoutOrder = self.LayoutCounter
+        end
         table.insert(self.Components, component)
         if component.Kind == "Section" then
             self.ActiveSection = component
@@ -873,6 +1156,16 @@ function Window:CreateTab(options)
         return self.Library:_register(component)
     end
 
+    function methods:Reflow()
+        if self.Destroyed then return self end
+        for _, component in ipairs(self.Components) do
+            if component and not component.Destroyed and type(component.Reflow) == "function" then
+                pcall(function() component:Reflow() end)
+            end
+        end
+        return self
+    end
+
     function methods:Refresh()
         if self.Destroyed then return self end
         local visible = self.Active == true
@@ -880,18 +1173,16 @@ function Window:CreateTab(options)
         for _, component in ipairs(self.Components) do
             if component and not component.Destroyed and component.Instance then
                 local section = component.Data.SectionOwner
-                if section and section.Data and section.Data.Expanded == false then
-                    component.Instance.Visible = false
-                elseif component.Kind ~= "Section" then
-                    component.Instance.Visible = true
-                end
+                component.Instance.Visible = visible and not (section and section.Data and section.Data.Expanded == false)
             end
         end
+        self:Reflow()
         return self
     end
 
     function methods:SetActive(value)
         self.Active = value == true
+        if self.Active then self.Library:ClosePopups() end
         self.Page.Visible = self.Active
         self.TabButton.BackgroundColor3 = self.Active and self.Library.Theme.Surface3 or self.Library.Theme.Surface2
         self.TabButton.BackgroundTransparency = self.Active and 0 or 0.52
@@ -912,6 +1203,9 @@ function Window:CreateTab(options)
     end
 
     local userConnections = ConnectionBag.new()
+    userConnections:Add(page:GetPropertyChangedSignal("AbsoluteSize"):Connect(function()
+        if page.AbsoluteSize.X > 0 then task.defer(function() if not proxy.Destroyed then proxy:Reflow() end end) end
+    end))
     userConnections:Add(button.Activated:Connect(function()
         for _, other in pairs(proxy.Window.Tabs) do
             other:SetActive(false)
@@ -966,17 +1260,22 @@ function Window:CreateTab(options)
         end
         if self.Page then pcall(function() self.Page:Destroy() end) end
         self.Window.Tabs[self.Name] = nil
+        if self.Window.ActiveTab == self then self.Window.ActiveTab = nil end
     end
 
     local function makeRow(opts, height)
         opts = opts or {}
+        local minimum = tonumber(height) or 54
         local row = New("Frame", {
             BackgroundColor3 = theme.Surface2,
             BackgroundTransparency = opts.Transparent and 1 or 0,
             BorderSizePixel = 0,
-            Size = UDim2.new(1, -4, 0, height or 54),
-            LayoutOrder = opts.LayoutOrder or 0
+            Size = UDim2.new(1, -4, 0, minimum),
+            LayoutOrder = opts.LayoutOrder or 0,
+            ClipsDescendants = true,
+            AutomaticSize = Enum.AutomaticSize.None
         }, page)
+        New("UISizeConstraint", {MinSize = Vector2.new(0, minimum)}, row)
         Corner(row, math.max(6, theme.Radius - 2))
         Stroke(row, theme.Border, 0.28, 1)
         return row
@@ -984,24 +1283,70 @@ function Window:CreateTab(options)
 
     function methods:CreateSection(opts)
         opts = opts or {}
+        local titleText = tostring(opts.Title or "Section")
+        local descriptionText = tostring(opts.Description or "")
+        local baseHeight = math.max(tonumber(opts.Height) or 0, descriptionText ~= "" and 64 or 46)
         local row = New("TextButton", {
             BackgroundColor3 = theme.Surface,
             BackgroundTransparency = 0,
             BorderSizePixel = 0,
-            Size = UDim2.new(1, -4, 0, opts.Height or 46),
+            Size = UDim2.new(1, -4, 0, baseHeight),
             Text = "",
             AutoButtonColor = false,
-            LayoutOrder = opts.LayoutOrder or 0
+            LayoutOrder = opts.LayoutOrder or 0,
+            ClipsDescendants = true,
+            AutomaticSize = Enum.AutomaticSize.None
         }, page)
+        local sizeConstraint = New("UISizeConstraint", {MinSize = Vector2.new(0, baseHeight)}, row)
         Corner(row, math.max(6, theme.Radius - 2))
-        local line = New("Frame", {BackgroundColor3 = theme.Border, BorderSizePixel = 0, Position = UDim2.new(0, 12, 1, -1), Size = UDim2.new(1, -24, 0, 1)}, row)
-        local titleLabel = New("TextLabel", {BackgroundTransparency = 1, Position = UDim2.fromOffset(14, 0), Size = UDim2.new(1, -60, 1, 0), Font = theme.TitleFont, Text = tostring(opts.Title or "Section"), TextSize = 12, TextColor3 = theme.Text, TextXAlignment = Enum.TextXAlignment.Left}, row)
-        local description = New("TextLabel", {BackgroundTransparency = 1, Position = UDim2.fromOffset(110, 0), Size = UDim2.new(1, -156, 1, 0), Font = theme.Font, Text = tostring(opts.Description or ""), TextSize = 10, TextColor3 = theme.Muted, TextXAlignment = Enum.TextXAlignment.Left, TextTruncate = Enum.TextTruncate.AtEnd}, row)
-        local chevron = New("TextLabel", {BackgroundTransparency = 1, AnchorPoint = Vector2.new(1, 0.5), Position = UDim2.new(1, -14, 0.5, 0), Size = UDim2.fromOffset(22, 22), Font = theme.TitleFont, Text = "⌄", TextSize = 15, TextColor3 = theme.Muted}, row)
+        local titleLabel = New("TextLabel", {
+            BackgroundTransparency = 1,
+            Position = UDim2.fromOffset(14, 10),
+            Size = UDim2.new(1, -56, 0, 20),
+            Font = theme.TitleFont,
+            Text = titleText,
+            TextSize = 12,
+            TextColor3 = theme.Text,
+            TextXAlignment = Enum.TextXAlignment.Left,
+            TextTruncate = Enum.TextTruncate.AtEnd
+        }, row)
+        local description = New("TextLabel", {
+            BackgroundTransparency = 1,
+            Position = UDim2.fromOffset(14, descriptionText ~= "" and 32 or 0),
+            Size = UDim2.new(1, -58, 0, descriptionText ~= "" and 20 or 0),
+            AutomaticSize = Enum.AutomaticSize.None,
+            Font = theme.Font,
+            Text = descriptionText,
+            TextSize = 10,
+            TextColor3 = theme.Muted,
+            TextXAlignment = Enum.TextXAlignment.Left,
+            TextWrapped = true,
+            TextYAlignment = Enum.TextYAlignment.Top,
+            Visible = descriptionText ~= ""
+        }, row)
+        if descriptionText ~= "" then
+            local availableWidth = math.max(180, page.AbsoluteSize.X - 78)
+            local measured = MeasureTextHeight(descriptionText, theme.Font, 10, availableWidth, 16)
+            local required = math.max(baseHeight, 38 + measured)
+            sizeConstraint.MinSize = Vector2.new(0, required)
+            row.Size = UDim2.new(1, -4, 0, required)
+            description.Size = UDim2.new(1, -58, 0, measured)
+        end
+        local chevron = CreateIcon(row, descriptionText ~= "" and "lucide:chevron-down" or "lucide:chevron-right", 15, theme.Muted, "right")
+        if chevron then
+            chevron.AnchorPoint = Vector2.new(1, 0.5)
+            chevron.Position = UDim2.new(1, -14, 0.5, 0)
+        end
+        local line = New("Frame", {BackgroundColor3 = theme.Border, BorderSizePixel = 0, Position = UDim2.new(0, 14, 1, -1), Size = UDim2.new(1, -28, 0, 1)}, row)
         local comp = Component.new(self.Library, "Section", row, {Value = true, Expanded = opts.DefaultExpanded ~= false, Title = titleLabel, Description = description, Chevron = chevron, Line = line})
         local function refresh()
             local expanded = comp.Data.Expanded == true
-            comp.Data.Chevron.Text = expanded and "⌄" or "›"
+            if chevron and chevron:IsA("TextLabel") then
+                chevron.Text = expanded and "-" or ">"
+            elseif chevron and chevron:IsA("ImageLabel") then
+                local asset = ResolveIcon(expanded and "lucide:chevron-down" or "lucide:chevron-right")
+                if asset then chevron.Image = asset end
+            end
             for _, child in ipairs(comp.Children) do
                 if child and not child.Destroyed then
                     child:SetVisible(expanded)
@@ -1017,7 +1362,24 @@ function Window:CreateTab(options)
         function comp:Toggle() return self:Set(not self.Data.Expanded) end
         function comp:Expand() return self:Set(true) end
         function comp:Collapse() return self:Set(false) end
-        comp.ApplyTheme = function(c, t) c.Data.Title.TextColor3 = t.Text; c.Data.Description.TextColor3 = t.Muted; c.Data.Line.BackgroundColor3 = t.Border; c.Data.Chevron.TextColor3 = t.Muted; c.Instance.BackgroundColor3 = t.Surface end
+        function comp:Reflow()
+            local width = math.max(160, page.AbsoluteSize.X - 78)
+            local measured = self.Data.Description.Visible and MeasureTextHeight(self.Data.Description.Text, self.Data.Description.Font, self.Data.Description.TextSize, width, 16) or 0
+            local required = self.Data.Description.Visible and math.max(64, 38 + measured) or 46
+            self.Instance.Size = UDim2.new(1, -4, 0, required)
+            sizeConstraint.MinSize = Vector2.new(0, required)
+            if self.Data.Description.Visible then self.Data.Description.Size = UDim2.new(1, -58, 0, measured) end
+            return self
+        end
+        comp.ApplyTheme = function(c, t)
+            c.Data.Title.TextColor3 = t.Text
+            c.Data.Description.TextColor3 = t.Muted
+            c.Data.Line.BackgroundColor3 = t.Border
+            if c.Data.Chevron then
+                if c.Data.Chevron:IsA("ImageLabel") then c.Data.Chevron.ImageColor3 = t.Muted else c.Data.Chevron.TextColor3 = t.Muted end
+            end
+            c.Instance.BackgroundColor3 = t.Surface
+        end
         comp:AddConnection(row.Activated:Connect(function() comp:Toggle() end))
         if not comp.Data.Expanded then refresh() end
         return self:_add(comp)
@@ -1025,54 +1387,82 @@ function Window:CreateTab(options)
 
     function methods:CreateLabel(opts)
         opts = opts or {}
-        local row = makeRow(opts, opts.Height or 42)
+        local text = tostring(opts.Text or opts.Title or "Label")
+        local textSize = opts.TextSize or 13
+        local width = math.max(160, page.AbsoluteSize.X - 42)
+        local height = opts.Height or math.max(36, MeasureTextHeight(text, opts.Font or theme.Font, textSize, width, textSize + 8) + 16)
+        local row = makeRow(opts, height)
         local label = New("TextLabel", {
             BackgroundTransparency = 1,
             Size = UDim2.new(1, -28, 1, 0),
             Position = UDim2.fromOffset(14, 0),
-            Font = theme.Font,
-            Text = tostring(opts.Text or opts.Title or "Label"),
-            TextSize = opts.TextSize or 13,
+            Font = opts.Font or theme.Font,
+            Text = text,
+            TextSize = textSize,
             TextColor3 = opts.Color or theme.Text,
             TextWrapped = true,
             TextXAlignment = Enum.TextXAlignment.Left,
             TextYAlignment = Enum.TextYAlignment.Center
         }, row)
-        local comp = Component.new(self.Library, "Label", row, {Value = label.Text, Label = label})
+        local comp = Component.new(self.Library, "Label", row, {Value = label.Text, Label = label, TextSize = textSize, Font = opts.Font or theme.Font, Color = opts.Color})
+        function comp:Reflow()
+            local width = math.max(120, page.AbsoluteSize.X - 42)
+            if opts.Height == nil then
+                local height = math.max(36, MeasureTextHeight(self.Data.Label.Text, self.Data.Font, self.Data.TextSize, width, self.Data.TextSize + 4) + 16)
+                self.Instance.Size = UDim2.new(1, -4, 0, height)
+            end
+            return self
+        end
         comp.ApplyTheme = function(c, t) c.Label.TextColor3 = opts.Color or t.Text end
         return self:_add(comp)
     end
 
     function methods:CreateParagraph(opts)
         opts = opts or {}
-        local row = makeRow(opts, opts.Height or 74)
+        local titleText = tostring(opts.Title or "Paragraph")
+        local bodyText = tostring(opts.Content or opts.Description or "")
+        local bodySize = opts.TextSize or 12
+        local availableWidth = math.max(180, page.AbsoluteSize.X - 42)
+        local bodyHeight = MeasureTextHeight(bodyText, theme.Font, bodySize, availableWidth, 18)
+        local rowHeight = math.max(tonumber(opts.Height) or 0, math.max(74, bodyHeight + 48))
+        local row = makeRow(opts, rowHeight)
         local titleLabel = New("TextLabel", {
             BackgroundTransparency = 1,
             Position = UDim2.fromOffset(14, 9),
             Size = UDim2.new(1, -28, 0, 22),
             Font = theme.TitleFont,
-            Text = tostring(opts.Title or "Paragraph"),
+            Text = titleText,
             TextSize = 14,
             TextColor3 = theme.Text,
-            TextXAlignment = Enum.TextXAlignment.Left
+            TextXAlignment = Enum.TextXAlignment.Left,
+            TextTruncate = Enum.TextTruncate.AtEnd
         }, row)
         local body = New("TextLabel", {
             BackgroundTransparency = 1,
-            Position = UDim2.fromOffset(14, 31),
-            Size = UDim2.new(1, -28, 1, -38),
+            Position = UDim2.fromOffset(14, 32),
+            Size = UDim2.new(1, -28, 0, bodyHeight),
             Font = theme.Font,
-            Text = tostring(opts.Content or opts.Description or ""),
-            TextSize = opts.TextSize or 12,
+            Text = bodyText,
+            TextSize = bodySize,
             TextColor3 = theme.Muted,
             TextWrapped = true,
             TextXAlignment = Enum.TextXAlignment.Left,
             TextYAlignment = Enum.TextYAlignment.Top,
             RichText = opts.RichText ~= false
         }, row)
-        local comp = Component.new(self.Library, "Paragraph", row, {Title = titleLabel, Content = body, Value = opts.Content or opts.Description or ""})
+        local comp = Component.new(self.Library, "Paragraph", row, {Title = titleLabel, Content = body, Value = bodyText})
         function comp:Set(value)
-            self.Data.Value = value
-            self.Data.Content.Text = tostring(value or "")
+            self.Data.Value = tostring(value or "")
+            self.Data.Content.Text = self.Data.Value
+            self:Reflow()
+            return self
+        end
+        function comp:Reflow()
+            local width = math.max(160, page.AbsoluteSize.X - 42)
+            local measured = MeasureTextHeight(self.Data.Content.Text, self.Data.Content.Font, self.Data.Content.TextSize, width, 18)
+            local height = math.max(tonumber(opts.Height) or 0, math.max(74, measured + 48))
+            self.Instance.Size = UDim2.new(1, -4, 0, height)
+            self.Data.Content.Size = UDim2.new(1, -28, 0, measured)
             return self
         end
         comp.ApplyTheme = function(c, t) c.Data.Title.TextColor3 = t.Text; c.Data.Content.TextColor3 = t.Muted end
@@ -1117,17 +1507,22 @@ function Window:CreateTab(options)
         comp.ApplyTheme = function(c, t) c.Data.Label.TextColor3 = t.Text; c.Data.Label.Font = t.SmallFont end
         comp:AddConnection(button.MouseEnter:Connect(function() Tween(row, {BackgroundColor3 = self.Library.Theme.Surface3 or self.Library.Theme.Surface}, 0.14) end))
         comp:AddConnection(button.MouseLeave:Connect(function() Tween(row, {BackgroundColor3 = self.Library.Theme.Surface2}, 0.14) end))
-        comp:AddConnection(button.MouseButton1Down:Connect(function() Tween(button, {Size = UDim2.new(0.985, 0, 0.96, 0)}, 0.08) end))
-        comp:AddConnection(button.MouseButton1Up:Connect(function() Tween(button, {Size = UDim2.fromScale(1, 1)}, 0.12) end))
+        comp:AddConnection(button.MouseButton1Down:Connect(function() Tween(row, {BackgroundTransparency = 0.04}, 0.08) end))
+        comp:AddConnection(button.MouseButton1Up:Connect(function() Tween(row, {BackgroundTransparency = 0}, 0.12) end))
         comp:AddConnection(button.Activated:Connect(function() if comp.Data.Enabled ~= false then Fire(comp.Data.Callback) end end))
         return self:_add(comp)
     end
 
     function methods:CreateToggle(opts)
         opts = opts or {}
-        local row = makeRow(opts, opts.Height or 58)
-        local title = New("TextLabel", {BackgroundTransparency = 1, Position = UDim2.fromOffset(14, 7), Size = UDim2.new(1, -92, 0, 21), Font = theme.SmallFont, Text = tostring(opts.Title or "Toggle"), TextSize = 13, TextColor3 = theme.Text, TextXAlignment = Enum.TextXAlignment.Left}, row)
-        local desc = New("TextLabel", {BackgroundTransparency = 1, Position = UDim2.fromOffset(14, 27), Size = UDim2.new(1, -92, 0, 20), Font = theme.Font, Text = tostring(opts.Description or ""), TextSize = 11, TextColor3 = theme.Muted, TextXAlignment = Enum.TextXAlignment.Left, TextTruncate = Enum.TextTruncate.AtEnd}, row)
+        local descriptionText = tostring(opts.Description or "")
+        local availableWidth = math.max(180, page.AbsoluteSize.X - 126)
+        local descriptionHeight = descriptionText ~= "" and MeasureTextHeight(descriptionText, theme.Font, 11, availableWidth, 16) or 0
+        local computedHeight = math.max(58, 37 + descriptionHeight)
+        local rowHeight = math.max(tonumber(opts.Height) or 0, computedHeight)
+        local row = makeRow(opts, rowHeight)
+        local title = New("TextLabel", {BackgroundTransparency = 1, Position = UDim2.fromOffset(14, 8), Size = UDim2.new(1, -94, 0, 20), Font = theme.SmallFont, Text = tostring(opts.Title or "Toggle"), TextSize = 13, TextColor3 = theme.Text, TextXAlignment = Enum.TextXAlignment.Left, TextTruncate = Enum.TextTruncate.AtEnd}, row)
+        local desc = New("TextLabel", {BackgroundTransparency = 1, Position = UDim2.fromOffset(14, 29), Size = UDim2.new(1, -96, 0, math.max(18, descriptionHeight)), Font = theme.Font, Text = descriptionText, TextSize = 11, TextColor3 = theme.Muted, TextXAlignment = Enum.TextXAlignment.Left, TextYAlignment = Enum.TextYAlignment.Top, TextWrapped = true, Visible = descriptionText ~= ""}, row)
         local track = New("Frame", {BackgroundColor3 = theme.Border, BorderSizePixel = 0, AnchorPoint = Vector2.new(1, 0.5), Position = UDim2.new(1, -14, 0.5, 0), Size = UDim2.fromOffset(42, 24)}, row)
         Corner(track, 12)
         local knob = New("Frame", {BackgroundColor3 = theme.Text, BorderSizePixel = 0, Position = UDim2.fromOffset(4, 4), Size = UDim2.fromOffset(16, 16)}, track)
@@ -1144,6 +1539,14 @@ function Window:CreateTab(options)
             self.Data.Value = value == true
             render(true)
             Fire(comp.Data.Callback, self.Data.Value)
+            return self
+        end
+        function comp:Reflow()
+            local width = math.max(160, page.AbsoluteSize.X - 126)
+            local measured = descriptionText ~= "" and MeasureTextHeight(self.Data.Description.Text, self.Data.Description.Font, self.Data.Description.TextSize, width, 16) or 0
+            local height = math.max(tonumber(opts.Height) or 0, math.max(58, 37 + measured))
+            self.Instance.Size = UDim2.new(1, -4, 0, height)
+            self.Data.Description.Size = UDim2.new(1, -96, 0, math.max(18, measured))
             return self
         end
         comp.ApplyTheme = function(c, t) c.Data.Title.TextColor3 = t.Text; c.Data.Description.TextColor3 = t.Muted; render(false) end
@@ -1181,9 +1584,10 @@ function Window:CreateTab(options)
     function methods:CreateDropdown(opts)
         opts = opts or {}
         local row = makeRow(opts, 58)
-        local title = New("TextLabel", {BackgroundTransparency = 1, Position = UDim2.fromOffset(14, 7), Size = UDim2.new(0.48, 0, 0, 20), Font = theme.SmallFont, Text = tostring(opts.Title or "Dropdown"), TextSize = 13, TextColor3 = theme.Text, TextXAlignment = Enum.TextXAlignment.Left}, row)
-        local selected = New("TextLabel", {BackgroundTransparency = 1, AnchorPoint = Vector2.new(1, 0.5), Position = UDim2.new(1, -34, 0.5, 0), Size = UDim2.new(0.44, 0, 0, 24), Font = theme.Font, Text = tostring(opts.Default or "Select"), TextSize = 12, TextColor3 = theme.Muted, TextXAlignment = Enum.TextXAlignment.Right, TextTruncate = Enum.TextTruncate.AtEnd}, row)
-        local arrow = New("TextLabel", {BackgroundTransparency = 1, AnchorPoint = Vector2.new(1, 0.5), Position = UDim2.new(1, -10, 0.5, 0), Size = UDim2.fromOffset(18, 18), Font = theme.TitleFont, Text = "⌄", TextSize = 16, TextColor3 = theme.Muted}, row)
+        local title = New("TextLabel", {BackgroundTransparency = 1, Position = UDim2.fromOffset(14, 7), Size = UDim2.new(1, -178, 0, 20), Font = theme.SmallFont, Text = tostring(opts.Title or "Dropdown"), TextSize = 13, TextColor3 = theme.Text, TextXAlignment = Enum.TextXAlignment.Left}, row)
+        local selected = New("TextLabel", {BackgroundTransparency = 1, AnchorPoint = Vector2.new(1, 0.5), Position = UDim2.new(1, -34, 0.5, 0), Size = UDim2.fromOffset(132, 24), Font = theme.Font, Text = tostring(opts.Default or "Select"), TextSize = 12, TextColor3 = theme.Muted, TextXAlignment = Enum.TextXAlignment.Right, TextTruncate = Enum.TextTruncate.AtEnd}, row)
+        local arrow = CreateIcon(row, "lucide:chevron-down", 15, theme.Muted, "right")
+        if arrow then arrow.AnchorPoint = Vector2.new(1, 0.5); arrow.Position = UDim2.new(1, -10, 0.5, 0) end
         local hit = New("TextButton", {BackgroundTransparency = 1, Size = UDim2.fromScale(1, 1), Text = "", AutoButtonColor = false}, row)
         local popup = New("Frame", {BackgroundColor3 = theme.Surface, BorderSizePixel = 0, Size = UDim2.new(1, 0, 0, 0), Position = UDim2.new(0, 0, 1, 6), ClipsDescendants = true, Visible = false, ZIndex = 20}, row)
         Corner(popup, theme.Radius)
@@ -1196,10 +1600,11 @@ function Window:CreateTab(options)
         local layout2 = New("UIListLayout", {Padding = UDim.new(0, 5), SortOrder = Enum.SortOrder.LayoutOrder}, list)
         local comp = Component.new(self.Library, "Dropdown", row, {Value = opts.Default, Options = normalizeOptions(opts.Options), Title = title, Selected = selected, Popup = popup, List = list, Search = search, Open = false, OptionButtons = {}, Callback = opts.Callback})
         local renderOptions
+        local popupHeight = math.min(250, 56 + #comp.Data.Options * 36)
         local function closePopup()
             comp.Data.Open = false
             popup.Visible = false
-            Tween(row, {ZIndex = 1}, 0.1)
+            StopPopupTracking(comp)
         end
         function comp:Set(value, silent)
             self.Data.Value = value
@@ -1218,8 +1623,11 @@ function Window:CreateTab(options)
         end
         function comp:Open()
             comp.Data.Open = true
+            popup.Parent = self.Library.PopupLayer or self.Library.Gui
+            popup.ZIndex = 250
             popup.Visible = true
-            Tween(popup, {Size = UDim2.new(1, 0, 0, math.min(230, 56 + #self.Data.Options * 36))}, 0.18)
+            popupHeight = math.min(250, 56 + #self.Data.Options * 36)
+            StartPopupTracking(self, row, popup, math.max(220, row.AbsoluteSize.X), popupHeight)
             return self
         end
         function comp:Close()
@@ -1249,8 +1657,9 @@ function Window:CreateTab(options)
                 if filter == "" or string.find(string.lower(label), filter, 1, true) then
                     local itemButton = New("TextButton", {BackgroundColor3 = self.Library.Theme.Surface2, BorderSizePixel = 0, Size = UDim2.new(1, 0, 0, 32), Text = "", AutoButtonColor = false, ZIndex = 22}, list)
                     Corner(itemButton, 6)
-                    local itemLabel = New("TextLabel", {BackgroundTransparency = 1, Position = UDim2.fromOffset(10, 0), Size = UDim2.new(1, -20, 1, 0), Font = self.Library.Theme.Font, Text = label, TextSize = 12, TextColor3 = item.Disabled and self.Library.Theme.Muted or self.Library.Theme.Text, TextXAlignment = Enum.TextXAlignment.Left, ZIndex = 23}, itemButton)
-                    if item.Icon then CreateIcon(itemButton, item.Icon, 15, self.Library.Theme.Muted) end
+                    local itemIcon = item.Icon and CreateIcon(itemButton, item.Icon, 15, self.Library.Theme.Muted) or nil
+                    if itemIcon then itemIcon.ZIndex = 23 end
+                    local itemLabel = New("TextLabel", {BackgroundTransparency = 1, Position = UDim2.fromOffset(itemIcon and 34 or 10, 0), Size = UDim2.new(1, itemIcon and -46 or -20, 1, 0), Font = self.Library.Theme.Font, Text = label, TextSize = 12, TextColor3 = item.Disabled and self.Library.Theme.Muted or self.Library.Theme.Text, TextXAlignment = Enum.TextXAlignment.Left, TextTruncate = Enum.TextTruncate.AtEnd, ZIndex = 23}, itemButton)
                     if not item.Disabled then
                         comp.DynamicConnections:Add(itemButton.Activated:Connect(function() comp:Set(item.Value); closePopup() end))
                         comp.DynamicConnections:Add(itemButton.MouseEnter:Connect(function() Tween(itemButton, {BackgroundColor3 = self.Library.Theme.Border}, 0.1) end))
@@ -1273,8 +1682,10 @@ function Window:CreateTab(options)
         opts.Title = opts.Title or "Multi Dropdown"
         local values = opts.Default or {}
         local row = makeRow(opts, 60)
-        local title = New("TextLabel", {BackgroundTransparency = 1, Position = UDim2.fromOffset(14, 8), Size = UDim2.new(0.48, 0, 0, 20), Font = theme.SmallFont, Text = opts.Title, TextSize = 13, TextColor3 = theme.Text, TextXAlignment = Enum.TextXAlignment.Left}, row)
-        local selected = New("TextLabel", {BackgroundTransparency = 1, AnchorPoint = Vector2.new(1, 0.5), Position = UDim2.new(1, -34, 0.5, 0), Size = UDim2.new(0.45, 0, 0, 30), Font = theme.Font, Text = "0 selected", TextSize = 12, TextColor3 = theme.Muted, TextXAlignment = Enum.TextXAlignment.Right, TextTruncate = Enum.TextTruncate.AtEnd}, row)
+        local title = New("TextLabel", {BackgroundTransparency = 1, Position = UDim2.fromOffset(14, 8), Size = UDim2.new(1, -178, 0, 20), Font = theme.SmallFont, Text = opts.Title, TextSize = 13, TextColor3 = theme.Text, TextXAlignment = Enum.TextXAlignment.Left}, row)
+        local selected = New("TextLabel", {BackgroundTransparency = 1, AnchorPoint = Vector2.new(1, 0.5), Position = UDim2.new(1, -34, 0.5, 0), Size = UDim2.fromOffset(132, 30), Font = theme.Font, Text = "0 selected", TextSize = 12, TextColor3 = theme.Muted, TextXAlignment = Enum.TextXAlignment.Right, TextTruncate = Enum.TextTruncate.AtEnd}, row)
+        local arrow = CreateIcon(row, "lucide:chevron-down", 15, theme.Muted, "right")
+        if arrow then arrow.AnchorPoint = Vector2.new(1, 0.5); arrow.Position = UDim2.new(1, -10, 0.5, 0) end
         local hit = New("TextButton", {BackgroundTransparency = 1, Size = UDim2.fromScale(1, 1), Text = "", AutoButtonColor = false}, row)
         local popup = New("Frame", {BackgroundColor3 = theme.Surface, BorderSizePixel = 0, Size = UDim2.new(1, 0, 0, 0), Position = UDim2.new(0, 0, 1, 6), ClipsDescendants = true, Visible = false, ZIndex = 20}, row)
         Corner(popup, theme.Radius)
@@ -1352,11 +1763,24 @@ function Window:CreateTab(options)
             for _, item in ipairs(self.Data.Value) do if item ~= value then table.insert(nextValues, item) end end
             return self:Set(nextValues)
         end
-        function comp:Toggle()
-            self.Data.Open = not self.Data.Open
-            popup.Visible = self.Data.Open
-            if self.Data.Open then Tween(popup, {Size = UDim2.new(1, 0, 0, math.min(260, 92 + #self.Data.Options * 36))}, 0.18) end
+        function comp:Open()
+            self.Data.Open = true
+            popup.Parent = self.Library.PopupLayer or self.Library.Gui
+            popup.ZIndex = 250
+            popup.Visible = true
+            local height = math.min(286, 92 + #self.Data.Options * 36)
+            StartPopupTracking(self, row, popup, math.max(240, row.AbsoluteSize.X), height)
             return self
+        end
+        function comp:Close()
+            self.Data.Open = false
+            popup.Visible = false
+            StopPopupTracking(self)
+            return self
+        end
+        function comp:Toggle()
+            if self.Data.Open then return self:Close() end
+            return self:Open()
         end
         comp.ApplyTheme = function(c, t) c.Data.Title.TextColor3 = t.Text; c.Data.Selected.TextColor3 = t.Muted; render() end
         comp:AddConnection(hit.Activated:Connect(function() comp:Toggle() end))
@@ -1371,10 +1795,12 @@ function Window:CreateTab(options)
     function methods:CreateImageDropdown(opts)
         opts = opts or {}
         local row = makeRow(opts, 60)
-        local title = New("TextLabel", {BackgroundTransparency = 1, Position = UDim2.fromOffset(14, 0), Size = UDim2.new(0.4, 0, 1, 0), Font = theme.SmallFont, Text = tostring(opts.Title or "Image Dropdown"), TextSize = 13, TextColor3 = theme.Text, TextXAlignment = Enum.TextXAlignment.Left}, row)
-        local preview = New("ImageLabel", {BackgroundColor3 = theme.Surface, BorderSizePixel = 0, AnchorPoint = Vector2.new(1, 0.5), Position = UDim2.new(1, -12, 0.5, 0), Size = UDim2.fromOffset(38, 38), Image = "", ScaleType = Enum.ScaleType.Crop}, row)
+        local title = New("TextLabel", {BackgroundTransparency = 1, Position = UDim2.fromOffset(14, 0), Size = UDim2.new(1, -112, 1, 0), Font = theme.SmallFont, Text = tostring(opts.Title or "Image Dropdown"), TextSize = 13, TextColor3 = theme.Text, TextXAlignment = Enum.TextXAlignment.Left, TextTruncate = Enum.TextTruncate.AtEnd}, row)
+        local preview = New("ImageLabel", {BackgroundColor3 = theme.Surface, BorderSizePixel = 0, AnchorPoint = Vector2.new(1, 0.5), Position = UDim2.new(1, -34, 0.5, 0), Size = UDim2.fromOffset(38, 38), Image = "", ScaleType = Enum.ScaleType.Crop}, row)
         Corner(preview, 8)
         Stroke(preview, theme.Border, 0.35, 1)
+        local arrow = CreateIcon(row, "lucide:chevron-down", 14, theme.Muted, "right")
+        if arrow then arrow.AnchorPoint = Vector2.new(1, 0.5); arrow.Position = UDim2.new(1, -10, 0.5, 0) end
         local hit = New("TextButton", {BackgroundTransparency = 1, Size = UDim2.fromScale(1, 1), Text = "", AutoButtonColor = false}, row)
         local popup = New("Frame", {BackgroundColor3 = theme.Surface, BorderSizePixel = 0, Size = UDim2.new(1, 0, 0, 0), Position = UDim2.new(0, 0, 1, 6), ClipsDescendants = true, Visible = false, ZIndex = 20}, row)
         Corner(popup, theme.Radius)
@@ -1389,10 +1815,11 @@ function Window:CreateTab(options)
             for _, item in ipairs(comp.Data.Options) do
                 local card = New("TextButton", {BackgroundColor3 = self.Library.Theme.Surface2, BorderSizePixel = 0, Text = "", AutoButtonColor = false, ZIndex = 22}, grid)
                 Corner(card, 8)
-                local image = New("ImageLabel", {BackgroundTransparency = 1, Size = UDim2.new(1, -14, 0, 42), Position = UDim2.fromOffset(7, 7), Image = tostring(item.Image or item.Icon or ""), ScaleType = Enum.ScaleType.Crop, ZIndex = 23}, card)
+                local imageSource = tostring(item.Image or item.Icon or "")
+                local image = New("ImageLabel", {BackgroundTransparency = 1, Size = UDim2.new(1, -14, 0, 42), Position = UDim2.fromOffset(7, 7), Image = imageSource, ScaleType = Enum.ScaleType.Crop, ZIndex = 23}, card)
                 Corner(image, 6)
                 local lbl = New("TextLabel", {BackgroundTransparency = 1, Position = UDim2.new(0, 7, 1, -23), Size = UDim2.new(1, -14, 0, 18), Font = self.Library.Theme.Font, Text = tostring(item.Label or item.Value), TextSize = 10, TextColor3 = self.Library.Theme.Text, TextTruncate = Enum.TextTruncate.AtEnd, ZIndex = 23}, card)
-                if not item.Disabled then comp.DynamicConnections:Add(card.Activated:Connect(function() comp:Set(item.Value); popup.Visible = false; comp.Data.Open = false end)) end
+                if not item.Disabled then comp.DynamicConnections:Add(card.Activated:Connect(function() comp:Set(item.Value); comp:Close() end)) end
             end
         end
         function comp:Set(value, silent)
@@ -1401,11 +1828,23 @@ function Window:CreateTab(options)
             if not silent then Fire(comp.Data.Callback, value) end
             return self
         end
-        function comp:Toggle()
-            self.Data.Open = not self.Data.Open
-            popup.Visible = self.Data.Open
-            if self.Data.Open then Tween(popup, {Size = UDim2.new(1, 0, 0, 170)}, 0.18) end
+        function comp:Open()
+            self.Data.Open = true
+            popup.Parent = self.Library.PopupLayer or self.Library.Gui
+            popup.ZIndex = 250
+            popup.Visible = true
+            StartPopupTracking(self, row, popup, math.max(300, row.AbsoluteSize.X), 190)
             return self
+        end
+        function comp:Close()
+            self.Data.Open = false
+            popup.Visible = false
+            StopPopupTracking(self)
+            return self
+        end
+        function comp:Toggle()
+            if self.Data.Open then return self:Close() end
+            return self:Open()
         end
         function comp:SetOptions(items)
             self.Data.Options = normalizeOptions(items)
@@ -1426,7 +1865,7 @@ function Window:CreateTab(options)
         local increment = tonumber(opts.Increment) or 1
         local default = Clamp(tonumber(opts.Default) or minValue, minValue, maxValue)
         local row = makeRow(opts, 68)
-        local title = New("TextLabel", {BackgroundTransparency = 1, Position = UDim2.fromOffset(14, 7), Size = UDim2.new(0.65, 0, 0, 20), Font = theme.SmallFont, Text = tostring(opts.Title or "Slider"), TextSize = 13, TextColor3 = theme.Text, TextXAlignment = Enum.TextXAlignment.Left}, row)
+        local title = New("TextLabel", {BackgroundTransparency = 1, Position = UDim2.fromOffset(14, 7), Size = UDim2.new(1, -120, 0, 20), Font = theme.SmallFont, Text = tostring(opts.Title or "Slider"), TextSize = 13, TextColor3 = theme.Text, TextXAlignment = Enum.TextXAlignment.Left}, row)
         local valueLabel = New("TextLabel", {BackgroundTransparency = 1, AnchorPoint = Vector2.new(1, 0), Position = UDim2.new(1, -14, 0, 7), Size = UDim2.fromOffset(90, 20), Font = theme.Font, Text = FormatValue(default, opts.Decimals), TextSize = 12, TextColor3 = theme.Accent, TextXAlignment = Enum.TextXAlignment.Right}, row)
         local bar = New("Frame", {BackgroundColor3 = theme.Border, BorderSizePixel = 0, Position = UDim2.new(0, 14, 0, 40), Size = UDim2.new(1, -28, 0, 5)}, row)
         Corner(bar, 5)
@@ -1465,8 +1904,8 @@ function Window:CreateTab(options)
     function methods:CreateInput(opts)
         opts = opts or {}
         local row = makeRow(opts, opts.Height or 58)
-        local title = New("TextLabel", {BackgroundTransparency = 1, Position = UDim2.fromOffset(14, 6), Size = UDim2.new(0.36, 0, 0, 18), Font = theme.SmallFont, Text = tostring(opts.Title or "Input"), TextSize = 13, TextColor3 = theme.Text, TextXAlignment = Enum.TextXAlignment.Left}, row)
-        local box = New("TextBox", {BackgroundColor3 = theme.Surface, BorderSizePixel = 0, AnchorPoint = Vector2.new(1, 0.5), Position = UDim2.new(1, -12, 0.5, 0), Size = UDim2.new(0.52, 0, 0, 34), PlaceholderText = tostring(opts.Placeholder or "Enter value..."), PlaceholderColor3 = theme.Muted, Text = tostring(opts.Default or ""), TextColor3 = theme.Text, Font = theme.Font, TextSize = 12, ClearTextOnFocus = false, TextXAlignment = Enum.TextXAlignment.Left}, row)
+        local title = New("TextLabel", {BackgroundTransparency = 1, Position = UDim2.fromOffset(14, 6), Size = UDim2.new(1, -190, 0, 18), Font = theme.SmallFont, Text = tostring(opts.Title or "Input"), TextSize = 13, TextColor3 = theme.Text, TextXAlignment = Enum.TextXAlignment.Left, TextTruncate = Enum.TextTruncate.AtEnd}, row)
+        local box = New("TextBox", {BackgroundColor3 = theme.Surface, BorderSizePixel = 0, AnchorPoint = Vector2.new(1, 0.5), Position = UDim2.new(1, -12, 0.5, 0), Size = UDim2.fromOffset(164, 34), PlaceholderText = tostring(opts.Placeholder or "Enter value..."), PlaceholderColor3 = theme.Muted, Text = tostring(opts.Default or ""), TextColor3 = theme.Text, Font = theme.Font, TextSize = 12, ClearTextOnFocus = false, TextXAlignment = Enum.TextXAlignment.Left}, row)
         Corner(box, 7)
         Stroke(box, theme.Border, 0.35, 1)
         Padding(box, 10, 10, 0, 0)
@@ -1477,14 +1916,14 @@ function Window:CreateTab(options)
             return self
         end
         comp.ApplyTheme = function(c, t) c.Data.Title.TextColor3 = t.Text; c.Data.Box.BackgroundColor3 = t.Surface; c.Data.Box.TextColor3 = t.Text; c.Data.Box.PlaceholderColor3 = t.Muted end
-        comp:AddConnection(box.FocusLost:Connect(function() self.Data.Value = box.Text; Fire(comp.Data.Callback, box.Text) end))
+        comp:AddConnection(box.FocusLost:Connect(function() comp.Data.Value = box.Text; Fire(comp.Data.Callback, box.Text) end))
         return self:_add(comp)
     end
 
     function methods:CreateKeybind(opts)
         opts = opts or {}
         local row = makeRow(opts, 56)
-        local title = New("TextLabel", {BackgroundTransparency = 1, Position = UDim2.fromOffset(14, 0), Size = UDim2.new(0.55, 0, 1, 0), Font = theme.SmallFont, Text = tostring(opts.Title or "Keybind"), TextSize = 13, TextColor3 = theme.Text, TextXAlignment = Enum.TextXAlignment.Left}, row)
+        local title = New("TextLabel", {BackgroundTransparency = 1, Position = UDim2.fromOffset(14, 0), Size = UDim2.new(1, -106, 1, 0), Font = theme.SmallFont, Text = tostring(opts.Title or "Keybind"), TextSize = 13, TextColor3 = theme.Text, TextXAlignment = Enum.TextXAlignment.Left, TextTruncate = Enum.TextTruncate.AtEnd}, row)
         local keyButton = New("TextButton", {BackgroundColor3 = theme.Surface, BorderSizePixel = 0, AnchorPoint = Vector2.new(1, 0.5), Position = UDim2.new(1, -12, 0.5, 0), Size = UDim2.fromOffset(76, 32), Text = tostring(opts.Default or "None"), Font = theme.SmallFont, TextSize = 11, TextColor3 = theme.Text, AutoButtonColor = false}, row)
         Corner(keyButton, 7)
         Stroke(keyButton, theme.Border, 0.35, 1)
@@ -1519,7 +1958,7 @@ function Window:CreateTab(options)
     function methods:CreateColorPicker(opts)
         opts = opts or {}
         local row = makeRow(opts, 56)
-        local title = New("TextLabel", {BackgroundTransparency = 1, Position = UDim2.fromOffset(14, 0), Size = UDim2.new(0.56, 0, 1, 0), Font = theme.SmallFont, Text = tostring(opts.Title or "Color Picker"), TextSize = 13, TextColor3 = theme.Text, TextXAlignment = Enum.TextXAlignment.Left}, row)
+        local title = New("TextLabel", {BackgroundTransparency = 1, Position = UDim2.fromOffset(14, 0), Size = UDim2.new(0.56, 0, 1, 0), Font = theme.SmallFont, Text = tostring(opts.Title or "Color Picker"), TextSize = 13, TextColor3 = theme.Text, TextXAlignment = Enum.TextXAlignment.Left, TextTruncate = Enum.TextTruncate.AtEnd}, row)
         local preview = New("TextButton", {BackgroundColor3 = opts.Default or theme.Accent, BorderSizePixel = 0, AnchorPoint = Vector2.new(1, 0.5), Position = UDim2.new(1, -12, 0.5, 0), Size = UDim2.fromOffset(64, 30), Text = "", AutoButtonColor = false}, row)
         Corner(preview, 7)
         Stroke(preview, theme.Border, 0.35, 1)
@@ -1558,12 +1997,23 @@ function Window:CreateTab(options)
             return self
         end
         function comp:Toggle()
-            self.Data.Open = not self.Data.Open
-            self.Data.Popup.Visible = self.Data.Open
+            if self.Data.Open then return self:Close() end
+            return self:Open()
+        end
+        function comp:Open()
+            self.Data.Open = true
+            self.Data.Popup.Parent = self.Library.PopupLayer or self.Library.Gui
+            self.Data.Popup.ZIndex = 250
+            self.Data.Popup.Visible = true
+            StartPopupTracking(self, row, self.Data.Popup, 280, 214)
             return self
         end
-        function comp:Open() self.Data.Open = true; self.Data.Popup.Visible = true; return self end
-        function comp:Close() self.Data.Open = false; self.Data.Popup.Visible = false; return self end
+        function comp:Close()
+            self.Data.Open = false
+            self.Data.Popup.Visible = false
+            StopPopupTracking(self)
+            return self
+        end
         local function applyFromInputs()
             local color = fromHex(hex.Text)
             if not color then
@@ -1630,12 +2080,29 @@ function Window:CreateTab(options)
 
     function methods:CreateCard(opts)
         opts = opts or {}
-        local height = opts.Height or 100
+        local titleText = tostring(opts.Title or "Card")
+        local bodyText = tostring(opts.Description or opts.Content or "")
+        local bodyHeight = MeasureTextHeight(bodyText, theme.Font, 11, math.max(180, page.AbsoluteSize.X - 48), 18)
+        local height = math.max(tonumber(opts.Height) or 0, math.max(100, bodyHeight + 58))
         local card = makeRow(opts, height)
-        local title = New("TextLabel", {BackgroundTransparency = 1, Position = UDim2.fromOffset(14, 10), Size = UDim2.new(1, -28, 0, 22), Font = theme.TitleFont, Text = tostring(opts.Title or "Card"), TextSize = 14, TextColor3 = theme.Text, TextXAlignment = Enum.TextXAlignment.Left}, card)
-        local body = New("TextLabel", {BackgroundTransparency = 1, Position = UDim2.fromOffset(14, 35), Size = UDim2.new(1, -28, 1, -46), Font = theme.Font, Text = tostring(opts.Description or opts.Content or ""), TextSize = 11, TextColor3 = theme.Muted, TextWrapped = true, TextXAlignment = Enum.TextXAlignment.Left, TextYAlignment = Enum.TextYAlignment.Top}, card)
+        local icon = opts.Icon and CreateIcon(card, opts.Icon, 17, theme.Accent) or nil
+        if icon then
+            icon.Position = UDim2.fromOffset(14, 20)
+            icon.AnchorPoint = Vector2.new(0, 0.5)
+        end
+        local titleX = icon and 40 or 14
+        local title = New("TextLabel", {BackgroundTransparency = 1, Position = UDim2.fromOffset(titleX, 10), Size = UDim2.new(1, -titleX - 14, 0, 22), Font = theme.TitleFont, Text = titleText, TextSize = 14, TextColor3 = theme.Text, TextXAlignment = Enum.TextXAlignment.Left, TextTruncate = Enum.TextTruncate.AtEnd}, card)
+        local body = New("TextLabel", {BackgroundTransparency = 1, Position = UDim2.fromOffset(14, 36), Size = UDim2.new(1, -28, 0, bodyHeight), Font = theme.Font, Text = bodyText, TextSize = 11, TextColor3 = theme.Muted, TextWrapped = true, TextXAlignment = Enum.TextXAlignment.Left, TextYAlignment = Enum.TextYAlignment.Top}, card)
         local comp = Component.new(self.Library, "Card", card, {Title = title, Content = body, Value = body.Text})
-        function comp:Set(value) self.Data.Value = tostring(value or ""); self.Data.Content.Text = self.Data.Value; return self end
+        function comp:Set(value) self.Data.Value = tostring(value or ""); self.Data.Content.Text = self.Data.Value; self:Reflow(); return self end
+        function comp:Reflow()
+            local width = math.max(160, page.AbsoluteSize.X - 48)
+            local measured = MeasureTextHeight(self.Data.Content.Text, self.Data.Content.Font, self.Data.Content.TextSize, width, 18)
+            local height = math.max(tonumber(opts.Height) or 0, math.max(100, measured + 58))
+            self.Instance.Size = UDim2.new(1, -4, 0, height)
+            self.Data.Content.Size = UDim2.new(1, -28, 0, measured)
+            return self
+        end
         comp.ApplyTheme = function(c, t) c.Data.Title.TextColor3 = t.Text; c.Data.Content.TextColor3 = t.Muted end
         return self:_add(comp)
     end
@@ -1650,8 +2117,8 @@ function Window:CreateTab(options)
         local label = New("TextLabel", {BackgroundTransparency = 1, Position = UDim2.fromOffset(52, 0), Size = UDim2.new(1, -66, 1, 0), Font = theme.SmallFont, Text = tostring(opts.Text or "Loading..."), TextSize = 12, TextColor3 = theme.Text, TextXAlignment = Enum.TextXAlignment.Left}, row)
         local comp = Component.new(self.Library, "Loading", row, {Value = true, Spinner = spinner, Label = label, Enabled = true})
         local rotation = 0
-        comp:AddConnection(game:GetService("RunService").Heartbeat:Connect(function(delta)
-            if comp.Data.Value and spinner.Parent then rotation += delta * 240; spinner.Rotation = rotation end
+        comp:AddConnection(RunService.Heartbeat:Connect(function(delta)
+            if comp.Data.Value and spinner.Parent then rotation = rotation + delta * 240; spinner.Rotation = rotation end
         end))
         function comp:Set(value) self.Data.Value = value == true; row.Visible = self.Data.Value; return self end
         comp.ApplyTheme = function(c, t)
@@ -1668,7 +2135,7 @@ function Window:CreateTab(options)
         local maxValue = tonumber(opts.Max) or 100
         local value = Clamp(tonumber(opts.Default or opts.Value) or minValue, minValue, maxValue)
         local row = makeRow(opts, opts.Height or 62)
-        local title = New("TextLabel", {BackgroundTransparency = 1, Position = UDim2.fromOffset(14, 8), Size = UDim2.new(0.65, 0, 0, 20), Font = theme.SmallFont, Text = tostring(opts.Title or "Progress"), TextSize = 13, TextColor3 = theme.Text, TextXAlignment = Enum.TextXAlignment.Left}, row)
+        local title = New("TextLabel", {BackgroundTransparency = 1, Position = UDim2.fromOffset(14, 8), Size = UDim2.new(1, -114, 0, 20), Font = theme.SmallFont, Text = tostring(opts.Title or "Progress"), TextSize = 13, TextColor3 = theme.Text, TextXAlignment = Enum.TextXAlignment.Left}, row)
         local valueLabel = New("TextLabel", {BackgroundTransparency = 1, AnchorPoint = Vector2.new(1, 0), Position = UDim2.new(1, -14, 0, 8), Size = UDim2.fromOffset(84, 20), Font = theme.Font, Text = FormatValue(value, opts.Decimals), TextSize = 11, TextColor3 = theme.Accent, TextXAlignment = Enum.TextXAlignment.Right}, row)
         local bar = New("Frame", {BackgroundColor3 = theme.Border, BorderSizePixel = 0, Position = UDim2.new(0, 14, 0, 40), Size = UDim2.new(1, -28, 0, 7)}, row)
         Corner(bar, 5)
@@ -1704,7 +2171,11 @@ function Window:CreateTab(options)
         local dot = New("Frame", {BackgroundColor3 = theme.Success, BorderSizePixel = 0, Position = UDim2.fromOffset(14, 18), Size = UDim2.fromOffset(10, 10)}, row)
         Corner(dot, 5)
         local title = New("TextLabel", {BackgroundTransparency = 1, Position = UDim2.fromOffset(32, 7), Size = UDim2.new(1, -46, 0, 18), Font = theme.SmallFont, Text = tostring(opts.Title or "Status"), TextSize = 12, TextColor3 = theme.Text, TextXAlignment = Enum.TextXAlignment.Left}, row)
-        local description = New("TextLabel", {BackgroundTransparency = 1, Position = UDim2.fromOffset(32, 26), Size = UDim2.new(1, -46, 0, 16), Font = theme.Font, Text = tostring(opts.Description or opts.Text or "Ready"), TextSize = 10, TextColor3 = theme.Muted, TextXAlignment = Enum.TextXAlignment.Left, TextTruncate = Enum.TextTruncate.AtEnd}, row)
+        local statusText = tostring(opts.Description or opts.Text or "Ready")
+        local statusHeight = MeasureTextHeight(statusText, theme.Font, 10, math.max(180, page.AbsoluteSize.X - 78), 16)
+        local rowHeight = math.max(tonumber(opts.Height) or 0, math.max(50, 31 + statusHeight))
+        row.Size = UDim2.new(1, -4, 0, rowHeight)
+        local description = New("TextLabel", {BackgroundTransparency = 1, Position = UDim2.fromOffset(32, 26), Size = UDim2.new(1, -46, 0, statusHeight), Font = theme.Font, Text = statusText, TextSize = 10, TextColor3 = theme.Muted, TextXAlignment = Enum.TextXAlignment.Left, TextYAlignment = Enum.TextYAlignment.Top, TextWrapped = true}, row)
         local comp = Component.new(self.Library, "Status", row, {Value = opts.State or "Success", Title = title, Description = description, Dot = dot, Callback = opts.Callback})
         local function tone(state)
             local stateName = string.lower(tostring(state or "Success"))
@@ -1717,7 +2188,16 @@ function Window:CreateTab(options)
             self.Data.Value = state
             if text ~= nil then self.Data.Description.Text = tostring(text) end
             self.Data.Dot.BackgroundColor3 = tone(state)
+            self:Reflow()
             Fire(comp.Data.Callback, state, text)
+            return self
+        end
+        function comp:Reflow()
+            local width = math.max(160, page.AbsoluteSize.X - 78)
+            local measured = MeasureTextHeight(self.Data.Description.Text, self.Data.Description.Font, self.Data.Description.TextSize, width, 16)
+            local height = math.max(tonumber(opts.Height) or 0, math.max(50, 31 + measured))
+            self.Instance.Size = UDim2.new(1, -4, 0, height)
+            self.Data.Description.Size = UDim2.new(1, -46, 0, measured)
             return self
         end
         comp.ApplyTheme = function(c, t) c.Data.Title.TextColor3 = t.Text; c.Data.Description.TextColor3 = t.Muted; c.Data.Dot.BackgroundColor3 = tone(c.Data.Value) end
@@ -1755,18 +2235,36 @@ function Window:CreateTab(options)
 
     function methods:CreateAlert(opts)
         opts = opts or {}
-        local row = makeRow(opts, opts.Height or 74)
+        local titleText = tostring(opts.Title or "Alert")
+        local bodyText = tostring(opts.Description or opts.Content or "")
+        local bodyHeight = MeasureTextHeight(bodyText, theme.Font, 11, math.max(180, page.AbsoluteSize.X - 56), 18)
+        local row = makeRow(opts, math.max(tonumber(opts.Height) or 0, math.max(74, bodyHeight + 50)))
         local kind = string.lower(tostring(opts.Type or "Info"))
         local tone = kind == "success" and theme.Success or kind == "warning" and theme.Warning or (kind == "danger" or kind == "error") and theme.Danger or theme.Accent2
         local stripe = New("Frame", {BackgroundColor3 = tone, BorderSizePixel = 0, Position = UDim2.fromOffset(0, 7), Size = UDim2.new(0, 3, 1, -14)}, row)
         Corner(stripe, 2)
-        local title = New("TextLabel", {BackgroundTransparency = 1, Position = UDim2.fromOffset(14, 9), Size = UDim2.new(1, -28, 0, 20), Font = theme.TitleFont, Text = tostring(opts.Title or "Alert"), TextSize = 13, TextColor3 = theme.Text, TextXAlignment = Enum.TextXAlignment.Left}, row)
-        local body = New("TextLabel", {BackgroundTransparency = 1, Position = UDim2.fromOffset(14, 31), Size = UDim2.new(1, -28, 1, -39), Font = theme.Font, Text = tostring(opts.Description or opts.Content or ""), TextSize = 11, TextColor3 = theme.Muted, TextWrapped = true, TextXAlignment = Enum.TextXAlignment.Left, TextYAlignment = Enum.TextYAlignment.Top}, row)
+        local icon = CreateIcon(row, opts.Icon or ((kind == "success" and "lucide:check") or (kind == "warning" and "lucide:warning") or ((kind == "danger" or kind == "error") and "lucide:error") or "lucide:info"), 16, tone)
+        if icon then
+            icon.AnchorPoint = Vector2.new(0, 0)
+            icon.Position = UDim2.fromOffset(14, 11)
+        end
+        local titleOffset = icon and 38 or 14
+        local title = New("TextLabel", {BackgroundTransparency = 1, Position = UDim2.fromOffset(titleOffset, 9), Size = UDim2.new(1, -titleOffset - 14, 0, 20), Font = theme.TitleFont, Text = titleText, TextSize = 13, TextColor3 = theme.Text, TextXAlignment = Enum.TextXAlignment.Left, TextTruncate = Enum.TextTruncate.AtEnd}, row)
+        local body = New("TextLabel", {BackgroundTransparency = 1, Position = UDim2.fromOffset(14, 32), Size = UDim2.new(1, -28, 0, bodyHeight), Font = theme.Font, Text = bodyText, TextSize = 11, TextColor3 = theme.Muted, TextWrapped = true, TextXAlignment = Enum.TextXAlignment.Left, TextYAlignment = Enum.TextYAlignment.Top}, row)
         local comp = Component.new(self.Library, "Alert", row, {Value = kind, Title = title, Description = body, Stripe = stripe})
         function comp:Set(state, text)
             self.Data.Value = string.lower(tostring(state or "Info"))
             if text ~= nil then self.Data.Description.Text = tostring(text) end
             self.Data.Stripe.BackgroundColor3 = (self.Data.Value == "success" and self.Library.Theme.Success) or (self.Data.Value == "warning" and self.Library.Theme.Warning) or (self.Data.Value == "danger" or self.Data.Value == "error") and self.Library.Theme.Danger or self.Library.Theme.Accent2
+            self:Reflow()
+            return self
+        end
+        function comp:Reflow()
+            local width = math.max(160, page.AbsoluteSize.X - 56)
+            local measured = MeasureTextHeight(self.Data.Description.Text, self.Data.Description.Font, self.Data.Description.TextSize, width, 18)
+            local height = math.max(tonumber(opts.Height) or 0, math.max(74, measured + 50))
+            self.Instance.Size = UDim2.new(1, -4, 0, height)
+            self.Data.Description.Size = UDim2.new(1, -28, 0, measured)
             return self
         end
         comp.ApplyTheme = function(c, t)
@@ -1777,7 +2275,6 @@ function Window:CreateTab(options)
         end
         return self:_add(comp)
     end
-
 
     function methods:CreateTag(opts)
         opts = opts or {}
@@ -1913,8 +2410,20 @@ function Window:CreateTab(options)
                 if not item.Disabled then comp.DynamicConnections:Add(button.Activated:Connect(function() Fire(item.Callback); comp:Close() end)) end
             end
         end
-        function comp:Open() self.Data.Open = true; self.Data.Popup.Visible = true; Tween(self.Data.Popup, {Size = UDim2.fromOffset(220, math.min(240, 14 + #self.Data.Items * 34))}, 0.16); return self end
-        function comp:Close() self.Data.Open = false; self.Data.Popup.Visible = false; return self end
+        function comp:Open()
+            self.Data.Open = true
+            self.Data.Popup.Parent = self.Library.PopupLayer or self.Library.Gui
+            self.Data.Popup.ZIndex = 250
+            self.Data.Popup.Visible = true
+            StartPopupTracking(self, trigger, self.Data.Popup, 240, math.min(280, 14 + #self.Data.Items * 34))
+            return self
+        end
+        function comp:Close()
+            self.Data.Open = false
+            self.Data.Popup.Visible = false
+            StopPopupTracking(self)
+            return self
+        end
         function comp:Toggle() if self.Data.Open then return self:Close() end return self:Open() end
         function comp:SetItems(items) self.Data.Items = items or {}; render(); return self end
         comp.ApplyTheme = function(c, t) c.Data.Trigger.BackgroundColor3 = t.Surface2; c.Data.Title.TextColor3 = t.Text; c.Data.Popup.BackgroundColor3 = t.Surface; local stroke = c.Data.Popup:FindFirstChildOfClass("UIStroke"); if stroke then stroke.Color = t.Border end; render() end
@@ -1932,17 +2441,22 @@ function Window:CreateTab(options)
             target = makeRow(opts, 42)
             local targetLabel = New("TextLabel", {BackgroundTransparency = 1, Size = UDim2.new(1, -24, 1, 0), Position = UDim2.fromOffset(12, 0), Font = theme.Font, Text = tostring(opts.TargetText or "Hover me"), TextSize = 11, TextColor3 = theme.Muted, TextXAlignment = Enum.TextXAlignment.Left}, target)
         end
-        local popup = New("Frame", {BackgroundColor3 = theme.Surface, BorderSizePixel = 0, Size = UDim2.fromOffset(220, 0), Visible = false, ZIndex = 90, AutomaticSize = Enum.AutomaticSize.Y}, self.Library.Gui)
+        local tooltipText = tostring(opts.Text or opts.Description or "Tooltip")
+        local tooltipHeight = MeasureTextHeight(tooltipText, theme.Font, 11, 200, 18)
+        local popup = New("Frame", {BackgroundColor3 = theme.Surface, BorderSizePixel = 0, Size = UDim2.fromOffset(230, tooltipHeight + 16), Visible = false, ZIndex = 350}, self.Library.PopupLayer or self.Library.Gui)
         Corner(popup, theme.Radius - 2)
         Stroke(popup, theme.Border, 0.1, 1)
-        local body = New("TextLabel", {BackgroundTransparency = 1, Size = UDim2.new(1, -20, 0, 0), Position = UDim2.fromOffset(10, 8), AutomaticSize = Enum.AutomaticSize.Y, Font = theme.Font, Text = tostring(opts.Text or opts.Description or "Tooltip"), TextSize = 11, TextColor3 = theme.Text, TextWrapped = true, TextXAlignment = Enum.TextXAlignment.Left, TextYAlignment = Enum.TextYAlignment.Top, ZIndex = 91}, popup)
-        Padding(popup, 10, 10, 8, 8)
-        local controller = {Instance = popup, Target = target, Visible = false, Connections = ConnectionBag.new()}
+        local body = New("TextLabel", {BackgroundTransparency = 1, Size = UDim2.new(1, -20, 0, tooltipHeight), Position = UDim2.fromOffset(10, 8), Font = theme.Font, Text = tooltipText, TextSize = 11, TextColor3 = theme.Text, TextWrapped = true, TextXAlignment = Enum.TextXAlignment.Left, TextYAlignment = Enum.TextYAlignment.Top, ZIndex = 91}, popup)
+        local controller = {Library = self.Library, Instance = popup, Target = target, Visible = false, Connections = ConnectionBag.new()}
         function controller:Show()
             if self.Visible then return self end
             local position = target.AbsolutePosition
             local size = target.AbsoluteSize
-            popup.Position = UDim2.fromOffset(position.X, position.Y + size.Y + 8)
+            local viewport = self.Library.PopupLayer and self.Library.PopupLayer.AbsoluteSize or Vector2.new(1280, 720)
+            local width = math.max(180, popup.AbsoluteSize.X)
+            local x = Clamp(position.X, 8, math.max(8, viewport.X - width - 8))
+            local y = Clamp(position.Y + size.Y + 8, 8, math.max(8, viewport.Y - math.max(40, popup.AbsoluteSize.Y) - 8))
+            popup.Position = UDim2.fromOffset(x, y)
             popup.Visible = true
             self.Visible = true
             Tween(popup, {BackgroundTransparency = 0}, 0.12)
@@ -1959,6 +2473,11 @@ function Window:CreateTab(options)
         end
         controller.Connections:Add(target.MouseEnter:Connect(function() controller:Show() end))
         controller.Connections:Add(target.MouseLeave:Connect(function() controller:Hide() end))
+        controller.Connections:Add(UserInputService.InputChanged:Connect(function(input)
+            if controller.Visible and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+                controller:Show()
+            end
+        end))
         return controller
     end
 
@@ -1974,7 +2493,7 @@ function Window:CreateTab(options)
     end
 
     self.Tabs[proxy.Name] = proxy
-    table.insert(self.Library.WindowOrder, proxy)
+    table.insert(self.TabOrder, proxy)
     self.TabList.CanvasSize = UDim2.new()
     if not self.ActiveTab then proxy:SetActive(true) end
     return proxy
@@ -1984,14 +2503,25 @@ function IrisHub:CreateWindow(options)
     options = options or {}
     local theme = self.Theme
     local root = New("Frame", {BackgroundTransparency = 1, BorderSizePixel = 0, Size = UDim2.fromScale(1, 1), Visible = true}, self.Gui)
+    local camera = workspace.CurrentCamera
+    local viewport = camera and camera.ViewportSize or Vector2.new(1280, 720)
+    local minSize = options.MinSize or Vector2.new(520, 360)
+    local maxSize = options.MaxSize or Vector2.new(1600, 1000)
+    local viewportMax = Vector2.new(math.max(280, viewport.X - 24), math.max(240, viewport.Y - 24))
+    minSize = Vector2.new(math.min(minSize.X, viewportMax.X), math.min(minSize.Y, viewportMax.Y))
+    maxSize = Vector2.new(math.min(math.max(maxSize.X, minSize.X), viewportMax.X), math.min(math.max(maxSize.Y, minSize.Y), viewportMax.Y))
+    local requestedSize = options.Size or UDim2.fromOffset(720, 500)
+    if typeof(requestedSize) == "UDim2" and requestedSize.X.Scale == 0 and requestedSize.Y.Scale == 0 then
+        requestedSize = UDim2.fromOffset(Clamp(requestedSize.X.Offset, minSize.X, maxSize.X), Clamp(requestedSize.Y.Offset, minSize.Y, maxSize.Y))
+    end
     local main = New("Frame", {
         BackgroundColor3 = theme.Surface,
         BackgroundTransparency = 0,
         BorderSizePixel = 0,
         AnchorPoint = Vector2.new(0.5, 0.5),
         Position = options.Position or UDim2.fromScale(0.5, 0.5),
-        Size = options.Size or UDim2.fromOffset(720, 500),
-        ClipsDescendants = false,
+        Size = requestedSize,
+        ClipsDescendants = true,
         ZIndex = 10
     }, root)
     local shadow = nil
@@ -2005,20 +2535,18 @@ function IrisHub:CreateWindow(options)
         }),
         Rotation = 90
     }, main)
-    local minSize = options.MinSize or Vector2.new(520, 360)
-    local maxSize = options.MaxSize or Vector2.new(1600, 1000)
     New("UISizeConstraint", {MinSize = minSize, MaxSize = maxSize}, main)
 
-    local top = New("Frame", {BackgroundTransparency = 1, Size = UDim2.new(1, 0, 0, 68), ZIndex = 20}, main)
+    local top = New("Frame", {BackgroundTransparency = 1, Size = UDim2.new(1, 0, 0, 74), ZIndex = 20}, main)
     local brand = New("Frame", {
         BackgroundColor3 = theme.AccentSoft,
         BorderSizePixel = 0,
-        Position = UDim2.fromOffset(18, 16),
-        Size = UDim2.fromOffset(34, 34),
+        Position = UDim2.fromOffset(16, 14),
+        Size = UDim2.fromOffset(38, 38),
         ZIndex = 21
     }, top)
-    Corner(brand, 10)
-    Stroke(brand, theme.Accent, 0.35, 1)
+    Corner(brand, 11)
+    Stroke(brand, theme.Accent, 0.24, 1)
     local brandText = New("TextLabel", {
         BackgroundTransparency = 1,
         Size = UDim2.fromScale(1, 1),
@@ -2039,39 +2567,41 @@ function IrisHub:CreateWindow(options)
     end
     local title = New("TextLabel", {
         BackgroundTransparency = 1,
-        Position = UDim2.fromOffset(62, 13),
-        Size = UDim2.new(1, -215, 0, 24),
+        Position = UDim2.fromOffset(66, 10),
+        Size = UDim2.new(1, -390, 0, 24),
         Font = theme.TitleFont,
         Text = tostring(options.Title or "IrisHub"),
-        TextSize = 18,
+        TextSize = 17,
         TextColor3 = theme.Text,
         TextXAlignment = Enum.TextXAlignment.Left,
+        TextTruncate = Enum.TextTruncate.AtEnd,
         ZIndex = 21
     }, top)
     local subtitle = New("TextLabel", {
         BackgroundTransparency = 1,
-        Position = UDim2.fromOffset(63, 38),
-        Size = UDim2.new(1, -220, 0, 16),
+        Position = UDim2.fromOffset(66, 34),
+        Size = UDim2.new(1, -414, 0, 16),
         Font = theme.Font,
         Text = tostring(options.Subtitle or "Universal interface"),
         TextSize = 10,
         TextColor3 = theme.Muted,
         TextXAlignment = Enum.TextXAlignment.Left,
+        TextTruncate = Enum.TextTruncate.AtEnd,
         ZIndex = 21
     }, top)
     local statusDot = New("Frame", {
         BackgroundColor3 = theme.Success,
         BorderSizePixel = 0,
-        Position = UDim2.fromOffset(63, 56),
+        Position = UDim2.fromOffset(68, 54),
         Size = UDim2.fromOffset(6, 6),
         ZIndex = 21
     }, top)
     Corner(statusDot, 3)
     local statusText = New("TextLabel", {
         BackgroundTransparency = 1,
-        Position = UDim2.fromOffset(76, 51),
-        Size = UDim2.fromOffset(92, 16),
-        Font = theme.Font,
+        Position = UDim2.fromOffset(80, 49),
+        Size = UDim2.fromOffset(88, 16),
+        Font = theme.SmallFont,
         Text = "READY",
         TextSize = 8,
         TextColor3 = theme.Muted,
@@ -2080,52 +2610,56 @@ function IrisHub:CreateWindow(options)
     }, top)
     local breadcrumb = New("TextLabel", {
         BackgroundTransparency = 1,
-        AnchorPoint = Vector2.new(0, 1),
-        Position = UDim2.new(0, 190, 0, 59),
-        Size = UDim2.new(1, -390, 0, 16),
+        AnchorPoint = Vector2.new(1, 0.5),
+        Position = UDim2.new(1, -132, 0, 31),
+        Size = UDim2.fromOffset(112, 18),
         Font = theme.SmallFont,
         Text = "Main",
-        TextSize = 10,
+        TextSize = 9,
         TextColor3 = theme.Muted,
-        TextXAlignment = Enum.TextXAlignment.Left,
+        TextXAlignment = Enum.TextXAlignment.Right,
+        TextTruncate = Enum.TextTruncate.AtEnd,
         ZIndex = 21
     }, top)
 
-    local function topButton(text, rightOffset, textSize)
+    local function topButton(iconName, rightOffset)
         local button = New("TextButton", {
             BackgroundColor3 = theme.Surface2,
             BorderSizePixel = 0,
             AnchorPoint = Vector2.new(1, 0.5),
             Position = UDim2.new(1, rightOffset, 0.5, 0),
             Size = UDim2.fromOffset(32, 32),
-            Text = text,
-            Font = theme.TitleFont,
-            TextSize = textSize or 13,
-            TextColor3 = theme.Muted,
+            Text = "",
             AutoButtonColor = false,
             ZIndex = 22
         }, top)
         Corner(button, 9)
-        Stroke(button, theme.Border, 0.45, 1)
-        return button
+        Stroke(button, theme.Border, 0.38, 1)
+        local icon = CreateIcon(button, iconName, 14, theme.Muted)
+        if icon then
+            icon.AnchorPoint = Vector2.new(0.5, 0.5)
+            icon.Position = UDim2.fromScale(0.5, 0.5)
+            icon.ZIndex = 23
+        end
+        return button, icon
     end
 
-    local close = topButton("×", -12, 18)
-    local minimizeButton = topButton("−", -50, 16)
-    local maximize = topButton("□", -88, 12)
+    local close, closeIcon = topButton("lucide:x", -12)
+    local minimizeButton, minimizeIcon = topButton("lucide:minus", -50)
+    local maximize, maximizeIcon = topButton("lucide:maximize-2", -88)
     local headerLine = New("Frame", {
         BackgroundColor3 = theme.Border,
-        BackgroundTransparency = 0.48,
+        BackgroundTransparency = 0.5,
         BorderSizePixel = 0,
-        Position = UDim2.fromOffset(18, 67),
-        Size = UDim2.new(1, -36, 0, 1),
+        Position = UDim2.fromOffset(16, 72),
+        Size = UDim2.new(1, -32, 0, 1),
         ZIndex = 20
     }, top)
     local accentLine = New("Frame", {
         BackgroundColor3 = theme.Accent,
         BorderSizePixel = 0,
-        Position = UDim2.fromOffset(18, 67),
-        Size = UDim2.fromOffset(64, 2),
+        Position = UDim2.fromOffset(16, 72),
+        Size = UDim2.fromOffset(72, 2),
         ZIndex = 22
     }, top)
     Corner(accentLine, 2)
@@ -2133,16 +2667,17 @@ function IrisHub:CreateWindow(options)
     local sidebar = New("Frame", {
         BackgroundColor3 = theme.Background,
         BorderSizePixel = 0,
-        Position = UDim2.fromOffset(12, 82),
-        Size = UDim2.new(0, 170, 1, -96),
+        Position = UDim2.fromOffset(12, 86),
+        Size = UDim2.new(0, 184, 1, -100),
+        ClipsDescendants = true,
         ZIndex = 12
     }, main)
     Corner(sidebar, theme.Radius)
     Stroke(sidebar, theme.Border, 0.42, 1)
     local sidebarHeader = New("TextLabel", {
         BackgroundTransparency = 1,
-        Position = UDim2.fromOffset(14, 12),
-        Size = UDim2.new(1, -28, 0, 16),
+        Position = UDim2.fromOffset(15, 13),
+        Size = UDim2.new(1, -30, 0, 16),
         Font = theme.SmallFont,
         Text = "NAVIGATION",
         TextSize = 9,
@@ -2153,8 +2688,8 @@ function IrisHub:CreateWindow(options)
     local tabList = New("ScrollingFrame", {
         BackgroundTransparency = 1,
         BorderSizePixel = 0,
-        Position = UDim2.fromOffset(0, 34),
-        Size = UDim2.new(1, 0, 1, -64),
+        Position = UDim2.fromOffset(0, 40),
+        Size = UDim2.new(1, 0, 1, -72),
         AutomaticCanvasSize = Enum.AutomaticSize.Y,
         CanvasSize = UDim2.new(),
         ScrollBarThickness = 0,
@@ -2165,8 +2700,8 @@ function IrisHub:CreateWindow(options)
     local sidebarFooter = New("TextLabel", {
         BackgroundTransparency = 1,
         AnchorPoint = Vector2.new(0, 1),
-        Position = UDim2.new(0, 14, 1, -12),
-        Size = UDim2.new(1, -28, 0, 14),
+        Position = UDim2.new(0, 15, 1, -13),
+        Size = UDim2.new(1, -30, 0, 14),
         Font = theme.Font,
         Text = "IRISHUB • " .. self.Version,
         TextSize = 8,
@@ -2178,8 +2713,9 @@ function IrisHub:CreateWindow(options)
     local content = New("Frame", {
         BackgroundColor3 = theme.Background,
         BorderSizePixel = 0,
-        Position = UDim2.fromOffset(192, 82),
-        Size = UDim2.new(1, -204, 1, -96),
+        Position = UDim2.fromOffset(208, 86),
+        Size = UDim2.new(1, -220, 1, -100),
+        ClipsDescendants = true,
         ZIndex = 12
     }, main)
     Corner(content, theme.Radius)
@@ -2188,6 +2724,7 @@ function IrisHub:CreateWindow(options)
         BackgroundTransparency = 1,
         Position = UDim2.fromOffset(1, 1),
         Size = UDim2.new(1, -2, 1, -2),
+        ClipsDescendants = true,
         ZIndex = 13
     }, content)
 
@@ -2220,13 +2757,17 @@ function IrisHub:CreateWindow(options)
         Content = content,
         Pages = pages,
         Tabs = {},
+        TabOrder = {},
         Connections = ConnectionBag.new(),
         Destroyed = false,
         Minimized = false,
         Maximized = false
     }, Window)
     table.insert(self.Windows, window)
-    New("UIScale", {Scale = tonumber(options.UIScale) or 1}, root)
+    local requestedScale = tonumber(options.UIScale)
+    if requestedScale and math.abs(requestedScale - 1) > 0.001 then
+        New("UIScale", {Scale = Clamp(requestedScale, 0.75, 1.5)}, root)
+    end
 
     local dragStart
     local dragPosition
@@ -2305,6 +2846,7 @@ function IrisHub:CreateWindow(options)
     function window:Destroy()
         if self.Destroyed then return end
         self.Destroyed = true
+        self.Library:ClosePopups()
         self.Connections:Clear()
         for _, tab in pairs(self.Tabs) do
             if tab.Connections then tab.Connections:Clear() end
@@ -2426,21 +2968,32 @@ function IrisHub:Notify(options)
     end
     local typeName = tostring(options.Type or "Info")
     local accentColor = options.Color or (typeName == "Success" and theme.Success or typeName == "Warning" and theme.Warning or (typeName == "Error" or typeName == "Danger") and theme.Danger or theme.Accent)
-    local card = New("Frame", {BackgroundColor3 = theme.Surface, BorderSizePixel = 0, Size = UDim2.new(1, 0, 0, 78), LayoutOrder = math.floor(os.clock() * 1000), ZIndex = 100}, holder)
+    local descriptionText = tostring(options.Content or options.Description or "")
+    local descriptionHeight = MeasureTextHeight(descriptionText, theme.Font, 11, 270, 18)
+    local cardHeight = math.max(78, 52 + descriptionHeight)
+    local card = New("Frame", {BackgroundColor3 = theme.Surface, BorderSizePixel = 0, Size = UDim2.new(1, 0, 0, cardHeight), LayoutOrder = math.floor(os.clock() * 1000), ZIndex = 300, AutomaticSize = Enum.AutomaticSize.None}, holder)
     Corner(card, theme.Radius + 2)
     Stroke(card, theme.Border, 0.08, 1)
-    local accent = New("Frame", {BackgroundColor3 = accentColor, BorderSizePixel = 0, Size = UDim2.fromOffset(3, 78), Position = UDim2.fromOffset(0, 0), ZIndex = 102}, card)
+    local accent = New("Frame", {BackgroundColor3 = accentColor, BorderSizePixel = 0, Size = UDim2.fromOffset(3, cardHeight), Position = UDim2.fromOffset(0, 0), ZIndex = 302}, card)
     Corner(accent, 2)
     local icon = CreateIcon(card, options.Icon or (typeName == "Success" and "lucide:check" or typeName == "Warning" and "lucide:warning" or (typeName == "Error" or typeName == "Danger") and "lucide:error" or "lucide:bell"), 19, accentColor)
     if icon then icon.Position = UDim2.fromOffset(16, 18); icon.AnchorPoint = Vector2.new(0, 0) end
     local title = New("TextLabel", {BackgroundTransparency = 1, Position = UDim2.fromOffset(46, 11), Size = UDim2.new(1, -82, 0, 21), Font = theme.TitleFont, Text = tostring(options.Title or "Notification"), TextSize = 13, TextColor3 = theme.Text, TextXAlignment = Enum.TextXAlignment.Left, ZIndex = 103}, card)
-    local desc = New("TextLabel", {BackgroundTransparency = 1, Position = UDim2.fromOffset(46, 33), Size = UDim2.new(1, -64, 0, 29), Font = theme.Font, Text = tostring(options.Content or options.Description or ""), TextSize = 11, TextColor3 = theme.Muted, TextWrapped = true, TextXAlignment = Enum.TextXAlignment.Left, ZIndex = 103}, card)
-    local close = New("TextButton", {BackgroundTransparency = 1, Position = UDim2.new(1, -34, 0, 9), Size = UDim2.fromOffset(24, 24), Text = "×", Font = theme.TitleFont, TextSize = 15, TextColor3 = theme.Muted, AutoButtonColor = false, ZIndex = 104}, card)
-    local progress = New("Frame", {BackgroundColor3 = accentColor, BorderSizePixel = 0, Position = UDim2.new(0, 0, 1, -3), Size = UDim2.fromScale(1, 0.04), ZIndex = 104}, card)
+    local desc = New("TextLabel", {BackgroundTransparency = 1, Position = UDim2.fromOffset(46, 34), Size = UDim2.new(1, -64, 0, descriptionHeight), Font = theme.Font, Text = descriptionText, TextSize = 11, TextColor3 = theme.Muted, TextWrapped = true, TextXAlignment = Enum.TextXAlignment.Left, TextYAlignment = Enum.TextYAlignment.Top, ZIndex = 303}, card)
+    local close = New("TextButton", {BackgroundTransparency = 1, Position = UDim2.new(1, -34, 0, 9), Size = UDim2.fromOffset(24, 24), Text = "", AutoButtonColor = false, ZIndex = 304}, card)
+    local closeIcon = CreateIcon(close, "lucide:x", 13, theme.Muted)
+    if closeIcon then closeIcon.AnchorPoint = Vector2.new(0.5, 0.5); closeIcon.Position = UDim2.fromScale(0.5, 0.5); closeIcon.ZIndex = 305 end
+    local progress = New("Frame", {BackgroundColor3 = accentColor, BorderSizePixel = 0, Position = UDim2.new(0, 0, 1, -3), Size = UDim2.fromScale(1, 0.04), ZIndex = 304}, card)
     local duration = tonumber(options.Duration)
     local item = {Instance = card, Destroyed = false, Duration = duration or 0, Type = typeName, Progress = progress, Accent = accentColor}
     function item:SetTitle(value) title.Text = tostring(value or ""); return self end
-    function item:SetDescription(value) desc.Text = tostring(value or ""); return self end
+    function item:SetDescription(value)
+        desc.Text = tostring(value or "")
+        local nextHeight = math.max(78, 52 + MeasureTextHeight(desc.Text, theme.Font, 11, 270, 18))
+        card.Size = UDim2.new(1, 0, 0, nextHeight)
+        accent.Size = UDim2.fromOffset(3, nextHeight)
+        return self
+    end
     function item:SetProgress(value)
         local fraction = Clamp(tonumber(value) or 0, 0, 1)
         progress.Size = UDim2.new(fraction, 0, 0.04, 0)
@@ -2497,12 +3050,16 @@ function IrisHub:CreateModal(options)
     options = options or {}
     local theme = self.Theme
     local root = New("Frame", {BackgroundColor3 = theme.Overlay, BackgroundTransparency = 0.3, BorderSizePixel = 0, Size = UDim2.fromScale(1, 1), ZIndex = 80}, self.Gui)
-    local card = New("Frame", {BackgroundColor3 = theme.Surface, BorderSizePixel = 0, AnchorPoint = Vector2.new(0.5, 0.5), Position = UDim2.fromScale(0.5, 0.5), Size = options.Size or UDim2.fromOffset(420, 220), ZIndex = 81}, root)
+    local modalWidth = typeof(options.Size) == "UDim2" and options.Size.X.Offset > 0 and options.Size.X.Offset or 420
+    local modalDescription = tostring(options.Description or "")
+    local modalDescriptionHeight = MeasureTextHeight(modalDescription, theme.Font, 12, math.max(240, modalWidth - 36), 18)
+    local modalHeight = typeof(options.Size) == "UDim2" and options.Size.Y.Offset > 0 and math.max(options.Size.Y.Offset, 146 + modalDescriptionHeight) or math.max(220, 146 + modalDescriptionHeight)
+    local card = New("Frame", {BackgroundColor3 = theme.Surface, BorderSizePixel = 0, AnchorPoint = Vector2.new(0.5, 0.5), Position = UDim2.fromScale(0.5, 0.5), Size = options.Size or UDim2.fromOffset(modalWidth, modalHeight), ZIndex = 501}, root)
     Corner(card, theme.Radius + 2)
     Stroke(card, theme.Border, 0.05, 1)
     local title = New("TextLabel", {BackgroundTransparency = 1, Position = UDim2.fromOffset(18, 16), Size = UDim2.new(1, -36, 0, 26), Font = theme.TitleFont, Text = tostring(options.Title or "Modal"), TextSize = 17, TextColor3 = theme.Text, TextXAlignment = Enum.TextXAlignment.Left, ZIndex = 82}, card)
-    local desc = New("TextLabel", {BackgroundTransparency = 1, Position = UDim2.fromOffset(18, 48), Size = UDim2.new(1, -36, 0, 72), Font = theme.Font, Text = tostring(options.Description or ""), TextSize = 12, TextColor3 = theme.Muted, TextWrapped = true, TextXAlignment = Enum.TextXAlignment.Left, TextYAlignment = Enum.TextYAlignment.Top, ZIndex = 82}, card)
-    local actions = New("Frame", {BackgroundTransparency = 1, AnchorPoint = Vector2.new(1, 1), Position = UDim2.new(1, -18, 1, -18), Size = UDim2.fromOffset(240, 42), ZIndex = 82}, card)
+    local desc = New("TextLabel", {BackgroundTransparency = 1, Position = UDim2.fromOffset(18, 48), Size = UDim2.new(1, -36, 0, modalDescriptionHeight), Font = theme.Font, Text = modalDescription, TextSize = 12, TextColor3 = theme.Muted, TextWrapped = true, TextXAlignment = Enum.TextXAlignment.Left, TextYAlignment = Enum.TextYAlignment.Top, ZIndex = 502}, card)
+    local actions = New("Frame", {BackgroundTransparency = 1, AnchorPoint = Vector2.new(1, 1), Position = UDim2.new(1, -18, 1, -18), Size = UDim2.fromOffset(240, 42), ZIndex = 502}, card)
     local cancel = New("TextButton", {BackgroundColor3 = theme.Surface2, BorderSizePixel = 0, Size = UDim2.fromOffset(104, 38), Text = tostring(options.CancelText or "Cancel"), Font = theme.SmallFont, TextSize = 12, TextColor3 = theme.Muted, AutoButtonColor = false, ZIndex = 83}, actions)
     Corner(cancel, 8)
     local confirm = New("TextButton", {BackgroundColor3 = theme.Accent, BorderSizePixel = 0, Position = UDim2.fromOffset(114, 0), Size = UDim2.fromOffset(126, 38), Text = tostring(options.ConfirmText or "Confirm"), Font = theme.SmallFont, TextSize = 12, TextColor3 = theme.Text, AutoButtonColor = false, ZIndex = 83}, actions)
@@ -2656,9 +3213,13 @@ function IrisHub:CreateKeySystem(options)
     local providerName = options.Provider or "PlatoBoost"
     local provider = KeyProviders[providerName]
     if not provider then providerName = "PlatoBoost"; provider = KeyProviders[providerName] end
-    local root = New("Frame", {BackgroundTransparency = 0, BorderSizePixel = 0, Size = UDim2.fromScale(1, 1), ZIndex = 70}, self.Gui)
-    local scrim = New("Frame", {BackgroundColor3 = theme.Overlay, BackgroundTransparency = 0.18, BorderSizePixel = 0, Size = UDim2.fromScale(1, 1), ZIndex = 70}, root)
-    local card = New("Frame", {BackgroundColor3 = theme.Surface, BorderSizePixel = 0, AnchorPoint = Vector2.new(0.5, 0.5), Position = UDim2.fromScale(0.5, 0.5), Size = options.Size or UDim2.fromOffset(470, 330), ZIndex = 71}, root)
+    local root = New("Frame", {BackgroundTransparency = 0, BorderSizePixel = 0, Size = UDim2.fromScale(1, 1), ZIndex = 600}, self.Gui)
+    local scrim = New("Frame", {BackgroundColor3 = theme.Overlay, BackgroundTransparency = 0.18, BorderSizePixel = 0, Size = UDim2.fromScale(1, 1), ZIndex = 600}, root)
+    local keyWidth = typeof(options.Size) == "UDim2" and options.Size.X.Offset > 0 and options.Size.X.Offset or 470
+    local keyDescription = tostring(options.Description or "Enter your key to continue. Provider adapters can be registered through IrisHub:RegisterKeyProvider.")
+    local keyDescriptionHeight = MeasureTextHeight(keyDescription, theme.Font, 12, math.max(260, keyWidth - 40), 18)
+    local keyHeight = typeof(options.Size) == "UDim2" and options.Size.Y.Offset > 0 and math.max(options.Size.Y.Offset, 286 + keyDescriptionHeight) or math.max(330, 286 + keyDescriptionHeight)
+    local card = New("Frame", {BackgroundColor3 = theme.Surface, BorderSizePixel = 0, AnchorPoint = Vector2.new(0.5, 0.5), Position = UDim2.fromScale(0.5, 0.5), Size = options.Size or UDim2.fromOffset(keyWidth, keyHeight), ZIndex = 601}, root)
     Corner(card, theme.Radius + 4)
     Stroke(card, theme.Border, 0.02, 1)
     local accent = New("Frame", {BackgroundColor3 = theme.Accent, BorderSizePixel = 0, Position = UDim2.fromOffset(0, 0), Size = UDim2.new(1, 0, 0, 4), ZIndex = 72}, card)
@@ -2668,18 +3229,22 @@ function IrisHub:CreateKeySystem(options)
     local title = New("TextLabel", {BackgroundTransparency = 1, Position = UDim2.fromOffset(52, 20), Size = UDim2.new(1, -150, 0, 26), Font = theme.TitleFont, Text = tostring(options.Title or "IrisHub Access"), TextSize = 19, TextColor3 = theme.Text, TextXAlignment = Enum.TextXAlignment.Left, ZIndex = 72}, card)
     local providerTag = New("TextLabel", {BackgroundColor3 = theme.AccentSoft, BackgroundTransparency = 0.08, BorderSizePixel = 0, AnchorPoint = Vector2.new(1, 0.5), Position = UDim2.new(1, -18, 0, 34), Size = UDim2.fromOffset(124, 26), Font = theme.SmallFont, Text = providerName, TextSize = 10, TextColor3 = theme.Text, TextXAlignment = Enum.TextXAlignment.Center, ZIndex = 72}, card)
     Corner(providerTag, 13)
-    local info = New("TextLabel", {BackgroundTransparency = 1, Position = UDim2.fromOffset(20, 60), Size = UDim2.new(1, -40, 0, 40), Font = theme.Font, Text = tostring(options.Description or "Enter your key to continue. Provider adapters can be registered through IrisHub:RegisterKeyProvider."), TextSize = 12, TextColor3 = theme.Muted, TextWrapped = true, TextXAlignment = Enum.TextXAlignment.Left, TextYAlignment = Enum.TextYAlignment.Top, ZIndex = 72}, card)
-    local providerBox = New("Frame", {BackgroundColor3 = theme.Surface2, BorderSizePixel = 0, Position = UDim2.fromOffset(20, 108), Size = UDim2.new(1, -40, 0, 42), ZIndex = 72}, card)
+    local info = New("TextLabel", {BackgroundTransparency = 1, Position = UDim2.fromOffset(20, 60), Size = UDim2.new(1, -40, 0, keyDescriptionHeight), Font = theme.Font, Text = keyDescription, TextSize = 12, TextColor3 = theme.Muted, TextWrapped = true, TextXAlignment = Enum.TextXAlignment.Left, TextYAlignment = Enum.TextYAlignment.Top, ZIndex = 602}, card)
+    local providerY = 70 + keyDescriptionHeight + 18
+    local providerBox = New("Frame", {BackgroundColor3 = theme.Surface2, BorderSizePixel = 0, Position = UDim2.fromOffset(20, providerY), Size = UDim2.new(1, -40, 0, 42), ZIndex = 602}, card)
     Corner(providerBox, 9)
     Stroke(providerBox, theme.Border, 0.35, 1)
     local providerLabel = New("TextLabel", {BackgroundTransparency = 1, Position = UDim2.fromOffset(12, 0), Size = UDim2.new(1, -110, 1, 0), Font = theme.SmallFont, Text = "Provider • " .. providerName, TextSize = 11, TextColor3 = theme.Text, TextXAlignment = Enum.TextXAlignment.Left, ZIndex = 73}, providerBox)
     local cycle = New("TextButton", {BackgroundTransparency = 1, AnchorPoint = Vector2.new(1, 0.5), Position = UDim2.new(1, -8, 0.5, 0), Size = UDim2.fromOffset(86, 28), Text = "Change", Font = theme.SmallFont, TextSize = 10, TextColor3 = theme.Accent, AutoButtonColor = false, ZIndex = 73}, providerBox)
-    local input = New("TextBox", {BackgroundColor3 = theme.Surface2, BorderSizePixel = 0, Position = UDim2.fromOffset(20, 162), Size = UDim2.new(1, -40, 0, 42), PlaceholderText = tostring(options.Placeholder or "Paste your key"), PlaceholderColor3 = theme.Muted, TextColor3 = theme.Text, Font = theme.Font, TextSize = 12, ClearTextOnFocus = false, ZIndex = 72}, card)
+    local inputY = providerY + 54
+    local input = New("TextBox", {BackgroundColor3 = theme.Surface2, BorderSizePixel = 0, Position = UDim2.fromOffset(20, inputY), Size = UDim2.new(1, -40, 0, 42), PlaceholderText = tostring(options.Placeholder or "Paste your key"), PlaceholderColor3 = theme.Muted, TextColor3 = theme.Text, Font = theme.Font, TextSize = 12, ClearTextOnFocus = false, ZIndex = 72}, card)
     Corner(input, 9)
     Stroke(input, theme.Border, 0.35, 1)
     Padding(input, 12, 12, 0, 0)
-    local status = New("TextLabel", {BackgroundTransparency = 1, Position = UDim2.fromOffset(20, 209), Size = UDim2.new(1, -40, 0, 22), Font = theme.Font, Text = "", TextSize = 11, TextColor3 = theme.Muted, TextXAlignment = Enum.TextXAlignment.Left, ZIndex = 72}, card)
-    local actions = New("Frame", {BackgroundTransparency = 1, Position = UDim2.fromOffset(20, 246), Size = UDim2.new(1, -40, 0, 42), ZIndex = 72}, card)
+    local statusY = inputY + 47
+    local status = New("TextLabel", {BackgroundTransparency = 1, Position = UDim2.fromOffset(20, statusY), Size = UDim2.new(1, -40, 0, 22), Font = theme.Font, Text = "", TextSize = 11, TextColor3 = theme.Muted, TextXAlignment = Enum.TextXAlignment.Left, ZIndex = 72}, card)
+    local actionsY = statusY + 31
+    local actions = New("Frame", {BackgroundTransparency = 1, Position = UDim2.fromOffset(20, actionsY), Size = UDim2.new(1, -40, 0, 42), ZIndex = 602}, card)
     local getKey = New("TextButton", {BackgroundColor3 = theme.Surface2, BorderSizePixel = 0, Size = UDim2.fromOffset(122, 40), Text = "Get Key", Font = theme.SmallFont, TextSize = 11, TextColor3 = theme.Muted, AutoButtonColor = false, ZIndex = 73}, actions)
     Corner(getKey, 9)
     Stroke(getKey, theme.Border, 0.28, 1)

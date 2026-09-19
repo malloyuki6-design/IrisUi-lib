@@ -1,20 +1,42 @@
-# IrisHub 2.3.2 Validation
+# IrisHub 2.5.2 Validation
 
-## Fixed regression
+## Static checks
 
-The GitHub build previously failed to compile because the icon fallback table had missing separators beginning at the `code` entry. Every affected entry now has the required comma separator, and `dist/IrisHub.luau` has been regenerated from `src/IrisHub.luau`.
+- Main library Luau syntax: passed
+- Example Luau syntax: passed
+- All Luau files syntax: passed
+- Forbidden `--` comment marker scan: passed
+- Source to distribution synchronization: passed
+- Website JavaScript syntax: passed
+- Runtime API regression checks: passed
+- Layout contract checks: passed
+- Icon fallback checks: passed
+- ZIP integrity: pending final package
 
-## Checks
+## Layout protections
 
-- Lua parser-backed syntax check passed for `src/IrisHub.luau`.
-- Lua parser-backed syntax check passed for `examples/GitHubLoadstringExample.luau`.
-- Project validator passed.
-- Runtime contract regression checks passed.
-- Source and distribution hashes match.
-- Website JavaScript syntax check passed.
-- No `--` comment markers are present in the source/tests/examples validated by the project checker.
-- The GitHub loader is documented against `https://raw.githubusercontent.com/malloyuki6-design/IrisUi-lib/main/dist/IrisHub.luau`.
+- Removed automatic Y sizing from content rows that also use explicit measured heights.
+- Wrapped text is measured with `TextService` and assigned an explicit height.
+- Content rows clip overflow instead of allowing text to draw into neighboring rows.
+- User-provided heights are treated as minimum heights when wrapped content requires more space.
+- Window content is clamped to the available viewport for offset-based sizes.
+- Popups are moved to a dedicated popup layer when opened, so row clipping cannot cut off dropdowns or menus.
 
-## Parser note
+## Icon protections
 
-The local parser validation uses the system Lua 5.4 parser after translating the single Luau compound-assignment expression used by the spinner loop for syntax checking only. Roblox/Luau runtime behavior still requires a Roblox Studio/client play-test.
+- Namespaced icon names are supported for the tracked Lucide, Geist, and Craft provider namespaces.
+- Unknown or unresolved icons use a real built-in help icon instead of a square glyph placeholder.
+- A delayed image-load check replaces a failed resolved asset with the built-in help icon.
+- Roblox-hosted image assets remain the runtime source of truth.
+
+## Runtime fixes included
+
+- Fixed component callback state access in `CreateInput`.
+- Fixed tab ordering registration.
+- Fixed stale source backup files being shipped in the release.
+- Removed unused `WindowOrder` state.
+- Rebuilt `dist/IrisHub.luau` from the current source.
+
+## External runtime limitation
+
+A real Roblox Studio/client play-test is still required for final rendering and input verification. This environment cannot execute the library inside the Roblox engine.
