@@ -1,5 +1,12 @@
 # Changelog
 
+## 2.3.2
+
+- Fixed a production-breaking syntax error in the icon fallback registry caused by missing table separators.
+- Added Lua parser-backed syntax validation for the distribution source and GitHub example.
+- Regenerated the standalone distribution from the corrected source.
+- Kept the GitHub loader contract and runtime regression checks in sync with the corrected build.
+
 ## 2.3.1
 
 - Hardened the GitHub loadstring example against missing runtime compilers.

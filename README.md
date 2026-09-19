@@ -2,11 +2,11 @@
 
 IrisHub is an open-source universal Roblox/Luau UI framework focused on polished interfaces, consistent component APIs, responsive controls, runtime theming, and cleanup-safe component lifecycles.
 
-## v2.0.0 highlights
+## v2.3.2 highlights
 
 - Refined window chrome with minimize, maximize, focus, resize, drag and optional toggle-key support
 - Runtime scale and min/max size constraints
-- Cross-platform button activation through Roblox's `Activated` and `SecondaryActivated` events
+- Cross-platform primary button activation through Roblox's `Activated` event
 - Reactive component references with `Set`, `Get`, `Update`, `SetTitle`, `SetDescription`, `SetCallback`, `SetVisible`, `SetEnabled`, `IsEnabled` and `Destroy`
 - New Progress, Status, Badge, KeyValue, Alert and CodeBlock components
 - Section aliases plus `Expand` and `Collapse`
