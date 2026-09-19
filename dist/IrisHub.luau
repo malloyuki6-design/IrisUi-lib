@@ -1,6 +1,6 @@
 local IrisHub = {}
 IrisHub.__index = IrisHub
-IrisHub.Version = "2.5.2"
+IrisHub.Version = "2.6.0"
 IrisHub.Name = "IrisHub"
 
 local Players = game:GetService("Players")
@@ -385,7 +385,7 @@ local function IconAliasAsset(name)
     if alias and IconRegistry.BuiltinAssets[alias] then
         return IconRegistry.BuiltinAssets[alias]
     end
-    return nil
+    return IconRegistry.BuiltinAssets.helpcircle or IconRegistry.BuiltinAssets.info
 end
 
 local function CopyText(value)
@@ -652,80 +652,157 @@ function Component:Destroy()
     end
 end
 
-local function ResolveIcon(icon)
-    if icon == nil then return nil end
+local RemoteIconModule
+local RemoteIconAttempted = false
+local RemoteIconURL = "https://raw.githubusercontent.com/Footagesus/Icons/main/Main-v2.lua"
+
+local function GetRemoteIconModule()
+    if RemoteIconAttempted then
+        return RemoteIconModule
+    end
+    RemoteIconAttempted = true
+    local compiler = loadstring
+    if type(compiler) ~= "function" then
+        compiler = load
+    end
+    if type(compiler) ~= "function" or type(game.HttpGet) ~= "function" then
+        return nil
+    end
+    local ok, result = pcall(function()
+        local source = game:HttpGet(RemoteIconURL)
+        local chunk = compiler(source)
+        if type(chunk) ~= "function" then
+            return nil
+        end
+        local module = chunk()
+        if type(module) ~= "table" then
+            return nil
+        end
+        if type(module.SetIconsType) == "function" then
+            pcall(function() module:SetIconsType("lucide") end)
+        end
+        return module
+    end)
+    if ok and type(result) == "table" then
+        RemoteIconModule = result
+    end
+    return RemoteIconModule
+end
+
+local function NormalizeIconResult(result)
+    if type(result) == "string" and result ~= "" then
+        return result, nil
+    end
+    if type(result) ~= "table" then
+        return nil, nil
+    end
+    local image = result.image or result.Image or result.asset or result.Asset
+    local metadata = result.metadata or result.Metadata or result
+    if type(image) == "string" and image ~= "" then
+        return image, metadata
+    end
+    return nil, nil
+end
+
+local function ResolveRemoteIcon(value, provider, name)
+    local module = GetRemoteIconModule()
+    if not module or type(module.Icon2) ~= "function" then
+        return nil, nil
+    end
+    local ok, result = pcall(function()
+        return module.Icon2(name or value, provider or "lucide")
+    end)
+    if not ok then
+        ok, result = pcall(function()
+            return module:Icon2(name or value, provider or "lucide")
+        end)
+    end
+    if not ok then
+        return nil, nil
+    end
+    return NormalizeIconResult(result)
+end
+
+local function ResolveIconData(icon)
+    if icon == nil then return nil, nil end
     if typeof(icon) == "Instance" and icon:IsA("ImageLabel") then
-        return icon.Image
+        return icon.Image, nil
     end
     if type(icon) == "number" then
-        return "rbxassetid://" .. tostring(icon)
+        return "rbxassetid://" .. tostring(icon), nil
     end
     local value = tostring(icon)
     if value:match("^rbxassetid://") or value:match("^rbxthumb://") or value:match("^rbxgameasset://") then
-        return value
+        return value, nil
     end
     local exact = IconRegistry.Assets[value]
-    if exact then return exact end
-    local normalized = string.lower(value)
+    if exact then
+        return exact, nil
+    end
+    local normalized = NormalizeIconName(value)
     local normalizedAsset = IconRegistry.Assets[normalized]
-    if normalizedAsset then return normalizedAsset end
+    if normalizedAsset then
+        return normalizedAsset, nil
+    end
     local provider, name = value:match("^([^:]+):(.*)$")
     if provider and name then
         local providerLower = string.lower(provider)
-        if IconProviders[provider] or providerLower == "lucide" or providerLower == "geist" or providerLower == "craft" then
+        if providerLower == "lucide" or providerLower == "geist" or providerLower == "craft" then
             local known = IconRegistry.Assets[providerLower .. ":" .. NormalizeIconName(name)]
-            if known then return known end
-            local direct = IconRegistry.BuiltinAssets[NormalizeIconName(name)]
-            if direct then return direct end
-            return IconAliasAsset(name)
+            if known then
+                return known, nil
+            end
+            local asset, metadata = ResolveRemoteIcon(value, providerLower, name)
+            if asset then
+                return asset, metadata
+            end
+            return IconAliasAsset(name), nil
         end
     end
     if value:match("^https?://") then
-        return nil
+        return nil, nil
     end
-    return IconAliasAsset(value)
+    local asset, metadata = ResolveRemoteIcon(value, "lucide", value)
+    if asset then
+        return asset, metadata
+    end
+    return IconAliasAsset(value), nil
+end
+
+local function ResolveIcon(icon)
+    return ResolveIconData(icon)
 end
 
 local function CreateIcon(parent, icon, size, color, xAlignment)
     if icon == nil then return nil end
-    local asset = ResolveIcon(icon)
+    local asset, metadata = ResolveIconData(icon)
+    if not asset then return nil end
     local anchor = xAlignment == "right" and 1 or 0
     local offset = xAlignment == "right" and -12 or 12
-    local fallbackAsset = IconRegistry.BuiltinAssets.helpcircle or IconRegistry.BuiltinAssets.info
-    local finalAsset = asset or fallbackAsset
-    if finalAsset then
-        local image = New("ImageLabel", {
-            BackgroundTransparency = 1,
-            Size = UDim2.fromOffset(size or 18, size or 18),
-            Image = finalAsset,
-            ImageColor3 = color or Color3.new(1, 1, 1),
-            ImageTransparency = 0,
-            ScaleType = Enum.ScaleType.Fit,
-            ResampleMode = Enum.ResamplerMode.Default,
-            AnchorPoint = Vector2.new(anchor, 0.5),
-            Position = UDim2.new(anchor, offset, 0.5, 0)
-        }, parent)
-        if asset then
-            task.delay(1.5, function()
-                if image.Parent and image.Image == asset and not image.IsLoaded and fallbackAsset then
-                    image.Image = fallbackAsset
-                end
-            end)
-        end
-        return image
-    end
-    return New("TextLabel", {
+    local image = New("ImageLabel", {
         BackgroundTransparency = 1,
         Size = UDim2.fromOffset(size or 18, size or 18),
+        Image = asset,
+        ImageColor3 = color or Color3.new(1, 1, 1),
+        ImageTransparency = 0,
+        ScaleType = Enum.ScaleType.Fit,
+        ResampleMode = Enum.ResamplerMode.Default,
         AnchorPoint = Vector2.new(anchor, 0.5),
-        Position = UDim2.new(anchor, offset, 0.5, 0),
-        Font = Enum.Font.GothamBold,
-        Text = "?",
-        TextSize = math.max(9, math.floor((size or 18) * 0.62)),
-        TextColor3 = color or Color3.new(1, 1, 1),
-        TextXAlignment = Enum.TextXAlignment.Center,
-        TextYAlignment = Enum.TextYAlignment.Center
+        Position = UDim2.new(anchor, offset, 0.5, 0)
     }, parent)
+    if type(metadata) == "table" then
+        if typeof(metadata.ImageRectSize) == "Vector2" then
+            image.ImageRectSize = metadata.ImageRectSize
+        end
+        local rectPosition = metadata.ImageRectPosition or metadata.ImageRectOffset
+        if typeof(rectPosition) == "Vector2" then
+            image.ImageRectOffset = rectPosition
+        end
+        if metadata.ScaleType and typeof(metadata.ScaleType) == "EnumItem" then
+            image.ScaleType = metadata.ScaleType
+        end
+    end
+    return image
 end
 
 local function PositionPopup(library, popup, anchor, width, height)
@@ -890,6 +967,24 @@ function IrisHub:ClosePopups()
     return self:ClosePopupsExcept(nil)
 end
 
+function IrisHub:SetBackgroundImage(image, transparency, tileSize, tint)
+    for _, window in ipairs(self.Windows) do
+        if window and not window.Destroyed and type(window.SetBackgroundImage) == "function" then
+            window:SetBackgroundImage(image, transparency, tileSize, tint)
+        end
+    end
+    return self
+end
+
+function IrisHub:ClearBackgroundImage()
+    for _, window in ipairs(self.Windows) do
+        if window and not window.Destroyed and type(window.ClearBackgroundImage) == "function" then
+            window:ClearBackgroundImage()
+        end
+    end
+    return self
+end
+
 function IrisHub:RefreshTheme()
     local theme = self.Theme
     for _, record in ipairs(self.Components) do
@@ -964,8 +1059,8 @@ function IrisHub:GetIconCatalog()
 end
 
 function IrisHub:ResolveIcon(icon)
-    local asset, fallback = ResolveIcon(icon)
-    return asset or fallback
+    local asset = ResolveIcon(icon)
+    return asset
 end
 
 local Window = {}
@@ -974,10 +1069,13 @@ Window.__index = Window
 function Window:ApplyTheme(theme)
     if self.Destroyed then return end
     self.Main.BackgroundColor3 = theme.Surface
-    self.Main.BackgroundTransparency = theme.Transparency
+    self.Main.BackgroundTransparency = 0
     self.Stroke.Color = theme.Border
     self.Title.TextColor3 = theme.Text
     self.Subtitle.TextColor3 = theme.Muted
+    self.StatusText.TextColor3 = theme.Muted
+    self.StatusDot.BackgroundColor3 = theme.Success
+    self.Breadcrumb.TextColor3 = theme.Muted
     self.Close.BackgroundColor3 = theme.Surface2
     self.Close.TextColor3 = theme.Muted
     self.MinimizeButton.BackgroundColor3 = theme.Surface2
@@ -985,8 +1083,22 @@ function Window:ApplyTheme(theme)
     self.MaximizeButton.BackgroundColor3 = theme.Surface2
     self.MaximizeButton.TextColor3 = theme.Muted
     self.AccentLine.BackgroundColor3 = theme.Accent
+    self.HeaderLine.BackgroundColor3 = theme.Border
     self.Sidebar.BackgroundColor3 = theme.Background
-    self.Breadcrumb.TextColor3 = theme.Muted
+    self.Content.BackgroundColor3 = theme.Background
+    self.SidebarHeader.TextColor3 = theme.Muted
+    self.SidebarFooter.TextColor3 = theme.Muted
+    if self.SidebarDivider then self.SidebarDivider.BackgroundColor3 = theme.Border end
+    if self.ContentDivider then self.ContentDivider.BackgroundColor3 = theme.Border end
+    if self.BackgroundImage then
+        self.BackgroundImage.ImageColor3 = self.BackgroundTint or Color3.new(1, 1, 1)
+    end
+    if self.BackgroundOverlay then
+        self.BackgroundOverlay.BackgroundColor3 = theme.Background
+    end
+    for _, group in pairs(self.NavGroups or {}) do
+        if group.Title then group.Title.TextColor3 = theme.Muted end
+    end
     for _, tab in pairs(self.Tabs) do
         if tab.ApplyTheme then tab:ApplyTheme(theme) end
     end
@@ -1061,23 +1173,26 @@ end
 function Window:CreateTab(options)
     options = options or {}
     local theme = self.Library.Theme
+    local navSection = options.NavSection and self._EnsureNavSection and self._EnsureNavSection(options.NavSection) or nil
     local button = New("TextButton", {
         BackgroundColor3 = theme.Surface2,
-        BackgroundTransparency = 0.52,
+        BackgroundTransparency = 1,
         Text = "",
         AutoButtonColor = false,
-        Size = UDim2.new(1, -16, 0, 42),
-        ZIndex = 4
+        Size = UDim2.new(1, -18, 0, 38),
+        ZIndex = 4,
+        ClipsDescendants = true,
+        LayoutOrder = navSection and navSection:NextOrder() or (#self.TabOrder + 1)
     }, self.TabList)
-    Corner(button, theme.Radius - 4)
-    local icon = CreateIcon(button, options.Icon, 17, theme.Muted)
+    Corner(button, 7)
+    local icon = CreateIcon(button, options.Icon, 16, theme.Muted)
     local title = New("TextLabel", {
         BackgroundTransparency = 1,
-        Position = UDim2.fromOffset(options.Icon and 42 or 14, 0),
-        Size = UDim2.new(1, options.Icon and -54 or -28, 1, 0),
+        Position = UDim2.fromOffset(options.Icon and 38 or 13, 0),
+        Size = UDim2.new(1, options.Icon and -50 or -26, 1, 0),
         Font = theme.SmallFont,
         Text = tostring(options.Title or "Tab"),
-        TextSize = 13,
+        TextSize = 12,
         TextColor3 = theme.Muted,
         TextXAlignment = Enum.TextXAlignment.Left,
         TextTruncate = Enum.TextTruncate.AtEnd,
@@ -1088,7 +1203,7 @@ function Window:CreateTab(options)
         BorderSizePixel = 0,
         AnchorPoint = Vector2.new(0, 0.5),
         Position = UDim2.new(0, 0, 0.5, 0),
-        Size = UDim2.fromOffset(3, 22),
+        Size = UDim2.fromOffset(2, 20),
         Visible = false,
         ZIndex = 6
     }, button)
@@ -1121,11 +1236,12 @@ function Window:CreateTab(options)
         Components = {},
         LayoutCounter = 0,
         Name = tostring(options.Title or "Tab"),
+        Locked = options.Locked == true,
         ApplyTheme = function(tabSelf, themeData)
-            tabSelf.Title.TextColor3 = tabSelf.Active and themeData.Text or themeData.Muted
+            tabSelf.Title.TextColor3 = tabSelf.Locked and themeData.Muted or (tabSelf.Active and themeData.Text or themeData.Muted)
             tabSelf.TabButton.BackgroundColor3 = tabSelf.Active and themeData.Surface3 or themeData.Surface2
-            tabSelf.TabButton.BackgroundTransparency = tabSelf.Active and 0 or 0.52
-            if tabSelf.ButtonStroke then tabSelf.ButtonStroke.Color = themeData.Border; tabSelf.ButtonStroke.Transparency = tabSelf.Active and 0.18 or 1 end
+            tabSelf.TabButton.BackgroundTransparency = tabSelf.Active and 0.02 or 1
+            if tabSelf.ButtonStroke then tabSelf.ButtonStroke.Color = themeData.Border; tabSelf.ButtonStroke.Transparency = tabSelf.Active and 0.35 or 1 end
             if tabSelf.Icon then
                 local iconColor = tabSelf.Active and themeData.Accent or themeData.Muted
                 if tabSelf.Icon:IsA("ImageLabel") then tabSelf.Icon.ImageColor3 = iconColor end
@@ -1185,15 +1301,15 @@ function Window:CreateTab(options)
         if self.Active then self.Library:ClosePopups() end
         self.Page.Visible = self.Active
         self.TabButton.BackgroundColor3 = self.Active and self.Library.Theme.Surface3 or self.Library.Theme.Surface2
-        self.TabButton.BackgroundTransparency = self.Active and 0 or 0.52
+        self.TabButton.BackgroundTransparency = self.Active and 0.02 or 1
         if self.ButtonStroke then self.ButtonStroke.Color = self.Library.Theme.Border; self.ButtonStroke.Transparency = self.Active and 0.18 or 1 end
-        self.Title.TextColor3 = self.Active and self.Library.Theme.Text or self.Library.Theme.Muted
+        self.Title.TextColor3 = self.Locked and self.Library.Theme.Muted or (self.Active and self.Library.Theme.Text or self.Library.Theme.Muted)
         if self.Icon then
             local iconColor = self.Active and self.Library.Theme.Accent or self.Library.Theme.Muted
             if self.Icon:IsA("ImageLabel") then self.Icon.ImageColor3 = iconColor end
             if self.Icon:IsA("TextLabel") then self.Icon.TextColor3 = iconColor end
         end
-        self.ActiveBar.Visible = self.Active
+        self.ActiveBar.Visible = self.Active and not self.Locked
         if self.Active then
             self.Window.ActiveTab = self
             self.Window.Breadcrumb.Text = self.Name
@@ -1207,16 +1323,17 @@ function Window:CreateTab(options)
         if page.AbsoluteSize.X > 0 then task.defer(function() if not proxy.Destroyed then proxy:Reflow() end end) end
     end))
     userConnections:Add(button.Activated:Connect(function()
+        if proxy.Locked then return end
         for _, other in pairs(proxy.Window.Tabs) do
-            other:SetActive(false)
+            if other ~= proxy then other:SetActive(false) end
         end
         proxy:SetActive(true)
     end))
     userConnections:Add(button.MouseEnter:Connect(function()
-        if not proxy.Active then Tween(button, {BackgroundTransparency = 0.28}, 0.14) end
+        if not proxy.Active and not proxy.Locked then Tween(button, {BackgroundTransparency = 0.84}, 0.12) end
     end))
     userConnections:Add(button.MouseLeave:Connect(function()
-        if not proxy.Active then Tween(button, {BackgroundTransparency = 0.52}, 0.14) end
+        if not proxy.Active then Tween(button, {BackgroundTransparency = 1}, 0.12) end
     end))
     proxy.Connections = userConnections
 
@@ -1251,6 +1368,14 @@ function Window:CreateTab(options)
     function methods:ConfigPanel(opts) return self:CreateConfigPanel(opts) end
     function methods:CodeBlock(opts) return self:CreateCodeBlock(opts) end
 
+    function methods:Select()
+        if self.Locked then return self end
+        for _, other in pairs(self.Window.Tabs) do
+            if other ~= self then other:SetActive(false) end
+        end
+        return self:SetActive(true)
+    end
+
     function methods:Destroy()
         if self.Destroyed then return end
         self.Destroyed = true
@@ -1265,45 +1390,41 @@ function Window:CreateTab(options)
 
     local function makeRow(opts, height)
         opts = opts or {}
-        local minimum = tonumber(height) or 54
+        local minimum = tonumber(height) or 52
         local row = New("Frame", {
             BackgroundColor3 = theme.Surface2,
-            BackgroundTransparency = opts.Transparent and 1 or 0,
+            BackgroundTransparency = opts.Transparent and 1 or 0.06,
             BorderSizePixel = 0,
             Size = UDim2.new(1, -4, 0, minimum),
             LayoutOrder = opts.LayoutOrder or 0,
             ClipsDescendants = true,
             AutomaticSize = Enum.AutomaticSize.None
         }, page)
-        New("UISizeConstraint", {MinSize = Vector2.new(0, minimum)}, row)
-        Corner(row, math.max(6, theme.Radius - 2))
-        Stroke(row, theme.Border, 0.28, 1)
+        New("UISizeConstraint", {MinSize = Vector2.new(0, minimum), MaxSize = Vector2.new(math.huge, math.huge)}, row)
+        Corner(row, 8)
+        Stroke(row, theme.Border, 0.70, 1)
         return row
     end
 
     function methods:CreateSection(opts)
         opts = opts or {}
         local titleText = tostring(opts.Title or "Section")
-        local descriptionText = tostring(opts.Description or "")
-        local baseHeight = math.max(tonumber(opts.Height) or 0, descriptionText ~= "" and 64 or 46)
+        local descriptionText = tostring(opts.Description or opts.Desc or "")
+        local baseHeight = descriptionText ~= "" and 58 or 44
         local row = New("TextButton", {
-            BackgroundColor3 = theme.Surface,
-            BackgroundTransparency = 0,
+            BackgroundTransparency = 1,
             BorderSizePixel = 0,
             Size = UDim2.new(1, -4, 0, baseHeight),
             Text = "",
             AutoButtonColor = false,
             LayoutOrder = opts.LayoutOrder or 0,
-            ClipsDescendants = true,
-            AutomaticSize = Enum.AutomaticSize.None
+            ClipsDescendants = true
         }, page)
-        local sizeConstraint = New("UISizeConstraint", {MinSize = Vector2.new(0, baseHeight)}, row)
-        Corner(row, math.max(6, theme.Radius - 2))
         local titleLabel = New("TextLabel", {
             BackgroundTransparency = 1,
-            Position = UDim2.fromOffset(14, 10),
-            Size = UDim2.new(1, -56, 0, 20),
-            Font = theme.TitleFont,
+            Position = UDim2.fromOffset(10, descriptionText ~= "" and 5 or 0),
+            Size = UDim2.new(1, -44, 0, 19),
+            Font = theme.SmallFont,
             Text = titleText,
             TextSize = 12,
             TextColor3 = theme.Text,
@@ -1312,45 +1433,49 @@ function Window:CreateTab(options)
         }, row)
         local description = New("TextLabel", {
             BackgroundTransparency = 1,
-            Position = UDim2.fromOffset(14, descriptionText ~= "" and 32 or 0),
-            Size = UDim2.new(1, -58, 0, descriptionText ~= "" and 20 or 0),
-            AutomaticSize = Enum.AutomaticSize.None,
+            Position = UDim2.fromOffset(10, 26),
+            Size = UDim2.new(1, -44, 0, 17),
             Font = theme.Font,
             Text = descriptionText,
             TextSize = 10,
             TextColor3 = theme.Muted,
             TextXAlignment = Enum.TextXAlignment.Left,
-            TextWrapped = true,
-            TextYAlignment = Enum.TextYAlignment.Top,
+            TextTruncate = Enum.TextTruncate.AtEnd,
             Visible = descriptionText ~= ""
         }, row)
-        if descriptionText ~= "" then
-            local availableWidth = math.max(180, page.AbsoluteSize.X - 78)
-            local measured = MeasureTextHeight(descriptionText, theme.Font, 10, availableWidth, 16)
-            local required = math.max(baseHeight, 38 + measured)
-            sizeConstraint.MinSize = Vector2.new(0, required)
-            row.Size = UDim2.new(1, -4, 0, required)
-            description.Size = UDim2.new(1, -58, 0, measured)
-        end
-        local chevron = CreateIcon(row, descriptionText ~= "" and "lucide:chevron-down" or "lucide:chevron-right", 15, theme.Muted, "right")
+        local accent = New("Frame", {
+            BackgroundColor3 = theme.Accent,
+            BorderSizePixel = 0,
+            AnchorPoint = Vector2.new(0, 0.5),
+            Position = UDim2.new(0, 0, 0.5, 0),
+            Size = UDim2.fromOffset(2, 22),
+            Visible = false
+        }, row)
+        Corner(accent, 1)
+        local chevron = CreateIcon(row, descriptionText ~= "" and "chevron-down" or "chevron-right", 13, theme.Muted, "right")
         if chevron then
             chevron.AnchorPoint = Vector2.new(1, 0.5)
-            chevron.Position = UDim2.new(1, -14, 0.5, 0)
+            chevron.Position = UDim2.new(1, -10, 0.5, 0)
         end
-        local line = New("Frame", {BackgroundColor3 = theme.Border, BorderSizePixel = 0, Position = UDim2.new(0, 14, 1, -1), Size = UDim2.new(1, -28, 0, 1)}, row)
-        local comp = Component.new(self.Library, "Section", row, {Value = true, Expanded = opts.DefaultExpanded ~= false, Title = titleLabel, Description = description, Chevron = chevron, Line = line})
+        local line = New("Frame", {
+            BackgroundColor3 = theme.Border,
+            BackgroundTransparency = 0.45,
+            BorderSizePixel = 0,
+            Position = UDim2.new(0, 10, 1, -1),
+            Size = UDim2.new(1, -20, 0, 1)
+        }, row)
+        local comp = Component.new(self.Library, "Section", row, {Value = true, Expanded = opts.DefaultExpanded ~= false, Title = titleLabel, Description = description, Chevron = chevron, Line = line, Accent = accent})
         local function refresh()
             local expanded = comp.Data.Expanded == true
-            if chevron and chevron:IsA("TextLabel") then
-                chevron.Text = expanded and "-" or ">"
-            elseif chevron and chevron:IsA("ImageLabel") then
-                local asset = ResolveIcon(expanded and "lucide:chevron-down" or "lucide:chevron-right")
+            accent.Visible = expanded
+            if chevron then
+                local iconName = expanded and "chevron-down" or "chevron-right"
+                local asset = ResolveIcon(iconName)
                 if asset then chevron.Image = asset end
             end
+            titleLabel.TextColor3 = expanded and self.Library.Theme.Text or self.Library.Theme.Muted
             for _, child in ipairs(comp.Children) do
-                if child and not child.Destroyed then
-                    child:SetVisible(expanded)
-                end
+                if child and not child.Destroyed then child:SetVisible(expanded) end
             end
         end
         function comp:Set(value)
@@ -1363,25 +1488,24 @@ function Window:CreateTab(options)
         function comp:Expand() return self:Set(true) end
         function comp:Collapse() return self:Set(false) end
         function comp:Reflow()
-            local width = math.max(160, page.AbsoluteSize.X - 78)
-            local measured = self.Data.Description.Visible and MeasureTextHeight(self.Data.Description.Text, self.Data.Description.Font, self.Data.Description.TextSize, width, 16) or 0
-            local required = self.Data.Description.Visible and math.max(64, 38 + measured) or 46
+            local width = math.max(160, page.AbsoluteSize.X - 54)
+            local required = descriptionText ~= "" and 58 or 44
             self.Instance.Size = UDim2.new(1, -4, 0, required)
-            sizeConstraint.MinSize = Vector2.new(0, required)
-            if self.Data.Description.Visible then self.Data.Description.Size = UDim2.new(1, -58, 0, measured) end
+            if self.Data.Description.Visible then
+                self.Data.Description.Size = UDim2.new(1, -44, 0, 17)
+                self.Data.Title.Size = UDim2.new(1, -44, 0, 19)
+            end
             return self
         end
         comp.ApplyTheme = function(c, t)
-            c.Data.Title.TextColor3 = t.Text
+            c.Data.Title.TextColor3 = c.Data.Expanded and t.Text or t.Muted
             c.Data.Description.TextColor3 = t.Muted
             c.Data.Line.BackgroundColor3 = t.Border
-            if c.Data.Chevron then
-                if c.Data.Chevron:IsA("ImageLabel") then c.Data.Chevron.ImageColor3 = t.Muted else c.Data.Chevron.TextColor3 = t.Muted end
-            end
-            c.Instance.BackgroundColor3 = t.Surface
+            c.Data.Accent.BackgroundColor3 = t.Accent
+            if c.Data.Chevron then c.Data.Chevron.ImageColor3 = t.Muted end
         end
         comp:AddConnection(row.Activated:Connect(function() comp:Toggle() end))
-        if not comp.Data.Expanded then refresh() end
+        refresh()
         return self:_add(comp)
     end
 
@@ -2514,6 +2638,7 @@ function IrisHub:CreateWindow(options)
     if typeof(requestedSize) == "UDim2" and requestedSize.X.Scale == 0 and requestedSize.Y.Scale == 0 then
         requestedSize = UDim2.fromOffset(Clamp(requestedSize.X.Offset, minSize.X, maxSize.X), Clamp(requestedSize.Y.Offset, minSize.Y, maxSize.Y))
     end
+
     local main = New("Frame", {
         BackgroundColor3 = theme.Surface,
         BackgroundTransparency = 0,
@@ -2524,221 +2649,117 @@ function IrisHub:CreateWindow(options)
         ClipsDescendants = true,
         ZIndex = 10
     }, root)
-    local shadow = nil
-    Corner(main, theme.Radius + 2)
+    Corner(main, 10)
     local outline = Stroke(main, theme.Border, 0.12, 1)
-    local gradient = New("UIGradient", {
-        Color = ColorSequence.new({
-            ColorSequenceKeypoint.new(0, theme.Surface3),
-            ColorSequenceKeypoint.new(0.18, theme.Surface),
-            ColorSequenceKeypoint.new(1, theme.Surface)
-        }),
-        Rotation = 90
-    }, main)
     New("UISizeConstraint", {MinSize = minSize, MaxSize = maxSize}, main)
 
-    local top = New("Frame", {BackgroundTransparency = 1, Size = UDim2.new(1, 0, 0, 74), ZIndex = 20}, main)
+    local backgroundImage = New("ImageLabel", {
+        Name = "BackgroundImage",
+        BackgroundTransparency = 1,
+        BorderSizePixel = 0,
+        Size = UDim2.fromScale(1, 1),
+        Image = "",
+        ImageTransparency = Clamp(tonumber(options.BackgroundImageTransparency) or 0.90, 0, 1),
+        ImageColor3 = options.BackgroundTint or Color3.new(1, 1, 1),
+        ScaleType = string.lower(tostring(options.BackgroundScaleType or "Tile")) == "stretch" and Enum.ScaleType.Stretch or Enum.ScaleType.Tile,
+        TileSize = typeof(options.BackgroundTileSize) == "UDim2" and options.BackgroundTileSize or UDim2.fromOffset(128, 128),
+        ZIndex = 11,
+        Visible = options.BackgroundImage ~= nil and tostring(options.BackgroundImage) ~= ""
+    }, main)
+    if options.BackgroundImage ~= nil then
+        backgroundImage.Image = type(options.BackgroundImage) == "number" and "rbxassetid://" .. tostring(options.BackgroundImage) or tostring(options.BackgroundImage)
+    end
+    local backgroundOverlay = New("Frame", {
+        Name = "BackgroundOverlay",
+        BackgroundColor3 = theme.Background,
+        BackgroundTransparency = Clamp(tonumber(options.BackgroundTintTransparency) or 0.84, 0, 1),
+        BorderSizePixel = 0,
+        Size = UDim2.fromScale(1, 1),
+        ZIndex = 12
+    }, main)
+
+    local top = New("Frame", {BackgroundColor3 = theme.Surface, BackgroundTransparency = 0.03, BorderSizePixel = 0, Size = UDim2.new(1, 0, 0, 60), ZIndex = 20}, main)
     local brand = New("Frame", {
         BackgroundColor3 = theme.AccentSoft,
+        BackgroundTransparency = 0.12,
         BorderSizePixel = 0,
-        Position = UDim2.fromOffset(16, 14),
-        Size = UDim2.fromOffset(38, 38),
+        Position = UDim2.fromOffset(13, 13),
+        Size = UDim2.fromOffset(34, 34),
         ZIndex = 21
     }, top)
-    Corner(brand, 11)
-    Stroke(brand, theme.Accent, 0.24, 1)
-    local brandText = New("TextLabel", {
-        BackgroundTransparency = 1,
-        Size = UDim2.fromScale(1, 1),
-        Font = theme.TitleFont,
-        Text = "I",
-        TextSize = 17,
-        TextColor3 = theme.Text,
-        TextTransparency = options.Icon and 1 or 0,
-        TextXAlignment = Enum.TextXAlignment.Center,
-        TextYAlignment = Enum.TextYAlignment.Center,
-        ZIndex = 22
-    }, brand)
-    local brandIcon = CreateIcon(brand, options.Icon or "lucide:sparkles", 18, theme.Text)
-    if brandIcon then
-        brandIcon.AnchorPoint = Vector2.new(0.5, 0.5)
-        brandIcon.Position = UDim2.fromScale(0.5, 0.5)
-        brandIcon.ZIndex = 23
-    end
+    Corner(brand, 9)
+    local brandIcon = CreateIcon(brand, options.Icon or "sparkles", 16, theme.Text)
+    if brandIcon then brandIcon.AnchorPoint = Vector2.new(0.5, 0.5); brandIcon.Position = UDim2.fromScale(0.5, 0.5); brandIcon.ZIndex = 22 end
     local title = New("TextLabel", {
         BackgroundTransparency = 1,
-        Position = UDim2.fromOffset(66, 10),
-        Size = UDim2.new(1, -390, 0, 24),
+        Position = UDim2.fromOffset(57, 10),
+        Size = UDim2.new(1, -250, 0, 21),
         Font = theme.TitleFont,
         Text = tostring(options.Title or "IrisHub"),
-        TextSize = 17,
+        TextSize = 15,
         TextColor3 = theme.Text,
         TextXAlignment = Enum.TextXAlignment.Left,
         TextTruncate = Enum.TextTruncate.AtEnd,
-        ZIndex = 21
+        ZIndex = 22
     }, top)
     local subtitle = New("TextLabel", {
         BackgroundTransparency = 1,
-        Position = UDim2.fromOffset(66, 34),
-        Size = UDim2.new(1, -414, 0, 16),
+        Position = UDim2.fromOffset(57, 31),
+        Size = UDim2.new(1, -280, 0, 15),
         Font = theme.Font,
-        Text = tostring(options.Subtitle or "Universal interface"),
-        TextSize = 10,
-        TextColor3 = theme.Muted,
-        TextXAlignment = Enum.TextXAlignment.Left,
-        TextTruncate = Enum.TextTruncate.AtEnd,
-        ZIndex = 21
-    }, top)
-    local statusDot = New("Frame", {
-        BackgroundColor3 = theme.Success,
-        BorderSizePixel = 0,
-        Position = UDim2.fromOffset(68, 54),
-        Size = UDim2.fromOffset(6, 6),
-        ZIndex = 21
-    }, top)
-    Corner(statusDot, 3)
-    local statusText = New("TextLabel", {
-        BackgroundTransparency = 1,
-        Position = UDim2.fromOffset(80, 49),
-        Size = UDim2.fromOffset(88, 16),
-        Font = theme.SmallFont,
-        Text = "READY",
-        TextSize = 8,
-        TextColor3 = theme.Muted,
-        TextXAlignment = Enum.TextXAlignment.Left,
-        ZIndex = 21
-    }, top)
-    local breadcrumb = New("TextLabel", {
-        BackgroundTransparency = 1,
-        AnchorPoint = Vector2.new(1, 0.5),
-        Position = UDim2.new(1, -132, 0, 31),
-        Size = UDim2.fromOffset(112, 18),
-        Font = theme.SmallFont,
-        Text = "Main",
+        Text = tostring(options.Subtitle or "Universal UI"),
         TextSize = 9,
         TextColor3 = theme.Muted,
-        TextXAlignment = Enum.TextXAlignment.Right,
+        TextXAlignment = Enum.TextXAlignment.Left,
         TextTruncate = Enum.TextTruncate.AtEnd,
-        ZIndex = 21
-    }, top)
-
-    local function topButton(iconName, rightOffset)
-        local button = New("TextButton", {
-            BackgroundColor3 = theme.Surface2,
-            BorderSizePixel = 0,
-            AnchorPoint = Vector2.new(1, 0.5),
-            Position = UDim2.new(1, rightOffset, 0.5, 0),
-            Size = UDim2.fromOffset(32, 32),
-            Text = "",
-            AutoButtonColor = false,
-            ZIndex = 22
-        }, top)
-        Corner(button, 9)
-        Stroke(button, theme.Border, 0.38, 1)
-        local icon = CreateIcon(button, iconName, 14, theme.Muted)
-        if icon then
-            icon.AnchorPoint = Vector2.new(0.5, 0.5)
-            icon.Position = UDim2.fromScale(0.5, 0.5)
-            icon.ZIndex = 23
-        end
-        return button, icon
-    end
-
-    local close, closeIcon = topButton("lucide:x", -12)
-    local minimizeButton, minimizeIcon = topButton("lucide:minus", -50)
-    local maximize, maximizeIcon = topButton("lucide:maximize-2", -88)
-    local headerLine = New("Frame", {
-        BackgroundColor3 = theme.Border,
-        BackgroundTransparency = 0.5,
-        BorderSizePixel = 0,
-        Position = UDim2.fromOffset(16, 72),
-        Size = UDim2.new(1, -32, 0, 1),
-        ZIndex = 20
-    }, top)
-    local accentLine = New("Frame", {
-        BackgroundColor3 = theme.Accent,
-        BorderSizePixel = 0,
-        Position = UDim2.fromOffset(16, 72),
-        Size = UDim2.fromOffset(72, 2),
         ZIndex = 22
     }, top)
-    Corner(accentLine, 2)
+    local statusDot = New("Frame", {BackgroundColor3 = theme.Success, BorderSizePixel = 0, Position = UDim2.fromOffset(58, 49), Size = UDim2.fromOffset(5, 5), ZIndex = 22}, top)
+    Corner(statusDot, 3)
+    local statusText = New("TextLabel", {BackgroundTransparency = 1, Position = UDim2.fromOffset(67, 45), Size = UDim2.fromOffset(80, 13), Font = theme.SmallFont, Text = "READY", TextSize = 8, TextColor3 = theme.Muted, TextXAlignment = Enum.TextXAlignment.Left, ZIndex = 22}, top)
+    local breadcrumb = New("TextLabel", {BackgroundTransparency = 1, AnchorPoint = Vector2.new(1, 0.5), Position = UDim2.new(1, -126, 0, 30), Size = UDim2.fromOffset(124, 16), Font = theme.SmallFont, Text = "Main", TextSize = 9, TextColor3 = theme.Muted, TextXAlignment = Enum.TextXAlignment.Right, TextTruncate = Enum.TextTruncate.AtEnd, ZIndex = 22}, top)
 
-    local sidebar = New("Frame", {
-        BackgroundColor3 = theme.Background,
-        BorderSizePixel = 0,
-        Position = UDim2.fromOffset(12, 86),
-        Size = UDim2.new(0, 184, 1, -100),
-        ClipsDescendants = true,
-        ZIndex = 12
-    }, main)
-    Corner(sidebar, theme.Radius)
-    Stroke(sidebar, theme.Border, 0.42, 1)
-    local sidebarHeader = New("TextLabel", {
-        BackgroundTransparency = 1,
-        Position = UDim2.fromOffset(15, 13),
-        Size = UDim2.new(1, -30, 0, 16),
-        Font = theme.SmallFont,
-        Text = "NAVIGATION",
-        TextSize = 9,
-        TextColor3 = theme.Muted,
-        TextXAlignment = Enum.TextXAlignment.Left,
-        ZIndex = 14
-    }, sidebar)
-    local tabList = New("ScrollingFrame", {
-        BackgroundTransparency = 1,
-        BorderSizePixel = 0,
-        Position = UDim2.fromOffset(0, 40),
-        Size = UDim2.new(1, 0, 1, -72),
-        AutomaticCanvasSize = Enum.AutomaticSize.Y,
-        CanvasSize = UDim2.new(),
-        ScrollBarThickness = 0,
-        ZIndex = 13
-    }, sidebar)
-    Padding(tabList, 8, 8, 0, 8)
-    New("UIListLayout", {Padding = UDim.new(0, 6), SortOrder = Enum.SortOrder.LayoutOrder}, tabList)
-    local sidebarFooter = New("TextLabel", {
-        BackgroundTransparency = 1,
-        AnchorPoint = Vector2.new(0, 1),
-        Position = UDim2.new(0, 15, 1, -13),
-        Size = UDim2.new(1, -30, 0, 14),
-        Font = theme.Font,
-        Text = "IRISHUB • " .. self.Version,
-        TextSize = 8,
-        TextColor3 = theme.Muted,
-        TextXAlignment = Enum.TextXAlignment.Left,
-        ZIndex = 14
-    }, sidebar)
+    local function topButton(iconName, rightOffset)
+        local button = New("TextButton", {BackgroundColor3 = theme.Surface2, BackgroundTransparency = 0.10, BorderSizePixel = 0, AnchorPoint = Vector2.new(1, 0.5), Position = UDim2.new(1, rightOffset, 0.5, 0), Size = UDim2.fromOffset(30, 30), Text = "", AutoButtonColor = false, ZIndex = 23}, top)
+        Corner(button, 8)
+        Stroke(button, theme.Border, 0.60, 1)
+        local icon = CreateIcon(button, iconName, 13, theme.Muted)
+        if icon then icon.AnchorPoint = Vector2.new(0.5, 0.5); icon.Position = UDim2.fromScale(0.5, 0.5); icon.ZIndex = 24 end
+        return button, icon
+    end
+    local close, closeIcon = topButton("x", -10)
+    local minimizeButton, minimizeIcon = topButton("minus", -46)
+    local maximize, maximizeIcon = topButton("maximize-2", -82)
+    local headerLine = New("Frame", {BackgroundColor3 = theme.Border, BackgroundTransparency = 0.52, BorderSizePixel = 0, Position = UDim2.new(0, 12, 1, -1), Size = UDim2.new(1, -24, 0, 1), ZIndex = 24}, top)
+    local accentLine = New("Frame", {BackgroundColor3 = theme.Accent, BorderSizePixel = 0, Position = UDim2.fromOffset(12, 59), Size = UDim2.fromOffset(56, 2), ZIndex = 25}, main)
+    Corner(accentLine, 1)
 
-    local content = New("Frame", {
-        BackgroundColor3 = theme.Background,
-        BorderSizePixel = 0,
-        Position = UDim2.fromOffset(208, 86),
-        Size = UDim2.new(1, -220, 1, -100),
-        ClipsDescendants = true,
-        ZIndex = 12
-    }, main)
-    Corner(content, theme.Radius)
-    Stroke(content, theme.Border, 0.42, 1)
-    local pages = New("Frame", {
-        BackgroundTransparency = 1,
-        Position = UDim2.fromOffset(1, 1),
-        Size = UDim2.new(1, -2, 1, -2),
-        ClipsDescendants = true,
-        ZIndex = 13
-    }, content)
+    local body = New("Frame", {BackgroundTransparency = 1, BorderSizePixel = 0, Position = UDim2.fromOffset(0, 60), Size = UDim2.new(1, 0, 1, -60), ZIndex = 19}, main)
+    local sidebar = New("Frame", {BackgroundColor3 = theme.Background, BorderSizePixel = 0, Position = UDim2.fromOffset(0, 0), Size = UDim2.new(0, 168, 1, 0), ClipsDescendants = true, ZIndex = 20}, body)
+    local sidebarHeader = New("TextLabel", {BackgroundTransparency = 1, Position = UDim2.fromOffset(16, 12), Size = UDim2.new(1, -32, 0, 14), Font = theme.SmallFont, Text = "PAGES", TextSize = 8, TextColor3 = theme.Muted, TextXAlignment = Enum.TextXAlignment.Left, ZIndex = 21}, sidebar)
+    local tabList = New("ScrollingFrame", {BackgroundTransparency = 1, BorderSizePixel = 0, Position = UDim2.fromOffset(0, 34), Size = UDim2.new(1, 0, 1, -66), AutomaticCanvasSize = Enum.AutomaticSize.Y, CanvasSize = UDim2.new(), ScrollBarThickness = 0, ZIndex = 21}, sidebar)
+    Padding(tabList, 9, 9, 4, 10)
+    New("UIListLayout", {Padding = UDim.new(0, 4), SortOrder = Enum.SortOrder.LayoutOrder}, tabList)
+    local sidebarFooter = New("TextLabel", {BackgroundTransparency = 1, AnchorPoint = Vector2.new(0, 1), Position = UDim2.new(0, 16, 1, -12), Size = UDim2.new(1, -30, 0, 13), Font = theme.Font, Text = "IrisHub " .. self.Version, TextSize = 8, TextColor3 = theme.Muted, TextXAlignment = Enum.TextXAlignment.Left, ZIndex = 21}, sidebar)
+    local sidebarDivider = New("Frame", {BackgroundColor3 = theme.Border, BackgroundTransparency = 0.40, BorderSizePixel = 0, Position = UDim2.new(1, 0, 0, 0), Size = UDim2.fromOffset(1, 1), ZIndex = 22}, sidebar)
+    sidebarDivider.Size = UDim2.new(0, 1, 1, 0)
+
+    local content = New("Frame", {BackgroundColor3 = theme.Background, BorderSizePixel = 0, Position = UDim2.fromOffset(169, 0), Size = UDim2.new(1, -169, 1, 0), ClipsDescendants = true, ZIndex = 20}, body)
+    local contentDivider = New("Frame", {BackgroundColor3 = theme.Border, BackgroundTransparency = 0.55, BorderSizePixel = 0, Position = UDim2.fromOffset(0, 0), Size = UDim2.fromOffset(1, 1), ZIndex = 22}, content)
+    contentDivider.Size = UDim2.new(0, 1, 1, 0)
+    local pages = New("Frame", {BackgroundTransparency = 1, Position = UDim2.fromOffset(0, 0), Size = UDim2.new(1, 0, 1, 0), ClipsDescendants = true, ZIndex = 21}, content)
 
     local window = setmetatable({
         Library = self,
         Root = root,
         Main = main,
-        Shadow = shadow,
-        Gradient = gradient,
+        Shadow = nil,
+        Gradient = nil,
         Size = main.Size,
         Stroke = outline,
         Top = top,
         Brand = brand,
-        BrandText = brandText,
+        BrandText = nil,
         BrandIcon = brandIcon,
         Title = title,
         Subtitle = subtitle,
@@ -2753,17 +2774,81 @@ function IrisHub:CreateWindow(options)
         Sidebar = sidebar,
         SidebarHeader = sidebarHeader,
         SidebarFooter = sidebarFooter,
+        SidebarDivider = sidebarDivider,
         TabList = tabList,
         Content = content,
+        ContentDivider = contentDivider,
         Pages = pages,
+        BackgroundImage = backgroundImage,
+        BackgroundOverlay = backgroundOverlay,
+        BackgroundTint = options.BackgroundTint or Color3.new(1, 1, 1),
+        BackgroundImageTransparency = backgroundImage.ImageTransparency,
+        BackgroundTileSize = backgroundImage.TileSize,
         Tabs = {},
         TabOrder = {},
+        NavGroups = {},
         Connections = ConnectionBag.new(),
         Destroyed = false,
         Minimized = false,
         Maximized = false
     }, Window)
     table.insert(self.Windows, window)
+
+    local navGroupCount = 0
+    local navGroups = window.NavGroups
+    local function ensureNavSection(name, icon)
+        local key = tostring(name or "GENERAL")
+        local existing = navGroups[key]
+        if existing then return existing end
+        navGroupCount = navGroupCount + 1
+        local header = New("Frame", {BackgroundTransparency = 1, Size = UDim2.new(1, -18, 0, 24), LayoutOrder = navGroupCount * 1000 - 1, ZIndex = 22}, tabList)
+        local headerIcon = CreateIcon(header, icon, 11, theme.Muted)
+        if headerIcon then
+            headerIcon.AnchorPoint = Vector2.new(0, 0.5)
+            headerIcon.Position = UDim2.fromOffset(0, 12)
+            headerIcon.ZIndex = 23
+        end
+        local headerLabel = New("TextLabel", {
+            BackgroundTransparency = 1,
+            Position = UDim2.fromOffset(headerIcon and 18 or 0, 0),
+            Size = UDim2.new(1, headerIcon and -18 or 0, 1, 0),
+            Font = theme.SmallFont,
+            Text = string.upper(key),
+            TextSize = 7,
+            TextColor3 = theme.Muted,
+            TextXAlignment = Enum.TextXAlignment.Left,
+            TextTruncate = Enum.TextTruncate.AtEnd,
+            ZIndex = 23
+        }, header)
+        local group = {Name = key, Frame = header, Title = headerLabel, Counter = 0, BaseOrder = navGroupCount * 1000}
+        function group:NextOrder()
+            self.Counter = self.Counter + 1
+            return self.BaseOrder + self.Counter
+        end
+        navGroups[key] = group
+        return group
+    end
+    window._EnsureNavSection = ensureNavSection
+
+    function window:Section(opts)
+        opts = opts or {}
+        local section = ensureNavSection(opts.Title or "GENERAL", opts.Icon)
+        local controller = {Window = self, Name = section.Name, Title = section.Title}
+        function controller:Tab(tabOptions)
+            tabOptions = CloneTable(tabOptions or {})
+            tabOptions.NavSection = self.Name
+            return self.Window:CreateTab(tabOptions)
+        end
+        function controller:GetTabs()
+            local result = {}
+            for _, tab in ipairs(self.Window.TabOrder) do
+                if tab.NavSection == self.Name then table.insert(result, tab) end
+            end
+            return result
+        end
+        return controller
+    end
+
     local requestedScale = tonumber(options.UIScale)
     if requestedScale and math.abs(requestedScale - 1) > 0.001 then
         New("UIScale", {Scale = Clamp(requestedScale, 0.75, 1.5)}, root)
@@ -2800,9 +2885,10 @@ function IrisHub:CreateWindow(options)
             end
         end))
     end
-
     if options.Resizable ~= false then
-        local resizeGrip = New("TextButton", {BackgroundTransparency = 1, BorderSizePixel = 0, AnchorPoint = Vector2.new(1, 1), Position = UDim2.new(1, -7, 1, -7), Size = UDim2.fromOffset(26, 26), Text = "↘", Font = theme.SmallFont, TextSize = 13, TextColor3 = theme.Muted, AutoButtonColor = false, ZIndex = 60}, main)
+        local resizeGrip = New("TextButton", {BackgroundTransparency = 1, BorderSizePixel = 0, AnchorPoint = Vector2.new(1, 1), Position = UDim2.new(1, -4, 1, -4), Size = UDim2.fromOffset(20, 20), Text = "", AutoButtonColor = false, ZIndex = 60}, main)
+        local gripIcon = CreateIcon(resizeGrip, "grip-diagonal-2", 12, theme.Muted)
+        if gripIcon then gripIcon.AnchorPoint = Vector2.new(0.5, 0.5); gripIcon.Position = UDim2.fromScale(0.5, 0.5); gripIcon.ZIndex = 61 end
         window.ResizeGrip = resizeGrip
         local resizing = false
         local resizeStart
@@ -2829,12 +2915,12 @@ function IrisHub:CreateWindow(options)
         end))
     end
 
-    window.Connections:Add(close.MouseEnter:Connect(function() Tween(close, {BackgroundColor3 = theme.Danger, TextColor3 = theme.Text}, 0.12) end))
-    window.Connections:Add(close.MouseLeave:Connect(function() Tween(close, {BackgroundColor3 = self.Theme.Surface2, TextColor3 = self.Theme.Muted}, 0.12) end))
-    window.Connections:Add(minimizeButton.MouseEnter:Connect(function() Tween(minimizeButton, {BackgroundColor3 = self.Theme.Surface3, TextColor3 = self.Theme.Text}, 0.12) end))
-    window.Connections:Add(minimizeButton.MouseLeave:Connect(function() Tween(minimizeButton, {BackgroundColor3 = self.Theme.Surface2, TextColor3 = self.Theme.Muted}, 0.12) end))
-    window.Connections:Add(maximize.MouseEnter:Connect(function() Tween(maximize, {BackgroundColor3 = self.Theme.Surface3, TextColor3 = self.Theme.Text}, 0.12) end))
-    window.Connections:Add(maximize.MouseLeave:Connect(function() Tween(maximize, {BackgroundColor3 = self.Theme.Surface2, TextColor3 = self.Theme.Muted}, 0.12) end))
+    window.Connections:Add(close.MouseEnter:Connect(function() Tween(close, {BackgroundColor3 = theme.Danger, TextColor3 = theme.Text}, 0.10) end))
+    window.Connections:Add(close.MouseLeave:Connect(function() Tween(close, {BackgroundColor3 = self.Theme.Surface2, TextColor3 = self.Theme.Muted}, 0.10) end))
+    window.Connections:Add(minimizeButton.MouseEnter:Connect(function() Tween(minimizeButton, {BackgroundColor3 = self.Theme.Surface3, TextColor3 = self.Theme.Text}, 0.10) end))
+    window.Connections:Add(minimizeButton.MouseLeave:Connect(function() Tween(minimizeButton, {BackgroundColor3 = self.Theme.Surface2, TextColor3 = self.Theme.Muted}, 0.10) end))
+    window.Connections:Add(maximize.MouseEnter:Connect(function() Tween(maximize, {BackgroundColor3 = self.Theme.Surface3, TextColor3 = self.Theme.Text}, 0.10) end))
+    window.Connections:Add(maximize.MouseLeave:Connect(function() Tween(maximize, {BackgroundColor3 = self.Theme.Surface2, TextColor3 = self.Theme.Muted}, 0.10) end))
     window.Connections:Add(close.Activated:Connect(function()
         if type(options.OnClose) == "function" then Fire(options.OnClose, window) end
         window:Destroy()
@@ -2842,6 +2928,46 @@ function IrisHub:CreateWindow(options)
     window.Connections:Add(minimizeButton.Activated:Connect(function() window:Minimize() end))
     window.Connections:Add(maximize.Activated:Connect(function() window:Maximize() end))
     window.Connections:Add(main.InputBegan:Connect(function() window:Focus() end))
+
+    function window:SetBackgroundImage(image, transparency, tileSize, tint)
+        if self.Destroyed then return self end
+        if image == nil or tostring(image) == "" then
+            self:ClearBackground()
+            return self
+        end
+        self.BackgroundImage.Image = type(image) == "number" and "rbxassetid://" .. tostring(image) or tostring(image)
+        if transparency ~= nil then
+            self.BackgroundImageTransparency = Clamp(tonumber(transparency) or self.BackgroundImageTransparency, 0, 1)
+            self.BackgroundImage.ImageTransparency = self.BackgroundImageTransparency
+        end
+        if typeof(tileSize) == "UDim2" then
+            self.BackgroundTileSize = tileSize
+            self.BackgroundImage.TileSize = tileSize
+        end
+        if typeof(tint) == "Color3" then
+            self.BackgroundTint = tint
+            self.BackgroundImage.ImageColor3 = tint
+        end
+        self.BackgroundImage.Visible = true
+        return self
+    end
+
+    function window:ClearBackground()
+        self.BackgroundImage.Image = ""
+        self.BackgroundImage.Visible = false
+        return self
+    end
+
+    function window:SetBackgroundTint(color, overlayTransparency)
+        if typeof(color) == "Color3" then
+            self.BackgroundTint = color
+            self.BackgroundImage.ImageColor3 = color
+        end
+        if overlayTransparency ~= nil then
+            self.BackgroundOverlay.BackgroundTransparency = Clamp(tonumber(overlayTransparency) or 0.84, 0, 1)
+        end
+        return self
+    end
 
     function window:Destroy()
         if self.Destroyed then return end
@@ -2864,20 +2990,16 @@ function IrisHub:CreateWindow(options)
     function window:GetTab(name)
         local target = tostring(name)
         for _, tab in pairs(self.Tabs) do
-            if tab and not tab.Destroyed and tab.Name == target then
-                return tab
-            end
+            if tab and not tab.Destroyed and tab.Name == target then return tab end
         end
         return nil
     end
 
-    function window:GetActiveTab()
-        return self.ActiveTab
-    end
+    function window:GetActiveTab() return self.ActiveTab end
 
     function window:SelectTab(name)
         local target = self:GetTab(name)
-        if not target then return nil end
+        if not target or target.Locked then return nil end
         for _, tab in pairs(self.Tabs) do
             if tab ~= target then tab:SetActive(false) end
         end
@@ -2895,65 +3017,15 @@ function IrisHub:CreateWindow(options)
     function window:CreateTab(opts)
         opts = opts or {}
         local tab = Window.CreateTab(self, opts)
+        tab.NavSection = opts.NavSection
         if opts.OnCreated then Fire(opts.OnCreated, tab) end
         return tab
     end
 
-    function window:ApplyTheme(themeData)
-        self.Main.BackgroundColor3 = themeData.Surface
-        self.Main.BackgroundTransparency = themeData.Transparency
-        if self.Gradient then
-            self.Gradient.Color = ColorSequence.new({
-                ColorSequenceKeypoint.new(0, themeData.Surface3),
-                ColorSequenceKeypoint.new(0.18, themeData.Surface),
-                ColorSequenceKeypoint.new(1, themeData.Surface)
-            })
-        end
-        self.Stroke.Color = themeData.Border
-        self.Brand.BackgroundColor3 = themeData.AccentSoft
-        local brandStroke = self.Brand:FindFirstChildOfClass("UIStroke")
-        if brandStroke then brandStroke.Color = themeData.Accent end
-        if self.BrandIcon then
-            if self.BrandIcon:IsA("ImageLabel") then self.BrandIcon.ImageColor3 = themeData.Text end
-            if self.BrandIcon:IsA("TextLabel") then self.BrandIcon.TextColor3 = themeData.Text end
-        end
-        self.Title.TextColor3 = themeData.Text
-        self.Subtitle.TextColor3 = themeData.Muted
-        self.StatusText.TextColor3 = themeData.Muted
-        self.StatusDot.BackgroundColor3 = themeData.Success
-        self.Breadcrumb.TextColor3 = themeData.Muted
-        self.Close.BackgroundColor3 = themeData.Surface2
-        self.Close.TextColor3 = themeData.Muted
-        self.MinimizeButton.BackgroundColor3 = themeData.Surface2
-        self.MinimizeButton.TextColor3 = themeData.Muted
-        self.MaximizeButton.BackgroundColor3 = themeData.Surface2
-        self.MaximizeButton.TextColor3 = themeData.Muted
-        local closeStroke = self.Close:FindFirstChildOfClass("UIStroke")
-        if closeStroke then closeStroke.Color = themeData.Border end
-        local minStroke = self.MinimizeButton:FindFirstChildOfClass("UIStroke")
-        if minStroke then minStroke.Color = themeData.Border end
-        local maxStroke = self.MaximizeButton:FindFirstChildOfClass("UIStroke")
-        if maxStroke then maxStroke.Color = themeData.Border end
-        self.HeaderLine.BackgroundColor3 = themeData.Border
-        self.AccentLine.BackgroundColor3 = themeData.Accent
-        self.Sidebar.BackgroundColor3 = themeData.Background
-        self.SidebarHeader.TextColor3 = themeData.Muted
-        self.SidebarFooter.TextColor3 = themeData.Muted
-        self.Content.BackgroundColor3 = themeData.Background
-        local sidebarStroke = self.Sidebar:FindFirstChildOfClass("UIStroke")
-        if sidebarStroke then sidebarStroke.Color = themeData.Border end
-        local contentStroke = self.Content:FindFirstChildOfClass("UIStroke")
-        if contentStroke then contentStroke.Color = themeData.Border end
-        for _, tab in pairs(self.Tabs) do
-            if tab.ApplyTheme then tab:ApplyTheme(themeData) end
-        end
-    end
-
-    local defaultTab = window:CreateTab({
-        Title = options.DefaultTab or "Main",
-        Icon = options.DefaultIcon
-    })
+    local defaultSection = options.DefaultSection or "MAIN"
+    local defaultTab = window:CreateTab({Title = options.DefaultTab or "Main", Icon = options.DefaultIcon or "home", NavSection = defaultSection})
     defaultTab:SetActive(true)
+    window:ApplyTheme(theme)
     return window
 end
 

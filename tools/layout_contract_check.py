@@ -12,7 +12,11 @@ assert 'comp.Data.Value = box.Text' in SOURCE
 assert 'self.TabOrder = {}' not in SOURCE
 assert 'TabOrder = {}' in SOURCE
 assert 'table.insert(self.TabOrder, proxy)' in SOURCE
-assert 'local fallbackAsset = IconRegistry.BuiltinAssets.helpcircle or IconRegistry.BuiltinAssets.info' in SOURCE
+assert 'local function ResolveIconData(icon)' in SOURCE
+assert 'https://raw.githubusercontent.com/Footagesus/Icons/main/Main-v2.lua' in SOURCE
+assert 'function window:SetBackgroundImage(image, transparency, tileSize, tint)' in SOURCE
+assert 'function IrisHub:SetBackgroundImage(image, transparency, tileSize, tint)' in SOURCE
+assert 'function window:Section(opts)' in SOURCE
 assert 'IconRegistry.Glyphs' not in SOURCE or 'TextLabel' in SOURCE
 for expected in ['lucide:layout-dashboard', 'lucide:sparkles', 'lucide:palette', 'lucide:settings', 'lucide:info']:
     assert expected in EXAMPLE, f'missing canonical example icon: {expected}'

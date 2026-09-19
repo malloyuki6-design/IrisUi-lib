@@ -205,6 +205,7 @@ Features:Keybind({
 })
 
 Appearance:Section({Title = "Theme lab", Description = "Change the visual language at runtime"})
+Appearance:Section({Title = "Background", Description = "Apply a Roblox texture asset to the window surface"})
 
 Appearance:Dropdown({
     Title = "Theme",
@@ -222,6 +223,38 @@ local glass = Appearance:Toggle({
     Default = UI:GetThemeValue("Transparency") > 0,
     Callback = function(value)
         UI:SetTheme({Transparency = value and 0.08 or 0.02})
+    end
+})
+
+local backgroundId = Appearance:Input({
+    Title = "Texture ID",
+    Placeholder = "rbxassetid://1234567890",
+    Default = "",
+    Callback = function(value)
+        UI:SetConfig("BackgroundTexture", value)
+    end
+})
+
+Appearance:Button({
+    Title = "Apply texture",
+    Icon = "lucide:image",
+    Callback = function()
+        local value = backgroundId:Get()
+        if tostring(value or "") ~= "" then
+            UI:SetBackgroundImage(value, 0.86, UDim2.fromOffset(128, 128), Color3.new(1, 1, 1))
+            notify("Background", "Texture applied.", "Success")
+        else
+            notify("Background", "Enter a Roblox texture ID first.", "Warning")
+        end
+    end
+})
+
+Appearance:Button({
+    Title = "Clear background",
+    Icon = "lucide:eraser",
+    Callback = function()
+        UI:ClearBackgroundImage()
+        notify("Background", "Texture cleared.", "Info")
     end
 })
 
@@ -355,6 +388,10 @@ About:Status({Title = "Repository", Description = "Hosted on GitHub", State = "S
 About:KeyValue({Key = "Library version", Value = UI:GetVersion()})
 About:KeyValue({Key = "Distribution", Value = "dist/IrisHub.luau"})
 About:Badge({Text = "OPEN SOURCE"})
+
+local navigationGroup = Window:Section({Title = "Examples", Icon = "lucide:layers-3"})
+local Extra = navigationGroup:Tab({Title = "Extra", Icon = "lucide:sparkles"})
+Extra:Paragraph({Title = "Sectioned navigation", Content = "IrisHub supports grouped navigation while keeping the direct CreateTab API available."})
 
 local versionInfo = About:Button({
     Title = "Show runtime version",

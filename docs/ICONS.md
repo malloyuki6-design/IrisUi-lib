@@ -44,3 +44,7 @@ local catalog = UI:GetIconCatalog()
 ```
 
 The catalog exposes the bundled fallback asset names. Geist and Craft remain supported as provider namespaces through custom Roblox-hosted asset registration.
+
+## Footagesus Icons integration
+
+IrisHub resolves missing named icons through the Footagesus Icons runtime when the execution environment permits HTTP and dynamic loading. Lucide, Geist, and Craft namespaces can be requested with `lucide:name`, `geist:name`, and `craft:name`. Locally registered Roblox assets remain the first lookup path.

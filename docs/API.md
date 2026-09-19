@@ -221,3 +221,17 @@ code:Copy()
 ## Config panel
 
 `Tab:ConfigPanel(options)` creates a ready-made config controls section and returns the section, input, manager, save button, load button, and delete button.
+
+## Window background
+
+`Window:SetBackgroundImage(image, transparency, tileSize, tint)` applies a Roblox image or texture asset to the window background. Numeric values are converted to `rbxassetid://`.
+
+`Window:SetBackgroundTint(color, overlayTransparency)` changes the background tint and overlay strength.
+
+`Window:ClearBackground()` removes the background image.
+
+`IrisHub:SetBackgroundImage(...)` and `IrisHub:ClearBackgroundImage()` apply the operation to every live window.
+
+## Grouped navigation
+
+`Window:Section({Title, Icon})` creates a navigation group. The returned group exposes `:Tab({...})`, matching the sectioned navigation style used by WindUI while using IrisHub's own component and theme system.

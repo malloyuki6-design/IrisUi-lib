@@ -1,42 +1,41 @@
-# IrisHub 2.5.2 Validation
+# IrisHub 2.6.0 Validation
 
 ## Static checks
 
 - Main library Luau syntax: passed
-- Example Luau syntax: passed
-- All Luau files syntax: passed
-- Forbidden `--` comment marker scan: passed
+- GitHub example Luau syntax: passed
 - Source to distribution synchronization: passed
+- Forbidden `--` comment marker scan: passed
 - Website JavaScript syntax: passed
 - Runtime API regression checks: passed
-- Layout contract checks: passed
-- Icon fallback checks: passed
-- ZIP integrity: pending final package
+- Layout and icon contract checks: passed
+- Source and distribution SHA-256 match: passed
+- ZIP integrity: passed after final packaging
 
-## Layout protections
+## UI architecture checks
 
-- Removed automatic Y sizing from content rows that also use explicit measured heights.
-- Wrapped text is measured with `TextService` and assigned an explicit height.
-- Content rows clip overflow instead of allowing text to draw into neighboring rows.
-- User-provided heights are treated as minimum heights when wrapped content requires more space.
-- Window content is clamped to the available viewport for offset-based sizes.
-- Popups are moved to a dedicated popup layer when opened, so row clipping cannot cut off dropdowns or menus.
+- Main window no longer uses `CanvasGroup` rasterization.
+- Detached shadow rendering was removed from the main window.
+- Sidebar navigation uses grouped sections and compact tab rows.
+- Tab buttons and section headers use independent text/icon children to prevent overlap.
+- Content rows clip accidental overflow and use measured heights where wrapped text is expected.
+- Popups remain on the dedicated popup layer when opened.
+- Background textures are isolated behind the UI content and can be cleared without leaving a visual layer behind.
 
-## Icon protections
+## Icon checks
 
-- Namespaced icon names are supported for the tracked Lucide, Geist, and Craft provider namespaces.
-- Unknown or unresolved icons use a real built-in help icon instead of a square glyph placeholder.
-- A delayed image-load check replaces a failed resolved asset with the built-in help icon.
-- Roblox-hosted image assets remain the runtime source of truth.
+- Local Roblox assets remain the first lookup path.
+- Footagesus Icons is used as the runtime fallback for named Lucide, Geist and Craft icons when the execution environment supports HTTP and dynamic loading.
+- Icon sprite metadata is applied when returned by the icon runtime.
+- Unknown names resolve to a real built-in help icon rather than a box or text placeholder.
 
-## Runtime fixes included
+## API checks
 
-- Fixed component callback state access in `CreateInput`.
-- Fixed tab ordering registration.
-- Fixed stale source backup files being shipped in the release.
-- Removed unused `WindowOrder` state.
-- Rebuilt `dist/IrisHub.luau` from the current source.
+- `Window:Section(...)` and grouped `:Tab(...)` navigation verified by static contract tests.
+- `Window:SetBackgroundImage(...)`, `Window:SetBackgroundTint(...)`, `Window:ClearBackground()` and library background wrappers verified.
+- Existing component factory methods remain present.
+- Existing config, notification, tag, key-system and icon APIs remain present.
 
-## External runtime limitation
+## Runtime limitation
 
-A real Roblox Studio/client play-test is still required for final rendering and input verification. This environment cannot execute the library inside the Roblox engine.
+A real Roblox Studio/client play-test is still required for final rendering, asset loading, input and executor-specific HTTP behavior. This environment cannot execute the library inside the Roblox engine.

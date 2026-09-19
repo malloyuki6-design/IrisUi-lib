@@ -14,6 +14,11 @@ assert "self.TabButton.BackgroundColor3" in SOURCE
 assert "component.Data.SectionOwner = self.ActiveSection" in SOURCE
 assert "function methods:Refresh()" in SOURCE
 assert "function IrisHub:GetIconCatalog()" in SOURCE
+assert "function window:Section(opts)" in SOURCE
+assert "function window:SetBackgroundImage(image, transparency, tileSize, tint)" in SOURCE
+assert 'local headerLabel = New("TextLabel"' in SOURCE
+assert "local function ResolveRemoteIcon(value, provider, name)" in SOURCE
+assert 'module.Icon2(name or value, provider or "lucide")' in SOURCE
 assert "Window:SelectTab(\"Features\")" in EXAMPLE
 assert not re.search(r"\bDashboard\.Button\s*=", EXAMPLE)
 

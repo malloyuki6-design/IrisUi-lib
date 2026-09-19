@@ -2,8 +2,13 @@
 
 IrisHub is an open-source universal Roblox/Luau UI framework focused on polished interfaces, consistent component APIs, responsive controls, runtime theming, and cleanup-safe component lifecycles.
 
-## v2.3.2 highlights
+## v2.6.0 highlights
 
+- WindUI-inspired grouped navigation with `Window:Section(...):Tab(...)`
+- Footagesus Icons runtime resolution for Lucide, Geist, and Craft namespaces
+- Crisp native Roblox rendering path without `CanvasGroup` rasterization in the main UI
+- Roblox texture backgrounds with runtime tint, transparency, tiling and clearing APIs
+- Compact sidebar, tab, section and content hierarchy designed to reduce overlap and visual clutter
 - Refined window chrome with minimize, maximize, focus, resize, drag and optional toggle-key support
 - Runtime scale and min/max size constraints
 - Cross-platform primary button activation through Roblox's `Activated` event
@@ -230,3 +235,23 @@ IrisHub accepts namespaced icon identifiers such as `lucide:settings`, `geist:ac
 External icon APIs such as Iconify are useful for obtaining SVG icon data, but Roblox `ImageLabel` image content is designed around assets uploaded to Roblox rather than arbitrary web SVG URLs. IrisHub therefore keeps its runtime path Roblox-native and exposes `RegisterIcon()` and `RegisterIconSet()` for your own uploaded provider assets.
 
 The project tracks Lucide, Geist, and Craft as provider namespaces so you can keep source-compatible icon names while choosing the Roblox assets that back them.
+
+## WindUI-style navigation
+
+IrisHub supports grouped navigation with `Window:Section(...)` while keeping the direct tab API.
+
+```lua
+local Main = Window:Section({Title = "MAIN", Icon = "lucide:layout-grid"})
+local Settings = Window:Section({Title = "SETTINGS", Icon = "lucide:settings-2"})
+
+local Home = Main:Tab({Title = "Home", Icon = "lucide:house"})
+local Theme = Settings:Tab({Title = "Appearance", Icon = "lucide:palette"})
+```
+
+## Roblox texture backgrounds
+
+```lua
+Window:SetBackgroundImage("rbxassetid://1234567890", 0.86, UDim2.fromOffset(128, 128))
+Window:SetBackgroundTint(Color3.new(1, 1, 1), 0.84)
+Window:ClearBackground()
+```
