@@ -13,7 +13,26 @@ REQUIRED_COMPONENTS = {
     "CreateToggle", "CreateDropdown", "CreateMultiDropdown", "CreateImageDropdown", "CreateSlider",
     "CreateInput", "CreateKeybind", "CreateColorPicker", "CreateImage", "CreateAvatar", "CreateCard",
     "CreateLoading", "CreateProgress", "CreateStatus", "CreateBadge", "CreateKeyValue", "CreateAlert",
-    "CreateCodeBlock", "CreateModal", "CreateContextMenu", "CreateTooltip", "CreateSearch"
+    "CreateCodeBlock", "CreateTag", "CreateModal", "CreateContextMenu", "CreateTooltip", "CreateSearch"
+}
+
+
+REQUIRED_PUBLIC_APIS = {
+    "function IrisHub:RegisterIcon",
+    "function IrisHub:RegisterIconSet",
+    "function IrisHub:GetIconProviders",
+    "function IrisHub:RegisterKeyProvider",
+    "function IrisHub:GetKeyProviders",
+    "function IrisHub:CreateKeySystem",
+    "function IrisHub:CreateConfigManager",
+    "function IrisHub:ConfigExists",
+    "function IrisHub:ListConfigs",
+    "function IrisHub:DeleteConfig",
+    "function IrisHub:ExportConfig",
+    "function IrisHub:ImportConfig",
+    "function IrisHub:Notify",
+    "function IrisHub:GetNotifications",
+    "function IrisHub:ClearNotifications"
 }
 
 def lua_tokens(text: str):
@@ -82,6 +101,10 @@ for component in REQUIRED_COMPONENTS:
     if f"function methods:{component}" not in source and component != "CreateModal":
         if f"function IrisHub:{component}" not in source:
             raise AssertionError(f"missing API {component}")
+
+for api in REQUIRED_PUBLIC_APIS:
+    if api not in source:
+        raise AssertionError(f"missing public API {api}")
 
 for js in WEBSITE.glob("*.js"):
     subprocess.run(["node","--check",str(js)], check=True, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE)

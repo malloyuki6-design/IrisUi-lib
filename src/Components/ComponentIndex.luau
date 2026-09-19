@@ -20,6 +20,8 @@ return {
     Progress = "CreateProgress",
     Status = "CreateStatus",
     Badge = "CreateBadge",
+    Tag = "CreateTag",
+    ConfigPanel = "CreateConfigPanel",
     KeyValue = "CreateKeyValue",
     Alert = "CreateAlert",
     CodeBlock = "CreateCodeBlock",

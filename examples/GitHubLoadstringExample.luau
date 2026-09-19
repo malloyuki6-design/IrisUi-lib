@@ -5,7 +5,7 @@ local UI = IrisHub.Create({
     Title = "IrisHub",
     Subtitle = "Universal UI Framework • GitHub Loadstring Demo",
     Theme = "Iris",
-    DefaultIcon = "rbxassetid://10734950020",
+    DefaultIcon = "lucide:info",
     Size = UDim2.fromOffset(900, 620),
     MinSize = Vector2.new(620, 420),
     MaxSize = Vector2.new(1280, 860),
@@ -18,10 +18,10 @@ local UI = IrisHub.Create({
 
 local Window = UI.Windows[1]
 local Dashboard = Window:GetTab("Main")
-local Features = Window:CreateTab({Title = "Features", Icon = "rbxassetid://10734950309"})
-local Appearance = Window:CreateTab({Title = "Appearance", Icon = "rbxassetid://10734951010"})
-local Utilities = Window:CreateTab({Title = "Utilities", Icon = "rbxassetid://10734952330"})
-local About = Window:CreateTab({Title = "About", Icon = "rbxassetid://10734950020"})
+local Features = Window:CreateTab({Title = "Features", Icon = "lucide:sparkles"})
+local Appearance = Window:CreateTab({Title = "Appearance", Icon = "lucide:palette"})
+local Utilities = Window:CreateTab({Title = "Utilities", Icon = "lucide:settings"})
+local About = Window:CreateTab({Title = "About", Icon = "lucide:info"})
 
 local function notify(title, description, kind, duration)
     UI:Notify({
@@ -341,3 +341,37 @@ UI:SetConfig("AdvancedMode", enabled:Get())
 UI:SetConfig("Theme", UI.ThemeName)
 UI:SetConfig("GlassSurfaces", glass:Get())
 UI:SetConfig("EnabledSystems", systems:GetSelected())
+
+
+local providerTag = About:Tag({Text = "LUARMOR ADAPTER READY", Icon = "lucide:key"})
+local notificationDemo = About:Button({
+    Title = "Test rich notification",
+    Icon = "lucide:bell",
+    Callback = function()
+        local notice = UI:Notify({
+            Title = "IrisHub",
+            Description = "Icon-aware notification with progress and manual dismiss.",
+            Type = "Success",
+            Duration = 5,
+            Icon = "lucide:sparkles"
+        })
+        task.delay(1, function() notice:SetDescription("Notification updated at runtime.") end)
+    end
+})
+
+local keyDemoButton = About:Button({
+    Title = "Open key-system demo",
+    Icon = "lucide:key",
+    Callback = function()
+        UI:CreateKeySystem({
+            Provider = "Luarmor",
+            Description = "Demo adapter only. Replace Validate with your real provider integration.",
+            Validate = function(key)
+                return key == "IRISHUB-DEMO", key == "IRISHUB-DEMO" and "Demo key accepted." or "Use IRISHUB-DEMO for this local demo."
+            end,
+            OnSuccess = function()
+                UI:Notify({Title = "Key system", Description = "Demo access granted.", Type = "Success", Icon = "lucide:shield"})
+            end
+        })
+    end
+})

@@ -1,6 +1,6 @@
 local IrisHub = {}
 IrisHub.__index = IrisHub
-IrisHub.Version = "2.1.0"
+IrisHub.Version = "2.2.2"
 IrisHub.Name = "IrisHub"
 
 local Players = game:GetService("Players")
@@ -152,6 +152,61 @@ local function HexToColor(value)
     if not r or not g or not b then return nil end
     return Color3.fromRGB(r, g, b)
 end
+
+
+local IconProviders = {
+    Lucide = {
+        Name = "Lucide Icons",
+        Prefix = "lucide:",
+        Website = "https://lucide.dev/"
+    },
+    Geist = {
+        Name = "Geist Icons",
+        Prefix = "geist:",
+        Website = "https://vercel.com/geist/icons"
+    },
+    Craft = {
+        Name = "Craft Icons",
+        Prefix = "craft:",
+        Website = "https://www.figma.com/community/file/1415718327120418204"
+    }
+}
+
+local IconRegistry = {
+    Assets = {},
+    Fallbacks = {
+        home = "⌂",
+        house = "⌂",
+        settings = "⚙",
+        gear = "⚙",
+        user = "●",
+        users = "●●",
+        dashboard = "◈",
+        layout = "▦",
+        menu = "☰",
+        search = "⌕",
+        bell = "◔",
+        notification = "◔",
+        shield = "◇",
+        key = "◆",
+        lock = "■",
+        unlock = "□",
+        star = "★",
+        sparkles = "✦",
+        info = "i",
+        warning = "!",
+        error = "×",
+        success = "✓",
+        check = "✓",
+        close = "×",
+        plus = "+",
+        minus = "−",
+        chevronright = "›",
+        chevrondown = "⌄",
+        palette = "◉",
+        code = "<>"
+    }
+}
 
 local function CopyText(value)
     local text = tostring(value or "")
@@ -406,18 +461,65 @@ function Component:Destroy()
     end
 end
 
+local function ResolveIcon(icon)
+    if icon == nil then return nil, nil end
+    if typeof(icon) == "Instance" and icon:IsA("ImageLabel") then
+        return icon.Image, nil
+    end
+    if type(icon) == "number" then
+        return "rbxassetid://" .. tostring(icon), nil
+    end
+    local value = tostring(icon)
+    local asset = IconRegistry.Assets[value]
+    if asset then return asset, nil end
+    local provider, name = value:match("^(%w+):(.*)$")
+    if provider and name then
+        local providerData = IconProviders[provider:sub(1, 1):upper() .. provider:sub(2):lower()]
+        if providerData then
+            local registered = IconRegistry.Assets[value]
+            if registered then return registered, nil end
+            return nil, IconRegistry.Fallbacks[string.lower(name:gsub("[_%-]", ""))] or "•"
+        end
+    end
+    if value:match("^rbxassetid://") or value:match("^rbxthumb://") or value:match("^rbxgameasset://") then
+        return value, nil
+    end
+    if value:match("^https?://") then
+        local direct = IconRegistry.Assets[value]
+        if direct then return direct, nil end
+        return nil, "•"
+    end
+    return nil, value
+end
+
 local function CreateIcon(parent, icon, size, color, xAlignment)
     if not icon then return nil end
-    local image = New("ImageLabel", {
+    local imageAsset, fallbackText = ResolveIcon(icon)
+    local anchor = xAlignment == "right" and 1 or 0
+    local offset = xAlignment == "right" and -12 or 12
+    if imageAsset then
+        return New("ImageLabel", {
+            BackgroundTransparency = 1,
+            Size = UDim2.fromOffset(size or 18, size or 18),
+            Image = imageAsset,
+            ImageColor3 = color or Color3.new(1, 1, 1),
+            ScaleType = Enum.ScaleType.Fit,
+            AnchorPoint = Vector2.new(anchor, 0.5),
+            Position = UDim2.new(anchor, offset, 0.5, 0)
+        }, parent)
+    end
+    return New("TextLabel", {
         BackgroundTransparency = 1,
         Size = UDim2.fromOffset(size or 18, size or 18),
-        Image = tostring(icon),
-        ImageColor3 = color or Color3.new(1, 1, 1),
-        ScaleType = Enum.ScaleType.Fit,
-        AnchorPoint = Vector2.new(xAlignment == "right" and 1 or 0, 0.5),
-        Position = UDim2.new(xAlignment == "right" and 1 or 0, xAlignment == "right" and -12 or 12, 0.5, 0)
+        Font = Enum.Font.GothamBold,
+        Text = fallbackText or "•",
+        TextSize = math.max(11, (size or 18) - 2),
+        TextColor3 = color or Color3.new(1, 1, 1),
+        TextXAlignment = Enum.TextXAlignment.Center,
+        TextYAlignment = Enum.TextYAlignment.Center,
+        AnchorPoint = Vector2.new(anchor, 0.5),
+        Position = UDim2.new(anchor, offset, 0.5, 0)
     }, parent)
-    return image
 end
 
 function IrisHub.new(options)
@@ -499,6 +601,7 @@ end
 
 function IrisHub:SetUIVisible(value)
     if self.Gui then self.Gui.Enabled = value == true end
+    for _, window in ipairs(self.Windows) do if window and not window.Destroyed then window.Root.Visible = value == true end end
     return self
 end
 
@@ -521,6 +624,37 @@ end
 function IrisHub:_register(component)
     table.insert(self.Components, component)
     return component
+end
+
+
+function IrisHub:RegisterIcon(name, asset)
+    assert(type(name) == "string", "Icon name must be a string")
+    assert(type(asset) == "string" or type(asset) == "number", "Icon asset must be a string or number")
+    IconRegistry.Assets[name] = type(asset) == "number" and "rbxassetid://" .. tostring(asset) or asset
+    return self
+end
+
+function IrisHub:RegisterIconSet(provider, icons)
+    assert(type(provider) == "string", "Icon provider must be a string")
+    assert(type(icons) == "table", "Icon set must be a table")
+    for name, asset in pairs(icons) do
+        local key = string.lower(provider) .. ":" .. string.lower(tostring(name))
+        self:RegisterIcon(key, asset)
+    end
+    return self
+end
+
+function IrisHub:GetIconProviders()
+    local result = {}
+    for key, value in pairs(IconProviders) do
+        result[key] = CloneTable(value)
+    end
+    return result
+end
+
+function IrisHub:ResolveIcon(icon)
+    local asset, fallback = ResolveIcon(icon)
+    return asset or fallback
 end
 
 local Window = {}
@@ -672,7 +806,11 @@ function Window:CreateTab(options)
             tabSelf.Button.BackgroundColor3 = tabSelf.Active and themeData.Surface3 or themeData.Surface2
             tabSelf.Button.BackgroundTransparency = tabSelf.Active and 0 or 0.52
             if tabSelf.ButtonStroke then tabSelf.ButtonStroke.Color = themeData.Border; tabSelf.ButtonStroke.Transparency = tabSelf.Active and 0.18 or 1 end
-            if tabSelf.Icon then tabSelf.Icon.ImageColor3 = tabSelf.Active and themeData.Accent or themeData.Muted end
+            if tabSelf.Icon then
+                local iconColor = tabSelf.Active and themeData.Accent or themeData.Muted
+                if tabSelf.Icon:IsA("ImageLabel") then tabSelf.Icon.ImageColor3 = iconColor end
+                if tabSelf.Icon:IsA("TextLabel") then tabSelf.Icon.TextColor3 = iconColor end
+            end
             if tabSelf.ActiveBar then tabSelf.ActiveBar.BackgroundColor3 = themeData.Accent end
         end,
         Active = false
@@ -697,7 +835,11 @@ function Window:CreateTab(options)
         self.Button.BackgroundTransparency = self.Active and 0 or 0.52
         if self.ButtonStroke then self.ButtonStroke.Color = self.Library.Theme.Border; self.ButtonStroke.Transparency = self.Active and 0.18 or 1 end
         self.Title.TextColor3 = self.Active and self.Library.Theme.Text or self.Library.Theme.Muted
-        if self.Icon then self.Icon.ImageColor3 = self.Active and self.Library.Theme.Accent or self.Library.Theme.Muted end
+        if self.Icon then
+            local iconColor = self.Active and self.Library.Theme.Accent or self.Library.Theme.Muted
+            if self.Icon:IsA("ImageLabel") then self.Icon.ImageColor3 = iconColor end
+            if self.Icon:IsA("TextLabel") then self.Icon.TextColor3 = iconColor end
+        end
         self.ActiveBar.Visible = self.Active
         if self.Active then
             self.Window.ActiveTab = self
@@ -748,6 +890,8 @@ function Window:CreateTab(options)
     function methods:Badge(opts) return self:CreateBadge(opts) end
     function methods:KeyValue(opts) return self:CreateKeyValue(opts) end
     function methods:Alert(opts) return self:CreateAlert(opts) end
+    function methods:Tag(opts) return self:CreateTag(opts) end
+    function methods:ConfigPanel(opts) return self:CreateConfigPanel(opts) end
     function methods:CodeBlock(opts) return self:CreateCodeBlock(opts) end
 
     function methods:Destroy()
@@ -1572,6 +1716,99 @@ function Window:CreateTab(options)
         return self:_add(comp)
     end
 
+
+    function methods:CreateTag(opts)
+        opts = opts or {}
+        local row = New("Frame", {
+            BackgroundTransparency = 1,
+            BorderSizePixel = 0,
+            Size = UDim2.new(1, -4, 0, opts.Height or 38),
+            LayoutOrder = opts.LayoutOrder or 0
+        }, page)
+        local color = opts.Color or self.Library.Theme.Accent
+        local pill = New("Frame", {
+            BackgroundColor3 = color,
+            BackgroundTransparency = opts.Transparency ~= nil and opts.Transparency or 0.76,
+            BorderSizePixel = 0,
+            Position = UDim2.fromOffset(0, 4),
+            Size = UDim2.fromOffset(120, 28)
+        }, row)
+        Corner(pill, 14)
+        Stroke(pill, color, 0.35, 1)
+        local icon = CreateIcon(pill, opts.Icon, 14, color)
+        local text = New("TextLabel", {
+            BackgroundTransparency = 1,
+            Position = UDim2.fromOffset(opts.Icon and 30 or 10, 0),
+            Size = UDim2.new(1, opts.Icon and -38 or -20, 1, 0),
+            Font = self.Library.Theme.SmallFont,
+            Text = tostring(opts.Text or opts.Title or "Tag"),
+            TextSize = opts.TextSize or 11,
+            TextColor3 = opts.TextColor or self.Library.Theme.Text,
+            TextXAlignment = Enum.TextXAlignment.Center,
+            TextTruncate = Enum.TextTruncate.AtEnd
+        }, pill)
+        if opts.Icon and icon and icon:IsA("TextLabel") then
+            icon.TextColor3 = color
+        end
+        local textBounds = TextService:GetTextSize(text.Text, text.TextSize, text.Font, Vector2.new(500, 24))
+        local width = math.clamp(textBounds.X + (opts.Icon and 42 or 22), 56, 260)
+        pill.Size = UDim2.fromOffset(opts.Width or width, 28)
+        local comp = Component.new(self.Library, "Tag", row, {Value = text.Text, Pill = pill, Label = text, Icon = icon, Color = color, Height = opts.Height or 38})
+        function comp:Set(value)
+            self.Data.Value = tostring(value or "")
+            self.Data.Label.Text = self.Data.Value
+            return self
+        end
+        function comp:SetColor(value)
+            if typeof(value) ~= "Color3" then return self end
+            self.Data.Color = value
+            self.Data.Pill.BackgroundColor3 = value
+            local stroke = self.Data.Pill:FindFirstChildOfClass("UIStroke")
+            if stroke then stroke.Color = value end
+            if self.Data.Icon then
+                if self.Data.Icon:IsA("ImageLabel") then self.Data.Icon.ImageColor3 = value end
+                if self.Data.Icon:IsA("TextLabel") then self.Data.Icon.TextColor3 = value end
+            end
+            return self
+        end
+        function comp:SetIcon(value)
+            if self.Data.Icon then self.Data.Icon:Destroy() end
+            self.Data.Icon = CreateIcon(self.Data.Pill, value, 14, self.Data.Color)
+            self.Data.Label.Position = UDim2.fromOffset(value and 30 or 10, 0)
+            self.Data.Label.Size = UDim2.new(1, value and -38 or -20, 1, 0)
+            return self
+        end
+        comp.ApplyTheme = function(c, t)
+            c.Data.Label.TextColor3 = opts.TextColor or t.Text
+            local colorValue = c.Data.Color or t.Accent
+            c.Data.Pill.BackgroundColor3 = colorValue
+            local stroke = c.Data.Pill:FindFirstChildOfClass("UIStroke")
+            if stroke then stroke.Color = colorValue end
+        end
+        return self:_add(comp)
+    end
+
+    function methods:CreateConfigPanel(opts)
+        opts = opts or {}
+        local section = self:CreateSection({Title = opts.Title or "Configurations", Description = opts.Description or "Save and load named profiles."})
+        local nameInput = self:CreateInput({Title = "Config name", Placeholder = "Profile name", Default = opts.DefaultName or "IrisHubConfig"})
+        local manager = self.Library:CreateConfigManager(opts.DefaultName or "IrisHubConfig")
+        nameInput:SetCallback(function(value) manager:SetName(value) end)
+        local save = self:CreateButton({Title = "Save configuration", Icon = "lucide:save", Callback = function()
+            local ok, result = manager:Save()
+            if opts.OnSave then Fire(opts.OnSave, ok, result, manager.Name) end
+        end})
+        local load = self:CreateButton({Title = "Load configuration", Icon = "lucide:download", Callback = function()
+            local ok, result = manager:Load(opts.OnLoad)
+            if opts.OnLoadResult then Fire(opts.OnLoadResult, ok, result, manager.Name) end
+        end})
+        local remove = self:CreateButton({Title = "Delete configuration", Icon = "lucide:trash", Callback = function()
+            local ok, result = manager:Delete()
+            if opts.OnDelete then Fire(opts.OnDelete, ok, result, manager.Name) end
+        end})
+        return {Section = section, Input = nameInput, Manager = manager, Save = save, Load = load, Delete = remove}
+    end
+
     function methods:CreateCodeBlock(opts)
         opts = opts or {}
         local code = tostring(opts.Code or opts.Text or "")
@@ -1727,10 +1964,17 @@ function IrisHub:CreateWindow(options)
         Text = "I",
         TextSize = 17,
         TextColor3 = theme.Text,
+        TextTransparency = options.Icon and 1 or 0,
         TextXAlignment = Enum.TextXAlignment.Center,
         TextYAlignment = Enum.TextYAlignment.Center,
         ZIndex = 22
     }, brand)
+    local brandIcon = CreateIcon(brand, options.Icon or "lucide:sparkles", 18, theme.Text)
+    if brandIcon then
+        brandIcon.AnchorPoint = Vector2.new(0.5, 0.5)
+        brandIcon.Position = UDim2.fromScale(0.5, 0.5)
+        brandIcon.ZIndex = 23
+    end
     local title = New("TextLabel", {
         BackgroundTransparency = 1,
         Position = UDim2.fromOffset(62, 13),
@@ -1896,6 +2140,7 @@ function IrisHub:CreateWindow(options)
         Top = top,
         Brand = brand,
         BrandText = brandText,
+        BrandIcon = brandIcon,
         Title = title,
         Subtitle = subtitle,
         StatusDot = statusDot,
@@ -2067,6 +2312,10 @@ function IrisHub:CreateWindow(options)
         self.Brand.BackgroundColor3 = themeData.AccentSoft
         local brandStroke = self.Brand:FindFirstChildOfClass("UIStroke")
         if brandStroke then brandStroke.Color = themeData.Accent end
+        if self.BrandIcon then
+            if self.BrandIcon:IsA("ImageLabel") then self.BrandIcon.ImageColor3 = themeData.Text end
+            if self.BrandIcon:IsA("TextLabel") then self.BrandIcon.TextColor3 = themeData.Text end
+        end
         self.Title.TextColor3 = themeData.Text
         self.Subtitle.TextColor3 = themeData.Muted
         self.StatusText.TextColor3 = themeData.Muted
@@ -2112,31 +2361,78 @@ function IrisHub:Notify(options)
     local theme = self.Theme
     local holder = self.NotificationHolder
     if not holder then
-        holder = New("Frame", {BackgroundTransparency = 1, AnchorPoint = Vector2.new(1, 1), Position = UDim2.new(1, -18, 1, -18), Size = UDim2.fromOffset(330, 420), ZIndex = 100}, self.Gui)
-        New("UIListLayout", {Padding = UDim.new(0, 8), SortOrder = Enum.SortOrder.LayoutOrder, VerticalAlignment = Enum.VerticalAlignment.Bottom}, holder)
+        holder = New("Frame", {BackgroundTransparency = 1, AnchorPoint = Vector2.new(1, 1), Position = UDim2.new(1, -20, 1, -20), Size = UDim2.fromOffset(370, 460), ZIndex = 100}, self.Gui)
+        New("UIListLayout", {Padding = UDim.new(0, 10), SortOrder = Enum.SortOrder.LayoutOrder, VerticalAlignment = Enum.VerticalAlignment.Bottom}, holder)
         self.NotificationHolder = holder
     end
-    local card = New("Frame", {BackgroundColor3 = theme.Surface, BorderSizePixel = 0, Size = UDim2.new(1, 0, 0, 72), LayoutOrder = os.clock() % 1 * 1000, ZIndex = 100}, holder)
-    Corner(card, theme.Radius)
-    Stroke(card, theme.Border, 0.12, 1)
-    local title = New("TextLabel", {BackgroundTransparency = 1, Position = UDim2.fromOffset(14, 10), Size = UDim2.new(1, -28, 0, 20), Font = theme.TitleFont, Text = tostring(options.Title or "Notification"), TextSize = 13, TextColor3 = theme.Text, TextXAlignment = Enum.TextXAlignment.Left, ZIndex = 101}, card)
-    local desc = New("TextLabel", {BackgroundTransparency = 1, Position = UDim2.fromOffset(14, 31), Size = UDim2.new(1, -28, 0, 30), Font = theme.Font, Text = tostring(options.Content or options.Description or ""), TextSize = 11, TextColor3 = theme.Muted, TextWrapped = true, TextXAlignment = Enum.TextXAlignment.Left, ZIndex = 101}, card)
-    local accent = New("Frame", {BackgroundColor3 = options.Color or (options.Type == "Success" and theme.Success or options.Type == "Warning" and theme.Warning or options.Type == "Error" and theme.Danger or theme.Accent), BorderSizePixel = 0, Size = UDim2.fromOffset(4, 72), Position = UDim2.fromOffset(0, 0), ZIndex = 102}, card)
-    Corner(accent, 4)
-    local duration = tonumber(options.Duration) or 4
-    local bar = New("Frame", {BackgroundColor3 = accent.BackgroundColor3, BorderSizePixel = 0, Position = UDim2.new(0, 0, 1, -3), Size = UDim2.fromScale(1, 0.04), ZIndex = 102}, card)
-    local item = {Instance = card, Destroyed = false}
+    local typeName = tostring(options.Type or "Info")
+    local accentColor = options.Color or (typeName == "Success" and theme.Success or typeName == "Warning" and theme.Warning or (typeName == "Error" or typeName == "Danger") and theme.Danger or theme.Accent)
+    local card = New("CanvasGroup", {BackgroundColor3 = theme.Surface, BorderSizePixel = 0, Size = UDim2.new(1, 0, 0, 78), LayoutOrder = os.clock() % 1 * 1000, ZIndex = 100, GroupTransparency = 0}, holder)
+    Corner(card, theme.Radius + 2)
+    Stroke(card, theme.Border, 0.08, 1)
+    local accent = New("Frame", {BackgroundColor3 = accentColor, BorderSizePixel = 0, Size = UDim2.fromOffset(3, 78), Position = UDim2.fromOffset(0, 0), ZIndex = 102}, card)
+    Corner(accent, 2)
+    local icon = CreateIcon(card, options.Icon or (typeName == "Success" and "lucide:check" or typeName == "Warning" and "lucide:warning" or (typeName == "Error" or typeName == "Danger") and "lucide:error" or "lucide:bell"), 19, accentColor)
+    if icon then icon.Position = UDim2.fromOffset(16, 18); icon.AnchorPoint = Vector2.new(0, 0) end
+    local title = New("TextLabel", {BackgroundTransparency = 1, Position = UDim2.fromOffset(46, 11), Size = UDim2.new(1, -82, 0, 21), Font = theme.TitleFont, Text = tostring(options.Title or "Notification"), TextSize = 13, TextColor3 = theme.Text, TextXAlignment = Enum.TextXAlignment.Left, ZIndex = 103}, card)
+    local desc = New("TextLabel", {BackgroundTransparency = 1, Position = UDim2.fromOffset(46, 33), Size = UDim2.new(1, -64, 0, 29), Font = theme.Font, Text = tostring(options.Content or options.Description or ""), TextSize = 11, TextColor3 = theme.Muted, TextWrapped = true, TextXAlignment = Enum.TextXAlignment.Left, ZIndex = 103}, card)
+    local close = New("TextButton", {BackgroundTransparency = 1, Position = UDim2.new(1, -34, 0, 9), Size = UDim2.fromOffset(24, 24), Text = "×", Font = theme.TitleFont, TextSize = 15, TextColor3 = theme.Muted, AutoButtonColor = false, ZIndex = 104}, card)
+    local progress = New("Frame", {BackgroundColor3 = accentColor, BorderSizePixel = 0, Position = UDim2.new(0, 0, 1, -3), Size = UDim2.fromScale(1, 0.04), ZIndex = 104}, card)
+    local duration = tonumber(options.Duration)
+    local item = {Instance = card, Destroyed = false, Duration = duration or 0, Type = typeName, Progress = progress, Accent = accentColor}
+    function item:SetTitle(value) title.Text = tostring(value or ""); return self end
+    function item:SetDescription(value) desc.Text = tostring(value or ""); return self end
+    function item:SetProgress(value)
+        local fraction = Clamp(tonumber(value) or 0, 0, 1)
+        progress.Size = UDim2.new(fraction, 0, 0.04, 0)
+        return self
+    end
     function item:Destroy()
         if self.Destroyed then return end
         self.Destroyed = true
-        Tween(card, {Position = UDim2.new(1, 40, 0, 0), BackgroundTransparency = 1}, 0.2)
-        task.delay(0.22, function() pcall(function() card:Destroy() end) end)
+        for i = #self.Library.Notifications, 1, -1 do
+            if self.Library.Notifications[i] == self then table.remove(self.Library.Notifications, i) break end
+        end
+        Tween(card, {GroupTransparency = 1}, 0.16)
+        Tween(card, {Position = UDim2.new(1, 28, 0, 0)}, 0.16)
+        task.delay(0.18, function() pcall(function() card:Destroy() end) end)
     end
+    item.Library = self
     table.insert(self.Notifications, item)
+    self.Connections:Add(close.Activated:Connect(function() item:Destroy() end))
+    self.Connections:Add(card.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 then item:Destroy() end
+    end))
+    card.Position = UDim2.new(1, 40, 0, 0)
     Tween(card, {Position = UDim2.fromOffset(0, 0)}, 0.18)
-    Tween(bar, {Size = UDim2.new(0, 0, 0.04, 0)}, duration, Enum.EasingStyle.Linear)
-    task.delay(duration, function() item:Destroy() end)
+    if duration and duration > 0 then
+        Tween(progress, {Size = UDim2.new(0, 0, 0.04, 0)}, duration, Enum.EasingStyle.Linear)
+        task.delay(duration, function() item:Destroy() end)
+    else
+        progress.Visible = false
+    end
+    while #self.Notifications > (tonumber(options.MaxVisible) or 6) do
+        local oldest = self.Notifications[1]
+        if oldest and oldest ~= item then oldest:Destroy() else break end
+    end
     return item
+end
+
+function IrisHub:GetNotifications()
+    local result = {}
+    for _, item in ipairs(self.Notifications) do
+        if item and not item.Destroyed then table.insert(result, item) end
+    end
+    return result
+end
+
+function IrisHub:ClearNotifications()
+    for index = #self.Notifications, 1, -1 do
+        local item = self.Notifications[index]
+        if item and item.Destroy then pcall(function() item:Destroy() end) end
+        self.Notifications[index] = nil
+    end
+    return self
 end
 
 function IrisHub:CreateModal(options)
@@ -2198,36 +2494,220 @@ function IrisHub:GetConfig(key, fallback)
     return value
 end
 
+
+function IrisHub:ConfigExists(name)
+    local file = SafeName(name or self.Options.ConfigName or "IrisHubConfig") .. ".json"
+    return isfile and isfile(file) == true or false
+end
+
+function IrisHub:ListConfigs()
+    local result = {}
+    if type(listfiles) ~= "function" then return result end
+    local ok, files = pcall(listfiles, "")
+    if not ok or type(files) ~= "table" then return result end
+    for _, path in ipairs(files) do
+        local normalized = tostring(path):gsub("\\\\", "/")
+        local file = normalized:match("([^/]+)\\.json$")
+        if file then table.insert(result, file) end
+    end
+    table.sort(result)
+    return result
+end
+
+function IrisHub:DeleteConfig(name)
+    local file = SafeName(name or self.Options.ConfigName or "IrisHubConfig") .. ".json"
+    if type(delfile) ~= "function" then return false, "delfile unavailable" end
+    if type(isfile) == "function" and not isfile(file) then return false, "configuration does not exist" end
+    local ok, err = pcall(delfile, file)
+    if not ok then return false, err end
+    return true, file
+end
+
+function IrisHub:ExportConfig()
+    return HttpService:JSONEncode(self.Config or {})
+end
+
+function IrisHub:ImportConfig(json, apply)
+    local ok, data = pcall(function() return HttpService:JSONDecode(tostring(json or "")) end)
+    if not ok or type(data) ~= "table" then return false, "invalid configuration JSON" end
+    self.Config = data
+    if apply and type(apply) == "function" then Fire(apply, data) end
+    return true, data
+end
+
+function IrisHub:CreateConfigManager(defaultName)
+    local library = self
+    local manager = {Name = defaultName or self.Options.ConfigName or "IrisHubConfig"}
+    function manager:SetName(name) self.Name = SafeName(name or manager.Name) return self end
+    function manager:Save(data)
+        if data then library.Config = CloneTable(data) end
+        return library:SaveConfig(self.Name)
+    end
+    function manager:Load(apply)
+        local ok, data = library:LoadConfig(self.Name)
+        if ok and apply then Fire(apply, data) end
+        return ok, data
+    end
+    function manager:Delete() return library:DeleteConfig(self.Name) end
+    function manager:Exists() return library:ConfigExists(self.Name) end
+    function manager:List() return library:ListConfigs() end
+    function manager:Export() return library:ExportConfig() end
+    function manager:Import(json, apply) return library:ImportConfig(json, apply) end
+    return manager
+end
+
+
+local KeyProviders = {
+    PlatoBoost = {
+        Name = "PlatoBoost",
+        Website = "https://platoboost.com/"
+    },
+    ["Panda Development"] = {
+        Name = "Panda Development",
+        Website = "https://pandadevelopment.net/",
+        Docs = "https://doc.pandadevelopment.net/utilizing-panda-auth-on-your-product/roblox-lua"
+    },
+    Luarmor = {
+        Name = "Luarmor",
+        Website = "https://luarmor.net/",
+        Docs = "https://docs.luarmor.net/"
+    }
+}
+
+function IrisHub:RegisterKeyProvider(name, provider)
+    assert(type(name) == "string", "Provider name must be a string")
+    assert(type(provider) == "table", "Provider must be a table")
+    KeyProviders[name] = Merge({Name = name}, provider)
+    return self
+end
+
+function IrisHub:GetKeyProvider(name)
+    return KeyProviders[name]
+end
+
+function IrisHub:GetKeyProviders()
+    local names = {}
+    for name in pairs(KeyProviders) do table.insert(names, name) end
+    table.sort(names)
+    return names
+end
+
 function IrisHub:CreateKeySystem(options)
     options = options or {}
     local theme = self.Theme
-    local root = New("CanvasGroup", {BackgroundTransparency = 1, Size = UDim2.fromScale(1, 1), ZIndex = 70}, self.Gui)
-    local card = New("Frame", {BackgroundColor3 = theme.Surface, BorderSizePixel = 0, AnchorPoint = Vector2.new(0.5, 0.5), Position = UDim2.fromScale(0.5, 0.5), Size = UDim2.fromOffset(390, 230), ZIndex = 71}, root)
-    Corner(card, theme.Radius + 2)
-    Stroke(card, theme.Border, 0.05, 1)
-    local title = New("TextLabel", {BackgroundTransparency = 1, Position = UDim2.fromOffset(18, 16), Size = UDim2.new(1, -36, 0, 28), Font = theme.TitleFont, Text = tostring(options.Title or "IrisHub Access"), TextSize = 18, TextColor3 = theme.Text, TextXAlignment = Enum.TextXAlignment.Left, ZIndex = 72}, card)
-    local info = New("TextLabel", {BackgroundTransparency = 1, Position = UDim2.fromOffset(18, 48), Size = UDim2.new(1, -36, 0, 40), Font = theme.Font, Text = tostring(options.Description or "Enter your key to continue."), TextSize = 12, TextColor3 = theme.Muted, TextWrapped = true, TextXAlignment = Enum.TextXAlignment.Left, TextYAlignment = Enum.TextYAlignment.Top, ZIndex = 72}, card)
-    local input = New("TextBox", {BackgroundColor3 = theme.Surface2, BorderSizePixel = 0, Position = UDim2.fromOffset(18, 95), Size = UDim2.new(1, -36, 0, 38), PlaceholderText = tostring(options.Placeholder or "Enter key"), PlaceholderColor3 = theme.Muted, TextColor3 = theme.Text, Font = theme.Font, TextSize = 12, ClearTextOnFocus = false, ZIndex = 72}, card)
-    Corner(input, 8)
-    Padding(input, 11, 11, 0, 0)
-    local status = New("TextLabel", {BackgroundTransparency = 1, Position = UDim2.fromOffset(18, 139), Size = UDim2.new(1, -36, 0, 22), Font = theme.Font, Text = "", TextSize = 11, TextColor3 = theme.Muted, TextXAlignment = Enum.TextXAlignment.Left, ZIndex = 72}, card)
-    local submit = New("TextButton", {BackgroundColor3 = theme.Accent, BorderSizePixel = 0, Position = UDim2.fromOffset(18, 171), Size = UDim2.new(1, -36, 0, 38), Text = "Validate", Font = theme.SmallFont, TextSize = 12, TextColor3 = theme.Text, AutoButtonColor = false, ZIndex = 72}, card)
-    Corner(submit, 8)
-    local controller = {Instance = root, Input = input}
-    function controller:Destroy() pcall(function() root:Destroy() end) end
-    submit.Activated:Connect(function()
-        status.Text = "Validating..."
-        local ok, result = pcall(options.Validate or function() return false end, input.Text)
-        if ok and result == true then
-            status.Text = "Access granted"
-            status.TextColor3 = theme.Success
-            task.delay(0.25, function() controller:Destroy(); Fire(options.OnSuccess, input.Text) end)
-        else
-            status.Text = tostring((ok and result) or "Invalid key")
-            status.TextColor3 = theme.Danger
-            Fire(options.OnFailure, input.Text, ok and result or nil)
+    local providerName = options.Provider or "PlatoBoost"
+    local provider = KeyProviders[providerName]
+    if not provider then providerName = "PlatoBoost"; provider = KeyProviders[providerName] end
+    local root = New("CanvasGroup", {BackgroundTransparency = 0, GroupTransparency = 0, Size = UDim2.fromScale(1, 1), ZIndex = 70}, self.Gui)
+    local scrim = New("Frame", {BackgroundColor3 = theme.Overlay, BackgroundTransparency = 0.18, BorderSizePixel = 0, Size = UDim2.fromScale(1, 1), ZIndex = 70}, root)
+    local card = New("Frame", {BackgroundColor3 = theme.Surface, BorderSizePixel = 0, AnchorPoint = Vector2.new(0.5, 0.5), Position = UDim2.fromScale(0.5, 0.5), Size = options.Size or UDim2.fromOffset(470, 330), ZIndex = 71}, root)
+    Corner(card, theme.Radius + 4)
+    Stroke(card, theme.Border, 0.02, 1)
+    local accent = New("Frame", {BackgroundColor3 = theme.Accent, BorderSizePixel = 0, Position = UDim2.fromOffset(0, 0), Size = UDim2.new(1, 0, 0, 4), ZIndex = 72}, card)
+    Corner(accent, 2)
+    local icon = CreateIcon(card, options.Icon or "lucide:key", 20, theme.Accent)
+    if icon then icon.Position = UDim2.fromOffset(20, 36); icon.AnchorPoint = Vector2.new(0, 0.5) end
+    local title = New("TextLabel", {BackgroundTransparency = 1, Position = UDim2.fromOffset(52, 20), Size = UDim2.new(1, -150, 0, 26), Font = theme.TitleFont, Text = tostring(options.Title or "IrisHub Access"), TextSize = 19, TextColor3 = theme.Text, TextXAlignment = Enum.TextXAlignment.Left, ZIndex = 72}, card)
+    local providerTag = New("TextLabel", {BackgroundColor3 = theme.AccentSoft, BackgroundTransparency = 0.08, BorderSizePixel = 0, AnchorPoint = Vector2.new(1, 0.5), Position = UDim2.new(1, -18, 0, 34), Size = UDim2.fromOffset(124, 26), Font = theme.SmallFont, Text = providerName, TextSize = 10, TextColor3 = theme.Text, TextXAlignment = Enum.TextXAlignment.Center, ZIndex = 72}, card)
+    Corner(providerTag, 13)
+    local info = New("TextLabel", {BackgroundTransparency = 1, Position = UDim2.fromOffset(20, 60), Size = UDim2.new(1, -40, 0, 40), Font = theme.Font, Text = tostring(options.Description or "Enter your key to continue. Provider adapters can be registered through IrisHub:RegisterKeyProvider."), TextSize = 12, TextColor3 = theme.Muted, TextWrapped = true, TextXAlignment = Enum.TextXAlignment.Left, TextYAlignment = Enum.TextYAlignment.Top, ZIndex = 72}, card)
+    local providerBox = New("Frame", {BackgroundColor3 = theme.Surface2, BorderSizePixel = 0, Position = UDim2.fromOffset(20, 108), Size = UDim2.new(1, -40, 0, 42), ZIndex = 72}, card)
+    Corner(providerBox, 9)
+    Stroke(providerBox, theme.Border, 0.35, 1)
+    local providerLabel = New("TextLabel", {BackgroundTransparency = 1, Position = UDim2.fromOffset(12, 0), Size = UDim2.new(1, -110, 1, 0), Font = theme.SmallFont, Text = "Provider • " .. providerName, TextSize = 11, TextColor3 = theme.Text, TextXAlignment = Enum.TextXAlignment.Left, ZIndex = 73}, providerBox)
+    local cycle = New("TextButton", {BackgroundTransparency = 1, AnchorPoint = Vector2.new(1, 0.5), Position = UDim2.new(1, -8, 0.5, 0), Size = UDim2.fromOffset(86, 28), Text = "Change", Font = theme.SmallFont, TextSize = 10, TextColor3 = theme.Accent, AutoButtonColor = false, ZIndex = 73}, providerBox)
+    local input = New("TextBox", {BackgroundColor3 = theme.Surface2, BorderSizePixel = 0, Position = UDim2.fromOffset(20, 162), Size = UDim2.new(1, -40, 0, 42), PlaceholderText = tostring(options.Placeholder or "Paste your key"), PlaceholderColor3 = theme.Muted, TextColor3 = theme.Text, Font = theme.Font, TextSize = 12, ClearTextOnFocus = false, ZIndex = 72}, card)
+    Corner(input, 9)
+    Stroke(input, theme.Border, 0.35, 1)
+    Padding(input, 12, 12, 0, 0)
+    local status = New("TextLabel", {BackgroundTransparency = 1, Position = UDim2.fromOffset(20, 209), Size = UDim2.new(1, -40, 0, 22), Font = theme.Font, Text = "", TextSize = 11, TextColor3 = theme.Muted, TextXAlignment = Enum.TextXAlignment.Left, ZIndex = 72}, card)
+    local actions = New("Frame", {BackgroundTransparency = 1, Position = UDim2.fromOffset(20, 246), Size = UDim2.new(1, -40, 0, 42), ZIndex = 72}, card)
+    local getKey = New("TextButton", {BackgroundColor3 = theme.Surface2, BorderSizePixel = 0, Size = UDim2.fromOffset(122, 40), Text = "Get Key", Font = theme.SmallFont, TextSize = 11, TextColor3 = theme.Muted, AutoButtonColor = false, ZIndex = 73}, actions)
+    Corner(getKey, 9)
+    Stroke(getKey, theme.Border, 0.28, 1)
+    local copyLink = New("TextButton", {BackgroundColor3 = theme.Surface2, BorderSizePixel = 0, Position = UDim2.fromOffset(130, 0), Size = UDim2.fromOffset(122, 40), Text = "Copy Link", Font = theme.SmallFont, TextSize = 11, TextColor3 = theme.Muted, AutoButtonColor = false, ZIndex = 73}, actions)
+    Corner(copyLink, 9)
+    Stroke(copyLink, theme.Border, 0.28, 1)
+    local submit = New("TextButton", {BackgroundColor3 = theme.Accent, BorderSizePixel = 0, AnchorPoint = Vector2.new(1, 0), Position = UDim2.new(1, 0, 0, 0), Size = UDim2.fromOffset(136, 40), Text = "Validate Key", Font = theme.SmallFont, TextSize = 11, TextColor3 = theme.Text, AutoButtonColor = false, ZIndex = 73}, actions)
+    Corner(submit, 9)
+    local controller = {Instance = root, Input = input, Provider = providerName, ProviderData = provider, Destroyed = false}
+    function controller:Destroy()
+        if self.Destroyed then return end
+        self.Destroyed = true
+        pcall(function() root:Destroy() end)
+    end
+    function controller:SetProvider(name)
+        local target = KeyProviders[name]
+        if not target then return false, "unknown provider" end
+        self.Provider = name
+        self.ProviderData = target
+        providerLabel.Text = "Provider • " .. name
+        providerTag.Text = name
+        return true, target
+    end
+    function controller:SetStatus(message, color)
+        status.Text = tostring(message or "")
+        status.TextColor3 = color or theme.Muted
+        return self
+    end
+    function controller:GetKeyUrl()
+        return options.KeyLink or (self.ProviderData and self.ProviderData.KeyLink) or (self.ProviderData and self.ProviderData.Website)
+    end
+    function controller:Validate(key)
+        local validator = options.Validate or (self.ProviderData and self.ProviderData.Validate)
+        if type(validator) ~= "function" then
+            return false, "No validator is configured for " .. tostring(self.Provider) .. ". Register a provider adapter or pass Validate." 
         end
-    end)
+        local ok, result = pcall(validator, key, self, self.Library)
+        if not ok then return false, result end
+        if result == true then return true, true end
+        return false, result or "Invalid key"
+    end
+    local names = self:GetKeyProviders()
+    local providerIndex = table.find(names, providerName) or 1
+    local function cycleProvider()
+        providerIndex = providerIndex % #names + 1
+        controller:SetProvider(names[providerIndex])
+    end
+    self.Connections:Add(cycle.Activated:Connect(cycleProvider))
+    self.Connections:Add(getKey.Activated:Connect(function()
+        local url = controller:GetKeyUrl()
+        if type(options.OnGetKey) == "function" then
+            Fire(options.OnGetKey, url, controller.Provider, controller)
+        elseif url then
+            local copied = CopyText(url)
+            controller:SetStatus(copied and "Key link copied to clipboard." or tostring(url), theme.Accent)
+        else
+            controller:SetStatus("No key link configured.", theme.Warning)
+        end
+    end))
+    self.Connections:Add(copyLink.Activated:Connect(function()
+        local url = controller:GetKeyUrl()
+        if url then
+            controller:SetStatus(CopyText(url) and "Provider link copied." or tostring(url), theme.Accent)
+        else
+            controller:SetStatus("No provider link configured.", theme.Warning)
+        end
+    end))
+    self.Connections:Add(submit.Activated:Connect(function()
+        local key = tostring(input.Text or ""):gsub("%s+", "")
+        if key == "" then controller:SetStatus("Enter a key first.", theme.Warning); return end
+        submit.Active = false
+        submit.Text = "Checking..."
+        controller:SetStatus("Validating with " .. tostring(controller.Provider) .. "...", theme.Muted)
+        local valid, message = controller:Validate(key)
+        if valid then
+            controller:SetStatus("Access granted.", theme.Success)
+            submit.Text = "Verified"
+            Fire(options.OnSuccess, key, controller.Provider)
+            task.delay(0.25, function() controller:Destroy() end)
+        else
+            controller:SetStatus(tostring(message), theme.Danger)
+            submit.Text = "Validate Key"
+            submit.Active = true
+            Fire(options.OnFailure, key, message, controller.Provider)
+        end
+    end))
     return controller
 end
 

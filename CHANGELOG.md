@@ -1,3 +1,25 @@
+## 2.2.2
+
+- Added the missing ConfigPanel implementation and tab alias.
+- Added provider documentation links for Panda Development and Luarmor.
+- Improved provider-aware branding metadata.
+
+## 2.2.1
+
+- Fixed provider key-system connection cleanup.
+- Added interactive notification cards and notification management APIs.
+- Added ConfigPanel composite UI.
+- Fixed provider-aware icon color updates for text fallbacks.
+
+## 2.2.0
+
+- Added namespaced icon registry with Lucide, Geist, and Craft provider metadata.
+- Added Tag component and runtime tag APIs.
+- Expanded notification system with icons, progress control, dismissal, updates, and visible-count culling.
+- Added config manager, config listing, delete, export, import, and existence APIs.
+- Added key-system provider registry for PlatoBoost, Panda Development, and Luarmor with pluggable validation adapters.
+- Added provider cycling, key-link copy, and status feedback to the key-system UI.
+
 # Changelog
 
 ## 2.1.0

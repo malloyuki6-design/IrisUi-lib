@@ -212,3 +212,12 @@ code:Set('print("Updated")')
 code:SetLanguage("lua")
 code:Copy()
 ```
+\n\n## Icons\n\n`UI:RegisterIcon(name, asset)` registers a Roblox asset ID for an icon identifier.\n\n`UI:RegisterIconSet(provider, icons)` registers a provider namespace.\n\n`UI:GetIconProviders()` returns provider metadata for Lucide, Geist, and Craft.\n\n`UI:ResolveIcon(icon)` resolves a registered icon to its Roblox asset or a text fallback.\n\n## Key providers\n\n`UI:GetKeyProviders()` returns the built-in provider names.\n\n`UI:GetKeyProvider(name)` returns provider metadata and any registered validation adapter.\n\n`UI:RegisterKeyProvider(name, adapter)` adds or replaces a provider adapter.\n\n`UI:CreateKeySystem(options)` creates the provider-aware key UI. Pass `Provider`, `KeyLink`, `Validate`, `OnSuccess`, and `OnFailure` as needed.\n\n## Config manager\n\n`UI:ConfigExists(name)` checks whether a JSON config exists.\n\n`UI:ListConfigs()` lists JSON configs when the runtime exposes `listfiles`.\n\n`UI:DeleteConfig(name)` deletes a JSON config when `delfile` is available.\n\n`UI:ExportConfig()` returns the current config as JSON.\n\n`UI:ImportConfig(json, apply)` imports JSON into the current config table.\n\n`UI:CreateConfigManager(name)` returns a small stateful manager for save/load/list/delete/import/export operations.\n
+
+## Notifications
+
+`UI:GetNotifications()` returns live notification objects. `UI:ClearNotifications()` dismisses all active notifications. Notification objects support `SetTitle`, `SetDescription`, `SetProgress`, and `Destroy`.
+
+## Config panel
+
+`Tab:ConfigPanel(options)` creates a ready-made config controls section and returns the section, input, manager, save button, load button, and delete button.

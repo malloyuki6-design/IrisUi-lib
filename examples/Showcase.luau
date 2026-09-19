@@ -16,10 +16,10 @@ local UI = IrisHub.Create({
 
 local Window = UI.Windows[1]
 local Dashboard = Window:GetTab("Main")
-local Controls = Window:CreateTab({Title = "Controls", Icon = "rbxassetid://10734952330"})
-local Visuals = Window:CreateTab({Title = "Visuals", Icon = "rbxassetid://10734951010"})
-local Tools = Window:CreateTab({Title = "Tools", Icon = "rbxassetid://10734950309"})
-local About = Window:CreateTab({Title = "About", Icon = "rbxassetid://10734950020"})
+local Controls = Window:CreateTab({Title = "Controls", Icon = "lucide:settings"})
+local Visuals = Window:CreateTab({Title = "Visuals", Icon = "lucide:palette"})
+local Tools = Window:CreateTab({Title = "Tools", Icon = "lucide:sparkles"})
+local About = Window:CreateTab({Title = "About", Icon = "lucide:info"})
 
 local function notify(title, description, kind)
     UI:Notify({
@@ -58,7 +58,7 @@ Dashboard:Alert({
 
 local openTools = Dashboard:Button({
     Title = "Open tools",
-    Icon = "rbxassetid://10734950020",
+    Icon = "lucide:info",
     Callback = function()
         Window:SelectTab("Tools")
         notify("Tools", "Tools tab activated", "Success")
@@ -106,7 +106,7 @@ local featureToggle = Controls:Toggle({
 local mode = Controls:Dropdown({
     Title = "Performance mode",
     Options = {
-        {Value = "Balanced", Label = "Balanced", Icon = "rbxassetid://10734950309"},
+        {Value = "Balanced", Label = "Balanced", Icon = "lucide:sparkles"},
         {Value = "Performance", Label = "Performance"},
         {Value = "Quality", Label = "Quality"},
         {Value = "Experimental", Label = "Experimental", Disabled = false}
@@ -323,3 +323,14 @@ featureToggle:SetCallback(function(value)
     UI:SetConfig("AdvancedMode", value)
     notify("Advanced mode", value and "Enabled" or "Disabled", value and "Success" or "Warning")
 end)
+
+
+local iconDemo = Main:Tag({Text = "LUCIDE ICON API", Icon = "lucide:sparkles"})
+local configManager = UI:CreateConfigManager("IrisHubShowcase")
+Main:Button({Title = "Save showcase config", Icon = "lucide:check", Callback = function()
+    local ok, result = configManager:Save()
+    UI:Notify({Title = "Config", Description = ok and "Saved " .. tostring(result) or tostring(result), Type = ok and "Success" or "Error"})
+end})
+Main:Button({Title = "Show key providers", Icon = "lucide:key", Callback = function()
+    UI:Notify({Title = "Key providers", Description = table.concat(UI:GetKeyProviders(), ", "), Type = "Info"})
+end})

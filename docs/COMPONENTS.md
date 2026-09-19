@@ -29,3 +29,13 @@
 | ContextMenu | Action list | `Open`, `Close`, `Toggle`, `SetItems` |
 | Tooltip | Hover explanation | `Show`, `Hide`, `Destroy` |
 | Search | Reactive text search | `Set` |
+
+
+## Tag
+
+`Tab:Tag({Text, Color, Icon, Width})` renders a compact status/metadata pill. The returned component supports `Set`, `SetColor`, and `SetIcon`.
+
+
+## ConfigPanel
+
+`Tab:ConfigPanel({Title, Description, DefaultName, OnSave, OnLoad, OnLoadResult, OnDelete})` builds a configuration profile control group on top of the config manager API.

@@ -200,3 +200,18 @@ The source is designed for Roblox LocalScript/ModuleScript execution. The sandbo
 ## License
 
 MIT. See `LICENSE`.
+\n\n## v2.2 Icon providers\n\nIrisHub accepts standard Roblox asset IDs plus namespaced icon identifiers such as `lucide:settings`, `geist:settings`, and `craft:settings`. Register the Roblox assets you want to use with `RegisterIcon` or `RegisterIconSet`. Provider namespaces are intentionally adapter-based so projects can choose their own licensed/converted Roblox assets.\n\nSupported provider metadata:\n\n- Lucide Icons: https://lucide.dev/\n- Geist Icons: https://vercel.com/geist/icons\n- Craft Icons: https://www.figma.com/community/file/1415718327120418204\n\n## Key system providers\n\nThe key-system UI includes provider selection for PlatoBoost, Panda Development, and Luarmor. Provider validation is intentionally callback-driven because the service-specific request format, product configuration, and credentials belong to the project integrating the library.\n\n```lua\nlocal keyUI = UI:CreateKeySystem({\n    Provider = "Luarmor",\n    Validate = function(key, controller, library)\n        return MyProviderAdapter(key)\n    end,\n    OnSuccess = function(key, provider)\n        print("Verified", provider)\n    end\n})\n```\n\nRegister additional services later with `UI:RegisterKeyProvider(name, adapter)`.\n\n## Config manager\n\n```lua\nlocal configs = UI:CreateConfigManager("MyHub")\nconfigs:Save()\nconfigs:Load()\nconfigs:List()\nconfigs:Delete()\n```\n\n`UI:ConfigExists`, `UI:ListConfigs`, `UI:DeleteConfig`, `UI:ExportConfig`, and `UI:ImportConfig` are also available.\n
+
+### Ready-made configuration UI
+
+```lua
+Tab:ConfigPanel({
+    Title = "Profiles",
+    DefaultName = "MyHub",
+    OnSave = function(ok, result, name) end,
+    OnLoadResult = function(ok, result, name) end
+})
+```
+
+
+See `THIRD_PARTY.md` for icon source references and redistribution notes.
