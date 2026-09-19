@@ -60,8 +60,7 @@ local openTools = Dashboard:Button({
     Title = "Open tools",
     Icon = "rbxassetid://10734950020",
     Callback = function()
-        Controls:SetActive(false)
-        Tools:SetActive(true)
+        Window:SelectTab("Tools")
         notify("Tools", "Tools tab activated", "Success")
     end
 })
@@ -80,7 +79,7 @@ Dashboard:CodeBlock({
     Theme = "Iris"
 })
 
-local Main = Window.Windows[1]:GetTab("Main")
+local Main = Window:GetTab("Main")
 
 Main:Toggle({
     Title = "Example",

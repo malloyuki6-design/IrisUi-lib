@@ -1,11 +1,12 @@
-local IrisHub = loadstring(game:HttpGet("https://raw.githubusercontent.com/YOUR_USERNAME/YOUR_REPOSITORY/main/dist/IrisHub.luau"))()
+local IrisHub = loadstring(game:HttpGet("https://raw.githubusercontent.com/malloyuki6-design/IrisUi-lib/refs/heads/main/dist/IrisHub.luau"))()
 
 local UI = IrisHub.Create({
     Name = "IrisHubExample",
     Title = "IrisHub",
     Subtitle = "Universal UI Framework • GitHub Loadstring Demo",
     Theme = "Iris",
-    Size = UDim2.fromOffset(860, 600),
+    DefaultIcon = "rbxassetid://10734950020",
+    Size = UDim2.fromOffset(900, 620),
     MinSize = Vector2.new(620, 420),
     MaxSize = Vector2.new(1280, 860),
     UIScale = 1,
@@ -68,7 +69,7 @@ local openFeatures = Dashboard:Button({
     Description = "Jump to the controls showcase.",
     Callback = function()
         Window:SetVisible(true)
-        Features:SetActive(true)
+        Window:SelectTab("Features")
         notify("Navigation", "Feature playground opened.", "Success")
     end
 })

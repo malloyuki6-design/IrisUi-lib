@@ -1,6 +1,6 @@
 local IrisHub = {}
 IrisHub.__index = IrisHub
-IrisHub.Version = "2.0.1"
+IrisHub.Version = "2.1.0"
 IrisHub.Name = "IrisHub"
 
 local Players = game:GetService("Players")
@@ -15,24 +15,24 @@ local ParentGui = (gethui and gethui()) or (LocalPlayer and LocalPlayer:WaitForC
 
 local Themes = {
     Iris = {
-        Background = Color3.fromRGB(15, 16, 24),
-        Surface = Color3.fromRGB(22, 23, 34),
-        Surface2 = Color3.fromRGB(29, 30, 44),
-        Surface3 = Color3.fromRGB(37, 39, 56),
-        Border = Color3.fromRGB(58, 61, 82),
-        Text = Color3.fromRGB(244, 245, 255),
-        Muted = Color3.fromRGB(153, 157, 181),
-        Accent = Color3.fromRGB(143, 120, 255),
-        Accent2 = Color3.fromRGB(104, 183, 255),
-        AccentSoft = Color3.fromRGB(55, 49, 94),
+        Background = Color3.fromRGB(10, 11, 18),
+        Surface = Color3.fromRGB(18, 20, 31),
+        Surface2 = Color3.fromRGB(25, 28, 42),
+        Surface3 = Color3.fromRGB(34, 37, 55),
+        Border = Color3.fromRGB(55, 60, 84),
+        Text = Color3.fromRGB(247, 248, 255),
+        Muted = Color3.fromRGB(164, 168, 194),
+        Accent = Color3.fromRGB(157, 132, 255),
+        Accent2 = Color3.fromRGB(105, 190, 255),
+        AccentSoft = Color3.fromRGB(58, 50, 98),
         Success = Color3.fromRGB(84, 205, 142),
         Warning = Color3.fromRGB(241, 190, 82),
         Danger = Color3.fromRGB(238, 92, 112),
         Overlay = Color3.fromRGB(7, 8, 12),
         Shadow = Color3.fromRGB(0, 0, 0),
-        ShadowTransparency = 0.45,
-        Transparency = 0.04,
-        Radius = 10,
+        ShadowTransparency = 0.80,
+        Transparency = 0,
+        Radius = 12,
         Font = Enum.Font.Gotham,
         TitleFont = Enum.Font.GothamBold,
         SmallFont = Enum.Font.GothamMedium
@@ -224,17 +224,16 @@ local function SetText(label, text)
 end
 
 local function CreateShadow(parent, transparency)
-    local shadow = New("ImageLabel", {
-        BackgroundTransparency = 1,
-        Image = "rbxassetid://6014261993",
-        ImageColor3 = Color3.new(0, 0, 0),
-        ImageTransparency = transparency or 0.45,
-        ScaleType = Enum.ScaleType.Slice,
-        SliceCenter = Rect.new(49, 49, 450, 450),
-        Size = UDim2.new(1, 34, 1, 34),
-        Position = UDim2.fromOffset(-17, -12),
+    local shadow = New("Frame", {
+        BackgroundColor3 = Color3.new(0, 0, 0),
+        BackgroundTransparency = transparency or 0.8,
+        BorderSizePixel = 0,
+        AnchorPoint = parent.AnchorPoint,
+        Position = UDim2.new(parent.Position.X.Scale, parent.Position.X.Offset + 8, parent.Position.Y.Scale, parent.Position.Y.Offset + 9),
+        Size = UDim2.new(parent.Size.X.Scale, parent.Size.X.Offset + 12, parent.Size.Y.Scale, parent.Size.Y.Offset + 12),
         ZIndex = math.max(0, parent.ZIndex - 1)
-    }, parent)
+    }, parent.Parent)
+    Corner(shadow, 14)
     return shadow
 end
 
@@ -536,8 +535,8 @@ function Window:ApplyTheme(theme)
     self.Subtitle.TextColor3 = theme.Muted
     self.Close.BackgroundColor3 = theme.Surface2
     self.Close.TextColor3 = theme.Muted
-    self.Minimize.BackgroundColor3 = theme.Surface2
-    self.Minimize.TextColor3 = theme.Muted
+    self.MinimizeButton.BackgroundColor3 = theme.Surface2
+    self.MinimizeButton.TextColor3 = theme.Muted
     self.MaximizeButton.BackgroundColor3 = theme.Surface2
     self.MaximizeButton.TextColor3 = theme.Muted
     self.AccentLine.BackgroundColor3 = theme.Accent
@@ -586,7 +585,7 @@ end
 function Window:Minimize()
     if self.Destroyed then return self end
     self.Minimized = not self.Minimized
-    local target = self.Minimized and UDim2.fromOffset(self.Size.X.Offset, 54) or self.Size
+    local target = self.Minimized and UDim2.new(self.Size.X.Scale, self.Size.X.Offset, 0, 58) or self.Size
     Tween(self.Main, {Size = target}, 0.24, Enum.EasingStyle.Quart)
     self.Pages.Visible = not self.Minimized
     self.Sidebar.Visible = not self.Minimized
@@ -612,10 +611,11 @@ function Window:CreateTab(options)
     options = options or {}
     local theme = self.Library.Theme
     local button = New("TextButton", {
-        BackgroundTransparency = 1,
+        BackgroundColor3 = theme.Surface2,
+        BackgroundTransparency = 0.52,
         Text = "",
         AutoButtonColor = false,
-        Size = UDim2.new(1, -20, 0, 40),
+        Size = UDim2.new(1, -16, 0, 42),
         ZIndex = 4
     }, self.TabList)
     Corner(button, theme.Radius - 4)
@@ -636,7 +636,7 @@ function Window:CreateTab(options)
         BorderSizePixel = 0,
         AnchorPoint = Vector2.new(0, 0.5),
         Position = UDim2.new(0, 0, 0.5, 0),
-        Size = UDim2.fromOffset(3, 18),
+        Size = UDim2.fromOffset(3, 22),
         Visible = false,
         ZIndex = 6
     }, button)
@@ -662,12 +662,16 @@ function Window:CreateTab(options)
         Title = title,
         Icon = icon,
         ActiveBar = activeBar,
+        ButtonStroke = Stroke(button, theme.Border, 1, 1),
         Page = page,
         Layout = layout,
         Components = {},
         Name = tostring(options.Title or "Tab"),
         ApplyTheme = function(tabSelf, themeData)
             tabSelf.Title.TextColor3 = tabSelf.Active and themeData.Text or themeData.Muted
+            tabSelf.Button.BackgroundColor3 = tabSelf.Active and themeData.Surface3 or themeData.Surface2
+            tabSelf.Button.BackgroundTransparency = tabSelf.Active and 0 or 0.52
+            if tabSelf.ButtonStroke then tabSelf.ButtonStroke.Color = themeData.Border; tabSelf.ButtonStroke.Transparency = tabSelf.Active and 0.18 or 1 end
             if tabSelf.Icon then tabSelf.Icon.ImageColor3 = tabSelf.Active and themeData.Accent or themeData.Muted end
             if tabSelf.ActiveBar then tabSelf.ActiveBar.BackgroundColor3 = themeData.Accent end
         end,
@@ -689,8 +693,9 @@ function Window:CreateTab(options)
     function methods:SetActive(value)
         self.Active = value == true
         self.Page.Visible = self.Active
-        self.Button.BackgroundColor3 = self.Active and self.Library.Theme.Surface2 or self.Library.Theme.Background
-        self.Button.BackgroundTransparency = self.Active and 0 or 1
+        self.Button.BackgroundColor3 = self.Active and self.Library.Theme.Surface3 or self.Library.Theme.Surface2
+        self.Button.BackgroundTransparency = self.Active and 0 or 0.52
+        if self.ButtonStroke then self.ButtonStroke.Color = self.Library.Theme.Border; self.ButtonStroke.Transparency = self.Active and 0.18 or 1 end
         self.Title.TextColor3 = self.Active and self.Library.Theme.Text or self.Library.Theme.Muted
         if self.Icon then self.Icon.ImageColor3 = self.Active and self.Library.Theme.Accent or self.Library.Theme.Muted end
         self.ActiveBar.Visible = self.Active
@@ -703,16 +708,16 @@ function Window:CreateTab(options)
 
     local userConnections = ConnectionBag.new()
     userConnections:Add(button.Activated:Connect(function()
-        for _, other in pairs(self.Window.Tabs) do
+        for _, other in pairs(proxy.Window.Tabs) do
             other:SetActive(false)
         end
         proxy:SetActive(true)
     end))
     userConnections:Add(button.MouseEnter:Connect(function()
-        if not proxy.Active then Tween(button, {BackgroundTransparency = 0.7}, 0.14) end
+        if not proxy.Active then Tween(button, {BackgroundTransparency = 0.28}, 0.14) end
     end))
     userConnections:Add(button.MouseLeave:Connect(function()
-        if not proxy.Active then Tween(button, {BackgroundTransparency = 1}, 0.14) end
+        if not proxy.Active then Tween(button, {BackgroundTransparency = 0.52}, 0.14) end
     end))
     proxy.Connections = userConnections
 
@@ -766,7 +771,7 @@ function Window:CreateTab(options)
             LayoutOrder = opts.LayoutOrder or 0
         }, page)
         Corner(row, math.max(6, theme.Radius - 2))
-        Stroke(row, theme.Border, 0.58, 1)
+        Stroke(row, theme.Border, 0.28, 1)
         return row
     end
 
@@ -774,9 +779,9 @@ function Window:CreateTab(options)
         opts = opts or {}
         local row = New("TextButton", {
             BackgroundColor3 = theme.Surface,
-            BackgroundTransparency = 0.2,
+            BackgroundTransparency = 0,
             BorderSizePixel = 0,
-            Size = UDim2.new(1, -4, 0, opts.Height or 44),
+            Size = UDim2.new(1, -4, 0, opts.Height or 46),
             Text = "",
             AutoButtonColor = false,
             LayoutOrder = opts.LayoutOrder or 0
@@ -1036,10 +1041,10 @@ function Window:CreateTab(options)
             for _, item in ipairs(comp.Data.Options) do
                 local label = tostring(item.Label or item.Value)
                 if filter == "" or string.find(string.lower(label), filter, 1, true) then
-                    local itemButton = New("TextButton", {BackgroundColor3 = theme.Surface2, BorderSizePixel = 0, Size = UDim2.new(1, 0, 0, 32), Text = "", AutoButtonColor = false, ZIndex = 22}, list)
+                    local itemButton = New("TextButton", {BackgroundColor3 = self.Library.Theme.Surface2, BorderSizePixel = 0, Size = UDim2.new(1, 0, 0, 32), Text = "", AutoButtonColor = false, ZIndex = 22}, list)
                     Corner(itemButton, 6)
-                    local itemLabel = New("TextLabel", {BackgroundTransparency = 1, Position = UDim2.fromOffset(10, 0), Size = UDim2.new(1, -20, 1, 0), Font = theme.Font, Text = label, TextSize = 12, TextColor3 = item.Disabled and theme.Muted or theme.Text, TextXAlignment = Enum.TextXAlignment.Left, ZIndex = 23}, itemButton)
-                    if item.Icon then CreateIcon(itemButton, item.Icon, 15, theme.Muted) end
+                    local itemLabel = New("TextLabel", {BackgroundTransparency = 1, Position = UDim2.fromOffset(10, 0), Size = UDim2.new(1, -20, 1, 0), Font = self.Library.Theme.Font, Text = label, TextSize = 12, TextColor3 = item.Disabled and self.Library.Theme.Muted or self.Library.Theme.Text, TextXAlignment = Enum.TextXAlignment.Left, ZIndex = 23}, itemButton)
+                    if item.Icon then CreateIcon(itemButton, item.Icon, 15, self.Library.Theme.Muted) end
                     if not item.Disabled then
                         comp.DynamicConnections:Add(itemButton.Activated:Connect(function() comp:Set(item.Value); closePopup() end))
                         comp.DynamicConnections:Add(itemButton.MouseEnter:Connect(function() Tween(itemButton, {BackgroundColor3 = self.Library.Theme.Border}, 0.1) end))
@@ -1092,10 +1097,10 @@ function Window:CreateTab(options)
             for _, item in ipairs(comp.Data.Options) do
                 local label = tostring(item.Label or item.Value)
                 if filter == "" or string.find(string.lower(label), filter, 1, true) then
-                    local btn = New("TextButton", {BackgroundColor3 = contains(comp.Data.Value, item.Value) and theme.Surface or theme.Surface2, BorderSizePixel = 0, Size = UDim2.new(1, 0, 0, 32), Text = "", AutoButtonColor = false, ZIndex = 22}, list)
+                    local btn = New("TextButton", {BackgroundColor3 = contains(comp.Data.Value, item.Value) and self.Library.Theme.Surface or self.Library.Theme.Surface2, BorderSizePixel = 0, Size = UDim2.new(1, 0, 0, 32), Text = "", AutoButtonColor = false, ZIndex = 22}, list)
                     Corner(btn, 6)
-                    local mark = New("TextLabel", {BackgroundTransparency = 1, Position = UDim2.fromOffset(10, 0), Size = UDim2.fromOffset(20, 32), Font = theme.TitleFont, Text = contains(comp.Data.Value, item.Value) and "✓" or "", TextSize = 13, TextColor3 = theme.Accent, ZIndex = 23}, btn)
-                    local lbl = New("TextLabel", {BackgroundTransparency = 1, Position = UDim2.fromOffset(34, 0), Size = UDim2.new(1, -44, 1, 0), Font = theme.Font, Text = label, TextSize = 12, TextColor3 = item.Disabled and theme.Muted or theme.Text, TextXAlignment = Enum.TextXAlignment.Left, ZIndex = 23}, btn)
+                    local mark = New("TextLabel", {BackgroundTransparency = 1, Position = UDim2.fromOffset(10, 0), Size = UDim2.fromOffset(20, 32), Font = self.Library.Theme.TitleFont, Text = contains(comp.Data.Value, item.Value) and "✓" or "", TextSize = 13, TextColor3 = self.Library.Theme.Accent, ZIndex = 23}, btn)
+                    local lbl = New("TextLabel", {BackgroundTransparency = 1, Position = UDim2.fromOffset(34, 0), Size = UDim2.new(1, -44, 1, 0), Font = self.Library.Theme.Font, Text = label, TextSize = 12, TextColor3 = item.Disabled and self.Library.Theme.Muted or self.Library.Theme.Text, TextXAlignment = Enum.TextXAlignment.Left, ZIndex = 23}, btn)
                     if not item.Disabled then
                         comp.DynamicConnections:Add(btn.Activated:Connect(function()
                             local nextValues = {}
@@ -1176,11 +1181,11 @@ function Window:CreateTab(options)
             comp.DynamicConnections:Clear()
             for _, child in ipairs(grid:GetChildren()) do if child:IsA("TextButton") then child:Destroy() end end
             for _, item in ipairs(comp.Data.Options) do
-                local card = New("TextButton", {BackgroundColor3 = theme.Surface2, BorderSizePixel = 0, Text = "", AutoButtonColor = false, ZIndex = 22}, grid)
+                local card = New("TextButton", {BackgroundColor3 = self.Library.Theme.Surface2, BorderSizePixel = 0, Text = "", AutoButtonColor = false, ZIndex = 22}, grid)
                 Corner(card, 8)
                 local image = New("ImageLabel", {BackgroundTransparency = 1, Size = UDim2.new(1, -14, 0, 42), Position = UDim2.fromOffset(7, 7), Image = tostring(item.Image or item.Icon or ""), ScaleType = Enum.ScaleType.Crop, ZIndex = 23}, card)
                 Corner(image, 6)
-                local lbl = New("TextLabel", {BackgroundTransparency = 1, Position = UDim2.new(0, 7, 1, -23), Size = UDim2.new(1, -14, 0, 18), Font = theme.Font, Text = tostring(item.Label or item.Value), TextSize = 10, TextColor3 = theme.Text, TextTruncate = Enum.TextTruncate.AtEnd, ZIndex = 23}, card)
+                local lbl = New("TextLabel", {BackgroundTransparency = 1, Position = UDim2.new(0, 7, 1, -23), Size = UDim2.new(1, -14, 0, 18), Font = self.Library.Theme.Font, Text = tostring(item.Label or item.Value), TextSize = 10, TextColor3 = self.Library.Theme.Text, TextTruncate = Enum.TextTruncate.AtEnd, ZIndex = 23}, card)
                 if not item.Disabled then comp.DynamicConnections:Add(card.Activated:Connect(function() comp:Set(item.Value); popup.Visible = false; comp.Data.Open = false end)) end
             end
         end
@@ -1364,7 +1369,23 @@ function Window:CreateTab(options)
             comp:Set(color)
             comp:Close()
         end
-        comp.ApplyTheme = function(c, t) c.Data.Title.TextColor3 = t.Text; c.Data.Preview.BorderColor3 = t.Border; c.Data.Popup.BackgroundColor3 = t.Surface; c.Data.Hex.BackgroundColor3 = t.Surface2; c.Data.Hex.TextColor3 = t.Text; c.Data.RGB[1].TextColor3 = t.Text; c.Data.RGB[2].TextColor3 = t.Text; c.Data.RGB[3].TextColor3 = t.Text; c.Data.RGB[1].BackgroundColor3 = t.Surface2; c.Data.RGB[2].BackgroundColor3 = t.Surface2; c.Data.RGB[3].BackgroundColor3 = t.Surface2; c.Data.Popup:FindFirstChildOfClass("UIStroke").Color = t.Border end
+        comp.ApplyTheme = function(c, t)
+            c.Data.Title.TextColor3 = t.Text
+            c.Data.Preview.BackgroundColor3 = c.Data.Value
+            local previewStroke = c.Data.Preview:FindFirstChildOfClass("UIStroke")
+            if previewStroke then previewStroke.Color = t.Border end
+            c.Data.Popup.BackgroundColor3 = t.Surface
+            c.Data.Hex.BackgroundColor3 = t.Surface2
+            c.Data.Hex.TextColor3 = t.Text
+            for _, box in ipairs(c.Data.RGB) do
+                box.TextColor3 = t.Text
+                box.BackgroundColor3 = t.Surface2
+            end
+            local popupStroke = c.Data.Popup:FindFirstChildOfClass("UIStroke")
+            if popupStroke then popupStroke.Color = t.Border end
+            local applyButton = c.Data.Popup:FindFirstChild("TextButton")
+            if applyButton then applyButton.BackgroundColor3 = t.Accent; applyButton.TextColor3 = t.Text end
+        end
         comp:AddConnection(preview.Activated:Connect(function() comp:Toggle() end))
         comp:AddConnection(apply.Activated:Connect(applyFromInputs))
         comp:AddConnection(hex.FocusLost:Connect(function() local value = fromHex(hex.Text); if value then comp:Set(value) end end))
@@ -1427,7 +1448,11 @@ function Window:CreateTab(options)
             if comp.Data.Value and spinner.Parent then rotation += delta * 240; spinner.Rotation = rotation end
         end))
         function comp:Set(value) self.Data.Value = value == true; row.Visible = self.Data.Value; return self end
-        comp.ApplyTheme = function(c, t) c.Data.Label.TextColor3 = t.Text end
+        comp.ApplyTheme = function(c, t)
+            c.Data.Label.TextColor3 = t.Text
+            local spinnerStroke = c.Data.Spinner:FindFirstChildOfClass("UIStroke")
+            if spinnerStroke then spinnerStroke.Color = t.Accent end
+        end
         return self:_add(comp)
     end
 
@@ -1583,7 +1608,7 @@ function Window:CreateTab(options)
             comp.DynamicConnections:Clear()
             for _, child in ipairs(popup:GetChildren()) do if child:IsA("TextButton") then child:Destroy() end end
             for _, item in ipairs(comp.Data.Items) do
-                local button = New("TextButton", {BackgroundColor3 = theme.Surface2, BorderSizePixel = 0, Size = UDim2.new(1, 0, 0, 30), Text = tostring(item.Title or item.Label or "Item"), Font = theme.Font, TextSize = 11, TextColor3 = item.Disabled and theme.Muted or theme.Text, AutoButtonColor = false, ZIndex = 41}, popup)
+                local button = New("TextButton", {BackgroundColor3 = self.Library.Theme.Surface2, BorderSizePixel = 0, Size = UDim2.new(1, 0, 0, 30), Text = tostring(item.Title or item.Label or "Item"), Font = self.Library.Theme.Font, TextSize = 11, TextColor3 = item.Disabled and self.Library.Theme.Muted or self.Library.Theme.Text, AutoButtonColor = false, ZIndex = 41}, popup)
                 Corner(button, 6)
                 Padding(button, 9, 9, 0, 0)
                 if not item.Disabled then comp.DynamicConnections:Add(button.Activated:Connect(function() Fire(item.Callback); comp:Close() end)) end
@@ -1650,7 +1675,7 @@ function Window:CreateTab(options)
     end
 
     self.Tabs[proxy.Name] = proxy
-    table.insert(self.WindowOrder, proxy)
+    table.insert(self.Library.WindowOrder, proxy)
     self.TabList.CanvasSize = UDim2.new()
     if not self.ActiveTab then proxy:SetActive(true) end
     return proxy
@@ -1662,56 +1687,230 @@ function IrisHub:CreateWindow(options)
     local root = New("CanvasGroup", {BackgroundTransparency = 1, Size = UDim2.fromScale(1, 1), Visible = true}, self.Gui)
     local main = New("Frame", {
         BackgroundColor3 = theme.Surface,
-        BackgroundTransparency = theme.Transparency,
+        BackgroundTransparency = 0,
         BorderSizePixel = 0,
         AnchorPoint = Vector2.new(0.5, 0.5),
         Position = options.Position or UDim2.fromScale(0.5, 0.5),
-        Size = options.Size or UDim2.fromOffset(640, 460),
-        ClipsDescendants = false
+        Size = options.Size or UDim2.fromOffset(720, 500),
+        ClipsDescendants = false,
+        ZIndex = 10
     }, root)
+    local shadow = CreateShadow(main, theme.ShadowTransparency or 0.8)
     Corner(main, theme.Radius + 2)
-    local outline = Stroke(main, theme.Border, 0.05, 1)
-    CreateShadow(main, theme.ShadowTransparency or 0.5)
-    local minSize = options.MinSize or Vector2.new(420, 300)
+    local outline = Stroke(main, theme.Border, 0.12, 1)
+    local gradient = New("UIGradient", {
+        Color = ColorSequence.new({
+            ColorSequenceKeypoint.new(0, theme.Surface3),
+            ColorSequenceKeypoint.new(0.18, theme.Surface),
+            ColorSequenceKeypoint.new(1, theme.Surface)
+        }),
+        Rotation = 90
+    }, main)
+    local minSize = options.MinSize or Vector2.new(520, 360)
     local maxSize = options.MaxSize or Vector2.new(1600, 1000)
     New("UISizeConstraint", {MinSize = minSize, MaxSize = maxSize}, main)
 
-    local top = New("Frame", {BackgroundTransparency = 1, Size = UDim2.new(1, 0, 0, 58)}, main)
-    local title = New("TextLabel", {BackgroundTransparency = 1, Position = UDim2.fromOffset(18, 9), Size = UDim2.new(1, -150, 0, 25), Font = theme.TitleFont, Text = tostring(options.Title or "IrisHub"), TextSize = 17, TextColor3 = theme.Text, TextXAlignment = Enum.TextXAlignment.Left}, top)
-    local subtitle = New("TextLabel", {BackgroundTransparency = 1, Position = UDim2.fromOffset(19, 33), Size = UDim2.new(1, -170, 0, 17), Font = theme.Font, Text = tostring(options.Subtitle or "Universal interface"), TextSize = 10, TextColor3 = theme.Muted, TextXAlignment = Enum.TextXAlignment.Left}, top)
-    local breadcrumb = New("TextLabel", {BackgroundTransparency = 1, AnchorPoint = Vector2.new(0, 1), Position = UDim2.new(0, 18, 1, -7), Size = UDim2.fromOffset(170, 14), Font = theme.Font, Text = "Overview", TextSize = 9, TextColor3 = theme.Muted, TextXAlignment = Enum.TextXAlignment.Left}, top)
-    local close = New("TextButton", {BackgroundColor3 = theme.Surface2, BorderSizePixel = 0, AnchorPoint = Vector2.new(1, 0.5), Position = UDim2.new(1, -12, 0.5, 0), Size = UDim2.fromOffset(30, 30), Text = "×", Font = theme.TitleFont, TextSize = 18, TextColor3 = theme.Muted, AutoButtonColor = false}, top)
-    Corner(close, 8)
-    local minimize = New("TextButton", {BackgroundColor3 = theme.Surface2, BorderSizePixel = 0, AnchorPoint = Vector2.new(1, 0.5), Position = UDim2.new(1, -48, 0.5, 0), Size = UDim2.fromOffset(30, 30), Text = "−", Font = theme.TitleFont, TextSize = 16, TextColor3 = theme.Muted, AutoButtonColor = false}, top)
-    Corner(minimize, 8)
-    local maximize = New("TextButton", {BackgroundColor3 = theme.Surface2, BorderSizePixel = 0, AnchorPoint = Vector2.new(1, 0.5), Position = UDim2.new(1, -84, 0.5, 0), Size = UDim2.fromOffset(30, 30), Text = "□", Font = theme.TitleFont, TextSize = 13, TextColor3 = theme.Muted, AutoButtonColor = false}, top)
-    Corner(maximize, 8)
-    local accentLine = New("Frame", {BackgroundColor3 = theme.Accent, BorderSizePixel = 0, Position = UDim2.fromOffset(18, 56), Size = UDim2.new(0, 52, 0, 2), ZIndex = 3}, top)
+    local top = New("Frame", {BackgroundTransparency = 1, Size = UDim2.new(1, 0, 0, 68), ZIndex = 20}, main)
+    local brand = New("Frame", {
+        BackgroundColor3 = theme.AccentSoft,
+        BorderSizePixel = 0,
+        Position = UDim2.fromOffset(18, 16),
+        Size = UDim2.fromOffset(34, 34),
+        ZIndex = 21
+    }, top)
+    Corner(brand, 10)
+    Stroke(brand, theme.Accent, 0.35, 1)
+    local brandText = New("TextLabel", {
+        BackgroundTransparency = 1,
+        Size = UDim2.fromScale(1, 1),
+        Font = theme.TitleFont,
+        Text = "I",
+        TextSize = 17,
+        TextColor3 = theme.Text,
+        TextXAlignment = Enum.TextXAlignment.Center,
+        TextYAlignment = Enum.TextYAlignment.Center,
+        ZIndex = 22
+    }, brand)
+    local title = New("TextLabel", {
+        BackgroundTransparency = 1,
+        Position = UDim2.fromOffset(62, 13),
+        Size = UDim2.new(1, -215, 0, 24),
+        Font = theme.TitleFont,
+        Text = tostring(options.Title or "IrisHub"),
+        TextSize = 18,
+        TextColor3 = theme.Text,
+        TextXAlignment = Enum.TextXAlignment.Left,
+        ZIndex = 21
+    }, top)
+    local subtitle = New("TextLabel", {
+        BackgroundTransparency = 1,
+        Position = UDim2.fromOffset(63, 38),
+        Size = UDim2.new(1, -220, 0, 16),
+        Font = theme.Font,
+        Text = tostring(options.Subtitle or "Universal interface"),
+        TextSize = 10,
+        TextColor3 = theme.Muted,
+        TextXAlignment = Enum.TextXAlignment.Left,
+        ZIndex = 21
+    }, top)
+    local statusDot = New("Frame", {
+        BackgroundColor3 = theme.Success,
+        BorderSizePixel = 0,
+        Position = UDim2.fromOffset(63, 56),
+        Size = UDim2.fromOffset(6, 6),
+        ZIndex = 21
+    }, top)
+    Corner(statusDot, 3)
+    local statusText = New("TextLabel", {
+        BackgroundTransparency = 1,
+        Position = UDim2.fromOffset(76, 51),
+        Size = UDim2.fromOffset(92, 16),
+        Font = theme.Font,
+        Text = "READY",
+        TextSize = 8,
+        TextColor3 = theme.Muted,
+        TextXAlignment = Enum.TextXAlignment.Left,
+        ZIndex = 21
+    }, top)
+    local breadcrumb = New("TextLabel", {
+        BackgroundTransparency = 1,
+        AnchorPoint = Vector2.new(0, 1),
+        Position = UDim2.new(0, 190, 0, 59),
+        Size = UDim2.new(1, -390, 0, 16),
+        Font = theme.SmallFont,
+        Text = "Main",
+        TextSize = 10,
+        TextColor3 = theme.Muted,
+        TextXAlignment = Enum.TextXAlignment.Left,
+        ZIndex = 21
+    }, top)
+
+    local function topButton(text, rightOffset, textSize)
+        local button = New("TextButton", {
+            BackgroundColor3 = theme.Surface2,
+            BorderSizePixel = 0,
+            AnchorPoint = Vector2.new(1, 0.5),
+            Position = UDim2.new(1, rightOffset, 0.5, 0),
+            Size = UDim2.fromOffset(32, 32),
+            Text = text,
+            Font = theme.TitleFont,
+            TextSize = textSize or 13,
+            TextColor3 = theme.Muted,
+            AutoButtonColor = false,
+            ZIndex = 22
+        }, top)
+        Corner(button, 9)
+        Stroke(button, theme.Border, 0.45, 1)
+        return button
+    end
+
+    local close = topButton("×", -12, 18)
+    local minimizeButton = topButton("−", -50, 16)
+    local maximize = topButton("□", -88, 12)
+    local headerLine = New("Frame", {
+        BackgroundColor3 = theme.Border,
+        BackgroundTransparency = 0.48,
+        BorderSizePixel = 0,
+        Position = UDim2.fromOffset(18, 67),
+        Size = UDim2.new(1, -36, 0, 1),
+        ZIndex = 20
+    }, top)
+    local accentLine = New("Frame", {
+        BackgroundColor3 = theme.Accent,
+        BorderSizePixel = 0,
+        Position = UDim2.fromOffset(18, 67),
+        Size = UDim2.fromOffset(64, 2),
+        ZIndex = 22
+    }, top)
     Corner(accentLine, 2)
 
-    local sidebar = New("Frame", {BackgroundColor3 = theme.Background, BorderSizePixel = 0, Position = UDim2.fromOffset(10, 68), Size = UDim2.new(0, 146, 1, -78)}, main)
+    local sidebar = New("Frame", {
+        BackgroundColor3 = theme.Background,
+        BorderSizePixel = 0,
+        Position = UDim2.fromOffset(12, 82),
+        Size = UDim2.new(0, 170, 1, -96),
+        ZIndex = 12
+    }, main)
     Corner(sidebar, theme.Radius)
-    local tabList = New("ScrollingFrame", {BackgroundTransparency = 1, BorderSizePixel = 0, Position = UDim2.fromOffset(0, 10), Size = UDim2.new(1, 0, 1, -20), AutomaticCanvasSize = Enum.AutomaticSize.Y, CanvasSize = UDim2.new(), ScrollBarThickness = 0}, sidebar)
-    Padding(tabList, 10, 10, 0, 10)
+    Stroke(sidebar, theme.Border, 0.42, 1)
+    local sidebarHeader = New("TextLabel", {
+        BackgroundTransparency = 1,
+        Position = UDim2.fromOffset(14, 12),
+        Size = UDim2.new(1, -28, 0, 16),
+        Font = theme.SmallFont,
+        Text = "NAVIGATION",
+        TextSize = 9,
+        TextColor3 = theme.Muted,
+        TextXAlignment = Enum.TextXAlignment.Left,
+        ZIndex = 14
+    }, sidebar)
+    local tabList = New("ScrollingFrame", {
+        BackgroundTransparency = 1,
+        BorderSizePixel = 0,
+        Position = UDim2.fromOffset(0, 34),
+        Size = UDim2.new(1, 0, 1, -64),
+        AutomaticCanvasSize = Enum.AutomaticSize.Y,
+        CanvasSize = UDim2.new(),
+        ScrollBarThickness = 0,
+        ZIndex = 13
+    }, sidebar)
+    Padding(tabList, 8, 8, 0, 8)
     New("UIListLayout", {Padding = UDim.new(0, 6), SortOrder = Enum.SortOrder.LayoutOrder}, tabList)
-    local pages = New("Frame", {BackgroundTransparency = 1, Position = UDim2.fromOffset(168, 68), Size = UDim2.new(1, -178, 1, -78)}, main)
+    local sidebarFooter = New("TextLabel", {
+        BackgroundTransparency = 1,
+        AnchorPoint = Vector2.new(0, 1),
+        Position = UDim2.new(0, 14, 1, -12),
+        Size = UDim2.new(1, -28, 0, 14),
+        Font = theme.Font,
+        Text = "IRISHUB • " .. self.Version,
+        TextSize = 8,
+        TextColor3 = theme.Muted,
+        TextXAlignment = Enum.TextXAlignment.Left,
+        ZIndex = 14
+    }, sidebar)
+
+    local content = New("Frame", {
+        BackgroundColor3 = theme.Background,
+        BorderSizePixel = 0,
+        Position = UDim2.fromOffset(192, 82),
+        Size = UDim2.new(1, -204, 1, -96),
+        ZIndex = 12
+    }, main)
+    Corner(content, theme.Radius)
+    Stroke(content, theme.Border, 0.42, 1)
+    local pages = New("Frame", {
+        BackgroundTransparency = 1,
+        Position = UDim2.fromOffset(1, 1),
+        Size = UDim2.new(1, -2, 1, -2),
+        ZIndex = 13
+    }, content)
 
     local window = setmetatable({
         Library = self,
         Root = root,
         Main = main,
+        Shadow = shadow,
+        Gradient = gradient,
         Size = main.Size,
         Stroke = outline,
         Top = top,
+        Brand = brand,
+        BrandText = brandText,
         Title = title,
         Subtitle = subtitle,
+        StatusDot = statusDot,
+        StatusText = statusText,
         Breadcrumb = breadcrumb,
         Close = close,
-        Minimize = minimize,
+        MinimizeButton = minimizeButton,
         MaximizeButton = maximize,
+        HeaderLine = headerLine,
         AccentLine = accentLine,
         Sidebar = sidebar,
+        SidebarHeader = sidebarHeader,
+        SidebarFooter = sidebarFooter,
         TabList = tabList,
+        Content = content,
         Pages = pages,
         Tabs = {},
         Connections = ConnectionBag.new(),
@@ -1755,7 +1954,7 @@ function IrisHub:CreateWindow(options)
     end
 
     if options.Resizable ~= false then
-        local resizeGrip = New("TextButton", {BackgroundTransparency = 1, BorderSizePixel = 0, AnchorPoint = Vector2.new(1, 1), Position = UDim2.new(1, -5, 1, -5), Size = UDim2.fromOffset(24, 24), Text = "↘", Font = theme.SmallFont, TextSize = 14, TextColor3 = theme.Muted, AutoButtonColor = false, ZIndex = 60}, main)
+        local resizeGrip = New("TextButton", {BackgroundTransparency = 1, BorderSizePixel = 0, AnchorPoint = Vector2.new(1, 1), Position = UDim2.new(1, -7, 1, -7), Size = UDim2.fromOffset(26, 26), Text = "↘", Font = theme.SmallFont, TextSize = 13, TextColor3 = theme.Muted, AutoButtonColor = false, ZIndex = 60}, main)
         window.ResizeGrip = resizeGrip
         local resizing = false
         local resizeStart
@@ -1765,13 +1964,12 @@ function IrisHub:CreateWindow(options)
                 resizing = true
                 resizeStart = input.Position
                 sizeStart = main.AbsoluteSize
+                window:Focus()
             end
         end))
         window.Connections:Add(UserInputService.InputChanged:Connect(function(input)
             if resizing and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
                 local delta = input.Position - resizeStart
-                local minSize = options.MinSize or Vector2.new(420, 300)
-                local maxSize = options.MaxSize or Vector2.new(1600, 1000)
                 local width = Clamp(sizeStart.X + delta.X, minSize.X, maxSize.X)
                 local height = Clamp(sizeStart.Y + delta.Y, minSize.Y, maxSize.Y)
                 window.Size = UDim2.fromOffset(width, height)
@@ -1783,11 +1981,17 @@ function IrisHub:CreateWindow(options)
         end))
     end
 
+    window.Connections:Add(close.MouseEnter:Connect(function() Tween(close, {BackgroundColor3 = theme.Danger, TextColor3 = theme.Text}, 0.12) end))
+    window.Connections:Add(close.MouseLeave:Connect(function() Tween(close, {BackgroundColor3 = self.Theme.Surface2, TextColor3 = self.Theme.Muted}, 0.12) end))
+    window.Connections:Add(minimizeButton.MouseEnter:Connect(function() Tween(minimizeButton, {BackgroundColor3 = self.Theme.Surface3, TextColor3 = self.Theme.Text}, 0.12) end))
+    window.Connections:Add(minimizeButton.MouseLeave:Connect(function() Tween(minimizeButton, {BackgroundColor3 = self.Theme.Surface2, TextColor3 = self.Theme.Muted}, 0.12) end))
+    window.Connections:Add(maximize.MouseEnter:Connect(function() Tween(maximize, {BackgroundColor3 = self.Theme.Surface3, TextColor3 = self.Theme.Text}, 0.12) end))
+    window.Connections:Add(maximize.MouseLeave:Connect(function() Tween(maximize, {BackgroundColor3 = self.Theme.Surface2, TextColor3 = self.Theme.Muted}, 0.12) end))
     window.Connections:Add(close.Activated:Connect(function()
         if type(options.OnClose) == "function" then Fire(options.OnClose, window) end
         window:Destroy()
     end))
-    window.Connections:Add(minimize.Activated:Connect(function() window:Minimize() end))
+    window.Connections:Add(minimizeButton.Activated:Connect(function() window:Minimize() end))
     window.Connections:Add(maximize.Activated:Connect(function() window:Maximize() end))
     window.Connections:Add(main.InputBegan:Connect(function() window:Focus() end))
 
@@ -1809,33 +2013,96 @@ function IrisHub:CreateWindow(options)
     end
 
     function window:GetTab(name)
-        for _, tab in pairs(self.Tabs) do if tab.Name == name then return tab end end
+        local target = tostring(name)
+        for _, tab in pairs(self.Tabs) do
+            if tab and not tab.Destroyed and tab.Name == target then
+                return tab
+            end
+        end
+        return nil
+    end
+
+    function window:GetActiveTab()
+        return self.ActiveTab
+    end
+
+    function window:SelectTab(name)
+        local target = self:GetTab(name)
+        if not target then return nil end
+        for _, tab in pairs(self.Tabs) do
+            if tab ~= target then tab:SetActive(false) end
+        end
+        target:SetActive(true)
+        return target
+    end
+
+    function window:SetStatus(text, color)
+        self.StatusText.Text = tostring(text or "READY")
+        self.StatusText.TextColor3 = color or self.Library.Theme.Muted
+        self.StatusDot.BackgroundColor3 = color or self.Library.Theme.Success
+        return self
     end
 
     function window:CreateTab(opts)
+        opts = opts or {}
         local tab = Window.CreateTab(self, opts)
-        if opts and opts.OnCreated then Fire(opts.OnCreated, tab) end
+        if opts.OnCreated then Fire(opts.OnCreated, tab) end
         return tab
     end
 
     function window:ApplyTheme(themeData)
         self.Main.BackgroundColor3 = themeData.Surface
         self.Main.BackgroundTransparency = themeData.Transparency
+        if self.Gradient then
+            self.Gradient.Color = ColorSequence.new({
+                ColorSequenceKeypoint.new(0, themeData.Surface3),
+                ColorSequenceKeypoint.new(0.18, themeData.Surface),
+                ColorSequenceKeypoint.new(1, themeData.Surface)
+            })
+        end
+        if self.Shadow then
+            self.Shadow.BackgroundTransparency = themeData.ShadowTransparency or 0.8
+        end
         self.Stroke.Color = themeData.Border
+        self.Brand.BackgroundColor3 = themeData.AccentSoft
+        local brandStroke = self.Brand:FindFirstChildOfClass("UIStroke")
+        if brandStroke then brandStroke.Color = themeData.Accent end
         self.Title.TextColor3 = themeData.Text
         self.Subtitle.TextColor3 = themeData.Muted
+        self.StatusText.TextColor3 = themeData.Muted
+        self.StatusDot.BackgroundColor3 = themeData.Success
         self.Breadcrumb.TextColor3 = themeData.Muted
         self.Close.BackgroundColor3 = themeData.Surface2
         self.Close.TextColor3 = themeData.Muted
-        self.Minimize.BackgroundColor3 = themeData.Surface2
-        self.Minimize.TextColor3 = themeData.Muted
+        self.MinimizeButton.BackgroundColor3 = themeData.Surface2
+        self.MinimizeButton.TextColor3 = themeData.Muted
         self.MaximizeButton.BackgroundColor3 = themeData.Surface2
         self.MaximizeButton.TextColor3 = themeData.Muted
+        local closeStroke = self.Close:FindFirstChildOfClass("UIStroke")
+        if closeStroke then closeStroke.Color = themeData.Border end
+        local minStroke = self.MinimizeButton:FindFirstChildOfClass("UIStroke")
+        if minStroke then minStroke.Color = themeData.Border end
+        local maxStroke = self.MaximizeButton:FindFirstChildOfClass("UIStroke")
+        if maxStroke then maxStroke.Color = themeData.Border end
+        self.HeaderLine.BackgroundColor3 = themeData.Border
         self.AccentLine.BackgroundColor3 = themeData.Accent
         self.Sidebar.BackgroundColor3 = themeData.Background
+        self.SidebarHeader.TextColor3 = themeData.Muted
+        self.SidebarFooter.TextColor3 = themeData.Muted
+        self.Content.BackgroundColor3 = themeData.Background
+        local sidebarStroke = self.Sidebar:FindFirstChildOfClass("UIStroke")
+        if sidebarStroke then sidebarStroke.Color = themeData.Border end
+        local contentStroke = self.Content:FindFirstChildOfClass("UIStroke")
+        if contentStroke then contentStroke.Color = themeData.Border end
+        for _, tab in pairs(self.Tabs) do
+            if tab.ApplyTheme then tab:ApplyTheme(themeData) end
+        end
     end
 
-    local defaultTab = window:CreateTab({Title = options.DefaultTab or "Main", Icon = options.DefaultIcon})
+    local defaultTab = window:CreateTab({
+        Title = options.DefaultTab or "Main",
+        Icon = options.DefaultIcon
+    })
     defaultTab:SetActive(true)
     return window
 end
